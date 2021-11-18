@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bridgx-scheduler
+  labels:
+    app: bridgx-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bridgx-scheduler
+  template:
+    metadata:
+      labels:
+        app: bridgx-scheduler
+    spec:
+      containers:
+        - name: bridgx-scheduler
+          image: 172.16.16.172:12380/bridgx/bridgx-scheduler:v0.2
+          imagePullPolicy: Always

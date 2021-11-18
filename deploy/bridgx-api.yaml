@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bridgx-api
+  labels:
+    app: bridgx-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bridgx-api
+  template:
+    metadata:
+      labels:
+        app: bridgx-api
+    spec:
+      containers:
+        - name: bridgx-api
+          image: 172.16.16.172:12380/bridgx/bridgx-api:v0.2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9090
+          env:
+            - name: GIN_MODE
+              value: release
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: bridgx-api
+spec:
+  selector:
+    app: bridgx-api
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 9090

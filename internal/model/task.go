@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/cast"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
@@ -94,6 +95,7 @@ func GetTaskCount(ctx context.Context, clusterNames []string) (int64, error) {
 }
 
 type TaskSearchCond struct {
+	TaskId      string
 	TaskName    string
 	ClusterName string
 	TaskStatus  string
@@ -103,6 +105,9 @@ type TaskSearchCond struct {
 
 func SearchTask(ctx context.Context, clusterNames []string, cond TaskSearchCond) (ret []Task, total int64, err error) {
 	query := clients.ReadDBCli.WithContext(ctx).Table(Task{}.TaskName).Where("task_filter IN (?) ", clusterNames)
+	if cond.TaskId != "" {
+		query = query.Where("id = ? ", cast.ToInt64(cond.TaskId))
+	}
 	if cond.TaskName != "" {
 		query = query.Where("task_name LIKE ?", "%"+cond.TaskName+"%")
 	}

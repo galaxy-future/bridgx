@@ -30,7 +30,7 @@ func GetTaskCount(ctx *gin.Context) {
 }
 
 func GetTaskDescribe(ctx *gin.Context) {
-	taskId, ok := ctx.GetQuery("task_name")
+	taskId, ok := ctx.GetQuery("task_id")
 	if !ok {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
@@ -56,12 +56,14 @@ func GetTaskDescribeAll(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.PermissionDenied, nil)
 		return
 	}
+	taskId := ctx.Query("task_id")
 	taskName := ctx.Query("task_name")
 	clusterName := ctx.Query("cluster_name")
 	taskStatus := ctx.Query("task_status")
 	pn, ps := getPager(ctx)
 	accountKeys, _ := service.GetAksByOrgId(user.OrgId)
 	tasks, total, err := service.GetTaskListByCond(ctx, accountKeys, model.TaskSearchCond{
+		TaskId:      taskId,
 		TaskName:    taskName,
 		ClusterName: clusterName,
 		TaskStatus:  taskStatus,
