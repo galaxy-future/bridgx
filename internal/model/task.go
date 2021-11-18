@@ -3,11 +3,11 @@ package model
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cast"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/spf13/cast"
 )
 
 type Task struct {

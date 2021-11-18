@@ -571,6 +571,11 @@ func GetVPC(ctx context.Context, req GetVPCRequest) (resp VPCResponse, err error
 	aks := make([]string, 0, len(req.Account.Info))
 	for _, info := range req.Account.Info {
 		aks = append(aks, info.AK)
+		if req.Provider != "" {
+			if info.Provider != req.Provider {
+				continue
+			}
+		}
 	}
 	vs, total, err := model.FindVpcsWithPage(ctx, model.FindVpcConditions{
 		Aks:        aks,

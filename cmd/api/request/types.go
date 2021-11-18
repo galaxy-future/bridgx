@@ -38,11 +38,11 @@ func (c *CreateVpcRequest) Check() bool {
 }
 
 type CreateSwitchRequest struct {
-	SwitchName string
-	RegionId   string
-	VpcId      string
-	CidrBlock  string
-	ZoneId     string
+	SwitchName string `json:"switch_name"`
+	RegionId   string `json:"region_id"`
+	VpcId      string `json:"vpc_id"`
+	CidrBlock  string `json:"cidr_block"`
+	ZoneId     string `json:"zone_id"`
 }
 
 func (c *CreateSwitchRequest) Check() bool {
@@ -50,10 +50,10 @@ func (c *CreateSwitchRequest) Check() bool {
 }
 
 type CreateSecurityGroupRequest struct {
-	VpcId             string
-	RegionId          string
-	SecurityGroupName string
-	SecurityGroupType string
+	VpcId             string `json:"vpc_id"`
+	RegionId          string `json:"region_id"`
+	SecurityGroupName string `json:"security_group_name"`
+	SecurityGroupType string `json:"security_group_type"`
 }
 
 func (c *CreateSecurityGroupRequest) Check() bool {
@@ -61,9 +61,9 @@ func (c *CreateSecurityGroupRequest) Check() bool {
 }
 
 type AddSecurityGroupRuleRequest struct {
-	VpcId           string
-	RegionId        string
-	SecurityGroupId string
+	VpcId           string              `json:"vpc_id"`
+	RegionId        string              `json:"region_id"`
+	SecurityGroupId string              `json:"security_group_id"`
 	Rules           []service.GroupRule `json:"rules"`
 }
 
@@ -85,16 +85,16 @@ func (c *CreateSecurityGroupWithRuleRequest) Check() bool {
 }
 
 type CreateNetworkRequest struct {
-	Provider          string
-	RegionId          string
-	CidrBlock         string
-	VpcName           string
-	ZoneId            string
-	SwitchCidrBlock   string
-	SwitchName        string
-	SecurityGroupName string
-	SecurityGroupType string
-	Ak                string
+	Provider          string `json:"provider"`
+	RegionId          string `json:"region_id"`
+	CidrBlock         string `json:"cidr_block"`
+	VpcName           string `json:"vpc_name"`
+	ZoneId            string `json:"zone_id"`
+	SwitchCidrBlock   string `json:"switch_cidr_block"`
+	SwitchName        string `json:"switch_name"`
+	SecurityGroupName string `json:"security_group_name"`
+	SecurityGroupType string `json:"security_group_type"`
+	Ak                string `json:"ak"`
 }
 
 func (c *CreateNetworkRequest) Check() bool {

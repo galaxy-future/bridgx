@@ -1,13 +1,14 @@
 package tests
 
 import (
+	"testing"
+	"time"
+
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/pool"
 	"github.com/galaxy-future/BridgX/pkg/id_generator"
 	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
-	"testing"
-	"time"
 
 	"github.com/galaxy-future/BridgX/internal/model"
 )

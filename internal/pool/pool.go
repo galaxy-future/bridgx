@@ -1,8 +1,8 @@
 package pool
 
 import (
-	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/bytedance/gopkg/util/gopool"
+	"github.com/galaxy-future/BridgX/internal/model"
 )
 
 var expandWorkerPool gopool.Pool
