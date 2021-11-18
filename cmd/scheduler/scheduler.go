@@ -13,10 +13,11 @@ var schedulers = []*types.Scheduler{
 		Interval: constants.DefaultTaskMonitorInterval,
 		Monitor:  &monitors.TaskMonitor{},
 	},
-	//{ 自动监控当前实例数量与预期实例数量是否相等并执行扩缩容，待启用
-	//	Interval: constants.DefaultClusterMonitorInterval,
-	//	Monitor:  &monitors.ClusterMonitor{},
-	//},
+	// 自动监控当前实例数量与预期实例数量是否相等并执行扩缩容，待启用
+	{
+		Interval: constants.DefaultClusterMonitorInterval,
+		Monitor:  &monitors.ClusterMonitor{},
+	},
 	{
 		Interval: constants.DefaultKillExpireRunningTaskInterval,
 		Monitor:  &monitors.TaskKiller{},

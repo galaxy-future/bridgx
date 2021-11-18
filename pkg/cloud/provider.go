@@ -19,7 +19,7 @@ type Provider interface {
 	ProviderType() string
 	GetInstances(ids []string) (instances []Instance, err error)
 	GetInstancesByTags(region string, tags []Tag) (instances []Instance, err error)
-	GetInstancesByCluster(clusterName string) (instances []Instance, err error)
+	GetInstancesByCluster(regionId, clusterName string) (instances []Instance, err error)
 	BatchDelete(ids []string, regionId string) error
 	StartInstance(id string) error
 	StopInstance(id string) error

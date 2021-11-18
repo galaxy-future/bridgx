@@ -2,27 +2,25 @@ package aliyun
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/aliyun/alibaba-cloud-sdk-go/services/bssopenapi"
-	"github.com/galaxy-future/BridgX/internal/constants"
-	"github.com/galaxy-future/BridgX/internal/logs"
-	"github.com/galaxy-future/BridgX/pkg/utils"
-	"github.com/spf13/cast"
-
 	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
 	ecsClient "github.com/alibabacloud-go/ecs-20140526/v2/client"
 	"github.com/alibabacloud-go/tea/tea"
 	vpcClient "github.com/alibabacloud-go/vpc-20160428/v2/client"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/bssopenapi"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
+	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
+	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -215,9 +213,11 @@ func (p *Aliyun) StopInstance(id string) error {
 	return err
 }
 
-//TODO 使用真实阿里云接口
-func (p *Aliyun) GetInstancesByCluster(clusterName string) (instances []cloud.Instance, err error) {
-	return nil, fmt.Errorf("unsupported")
+func (p *Aliyun) GetInstancesByCluster(regionId, clusterName string) (instances []cloud.Instance, err error) {
+	return p.GetInstancesByTags(regionId, []cloud.Tag{{
+		Key:   cloud.ClusterName,
+		Value: clusterName,
+	}})
 }
 
 func (p *Aliyun) CreateVPC(req cloud.CreateVpcRequest) (cloud.CreateVpcResponse, error) {

@@ -248,7 +248,7 @@ func GetCloudInstancesByClusterName(clusterInfo *types.ClusterInfo) (instances [
 	if err != nil {
 		return
 	}
-	return provider.GetInstancesByCluster(clusterInfo.Name)
+	return provider.GetInstancesByCluster(clusterInfo.RegionId, clusterInfo.Name)
 }
 
 func GetInstancesByAccount(ctx context.Context, accountKey string, pageNum, pageSize int) (instances []model.Instance, total int64, err error) {

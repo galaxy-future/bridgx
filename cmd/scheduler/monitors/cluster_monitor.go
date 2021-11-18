@@ -42,11 +42,11 @@ func (m ClusterMonitor) Run() {
 }
 
 func (m ClusterMonitor) addClusterMonitorJobs(cluster *model.Cluster) {
-	instanceCountJob := &InstanceCountWatchJob{
-		ClusterName: cluster.ClusterName,
-		VersionNo:   atomic.NewString(""),
-	}
-	crond.AddFixedIntervalSecondsXJob(constants.DefaultInstanceCountWatcherInterval, instanceCountJob)
+	//instanceCountJob := &InstanceCountWatchJob{
+	//	ClusterName: cluster.ClusterName,
+	//	VersionNo:   atomic.NewString(""),
+	//}
+	//crond.AddFixedIntervalSecondsXJob(constants.DefaultInstanceCountWatcherInterval, instanceCountJob)
 
 	cleanerJob := &InstanceCleaner{
 		clusterName: cluster.ClusterName,
@@ -56,11 +56,11 @@ func (m ClusterMonitor) addClusterMonitorJobs(cluster *model.Cluster) {
 }
 
 func (m ClusterMonitor) removeClusterMonitorJobs(cluster *model.Cluster) {
-	instanceCountJob := &InstanceCountWatchJob{
-		ClusterName: cluster.ClusterName,
-		VersionNo:   atomic.NewString(""),
-	}
-	crond.RemoveXJob(instanceCountJob.UniqueKey())
+	//instanceCountJob := &InstanceCountWatchJob{
+	//	ClusterName: cluster.ClusterName,
+	//	VersionNo:   atomic.NewString(""),
+	//}
+	//crond.RemoveXJob(instanceCountJob.UniqueKey())
 
 	cleanerJob := &InstanceCleaner{
 		clusterName: cluster.ClusterName,
