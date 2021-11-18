@@ -101,7 +101,7 @@ func GetInstanceUsageTotal(ctx *gin.Context) {
 	}
 	clusterName := ctx.Query("cluster_name")
 	dateStr := ctx.Query("date")
-	date, err := time.Parse("2006-01-02", dateStr)
+	date, err := time.ParseInLocation("2006-01-02", dateStr, time.Local)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
 		return
