@@ -45,6 +45,7 @@ type Config struct {
 	DebugMode         bool           `yaml:"DebugMode"`
 	NeedPublishConfig bool           `yaml:"NeedPublishConfig"`
 	ServerPort        int            `yaml:"ServerPort"`
+	CostCfg           CostConfig     `yaml:"CostConfig"`
 	WriteDB           DBConfig       `yaml:"WriteDB"`
 	ReadDB            DBConfig       `yaml:"ReadDB"`
 	EtcdConfig        *EtcdConfig    `yaml:"EtcdConfig"`
@@ -74,4 +75,9 @@ type DBConfig struct {
 type EtcdConfig struct {
 	Endpoints   []string      `yaml:"Endpoints"`
 	DailTimeout time.Duration `yaml:"DailTimeout"`
+}
+
+type CostConfig struct {
+	QueryOrderIntvalSec    int `yaml:"QueryOrderIntvalSec"`
+	QueryAliyunOrderPerMin int `yaml:"QueryAliyunOrderPerMin"`
 }

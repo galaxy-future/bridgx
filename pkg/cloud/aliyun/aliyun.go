@@ -1,14 +1,19 @@
 package aliyun
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/bssopenapi"
+	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/pkg/utils"
+	"github.com/spf13/cast"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
 	ecsClient "github.com/alibabacloud-go/ecs-20140526/v2/client"
@@ -30,6 +35,7 @@ type Aliyun struct {
 	client    *ecs.Client
 	vpcClient *vpcClient.Client
 	ecsClient *ecsClient.Client
+	bssClient *bssopenapi.Client
 	lock      sync.Mutex
 }
 
@@ -109,7 +115,11 @@ func New(AK, SK, region string) (*Aliyun, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Aliyun{client: client, vpcClient: vpcClt, ecsClient: ecsClt}, err
+	bssCtl, err := bssopenapi.NewClientWithAccessKey(region, AK, SK)
+	if err != nil {
+		return nil, err
+	}
+	return &Aliyun{client: client, vpcClient: vpcClt, ecsClient: ecsClt, bssClient: bssCtl}, err
 }
 
 // BatchCreate the maximum of 'num' is 100
@@ -688,4 +698,78 @@ func (p *Aliyun) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (cloud.
 		logs.Logger.Errorf("DescribeGroupRules failed,error: %v groupId:%s", err, req.SecurityGroupId)
 	}
 	return cloud.DescribeGroupRulesResponse{Rules: rules}, nil
+}
+
+var ChargeType = map[string]string{
+	PostPaid:   constants.PostPaid,
+	PayAsYouGo: constants.PayAsYouGo,
+}
+var PayStatus = map[string]int8{
+	Paid:      constants.Paid,
+	Unpaid:    constants.Unpaid,
+	Cancelled: constants.Cancelled,
+}
+
+func (p *Aliyun) GetOrders(req cloud.GetOrdersRequest) (cloud.GetOrdersResponse, error) {
+	request := bssopenapi.CreateQueryOrdersRequest()
+	request.Scheme = "https"
+	request.CreateTimeStart = req.StartTime.Format("2006-01-02T15:04:05Z")
+	request.CreateTimeEnd = req.EndTime.Format("2006-01-02T15:04:05Z")
+	request.PageNum = requests.NewInteger(req.PageNum)
+	request.PageSize = requests.NewInteger(req.PageSize)
+	response, err := p.bssClient.QueryOrders(request)
+	if err != nil {
+		return cloud.GetOrdersResponse{}, err
+	}
+	if !response.Success {
+		return cloud.GetOrdersResponse{}, errors.New(response.Message)
+	}
+	if len(response.Data.OrderList.Order) == 0 {
+		return cloud.GetOrdersResponse{}, nil
+	}
+
+	orders := make([]cloud.Order, 0)
+	detailReq := bssopenapi.CreateGetOrderDetailRequest()
+	detailReq.Scheme = "https"
+	for _, row := range response.Data.OrderList.Order {
+		detailReq.OrderId = row.OrderId
+		detailRsp, err := p.bssClient.GetOrderDetail(detailReq)
+		if err != nil {
+			return cloud.GetOrdersResponse{}, err
+		}
+		if !detailRsp.Success {
+			return cloud.GetOrdersResponse{}, errors.New(detailRsp.Message)
+		}
+		if len(detailRsp.Data.OrderList.Order) == 0 {
+			continue
+		}
+
+		for _, subOrder := range detailRsp.Data.OrderList.Order {
+			orderTime, _ := time.Parse("2006-01-02T15:04:05Z", subOrder.CreateTime)
+			usageStartTime, _ := time.Parse("2006-01-02T15:04:05Z", subOrder.UsageStartTime)
+			usageEndTime, _ := time.Parse("2006-01-02T15:04:05Z", subOrder.UsageEndTime)
+			if subOrder.SubscriptionType == PayAsYouGo && usageEndTime.Sub(usageStartTime).Hours() > 24*365*20 {
+				usageEndTime, _ = time.Parse("2006-01-02 15:04:05", "2038-01-01 00:00:00")
+			}
+			extendMap := map[string]interface{}{
+				"main_order_id": subOrder.OrderId,
+				"order_type":    subOrder.OrderType,
+			}
+			orders = append(orders, cloud.Order{
+				OrderId:        subOrder.SubOrderId,
+				OrderTime:      orderTime,
+				Product:        subOrder.ProductCode,
+				Quantity:       cast.ToInt32(subOrder.Quantity),
+				UsageStartTime: usageStartTime,
+				UsageEndTime:   usageEndTime,
+				RegionId:       subOrder.Region,
+				ChargeType:     ChargeType[subOrder.SubscriptionType],
+				PayStatus:      PayStatus[subOrder.PaymentStatus],
+				Currency:       subOrder.PaymentCurrency,
+				Cost:           cast.ToFloat32(subOrder.PretaxAmount),
+				Extend:         extendMap,
+			})
+		}
+	}
+	return cloud.GetOrdersResponse{Orders: orders}, nil
 }

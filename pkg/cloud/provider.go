@@ -39,6 +39,7 @@ type Provider interface {
 	DescribeVpcs(req DescribeVpcsRequest) (DescribeVpcsResponse, error)
 	DescribeSwitches(req DescribeSwitchesRequest) (DescribeSwitchesResponse, error)
 	DescribeGroupRules(req DescribeGroupRulesRequest) (DescribeGroupRulesResponse, error)
+	GetOrders(req GetOrdersRequest) (GetOrdersResponse, error)
 }
 type ProviderDriverFunc func(keyId ...string) (Provider, error)
 

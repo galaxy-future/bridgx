@@ -1,0 +1,64 @@
+package service
+
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/pkg/cloud"
+)
+
+func QueryOrders(accName, provider, ak, regionId string, startTime, endTime time.Time) error {
+	cloudCli, err := getProvider(provider, ak, regionId)
+	if err != nil {
+		return err
+	}
+
+	pageNum := 1
+	pageSize := 100
+	for {
+		res, err := cloudCli.GetOrders(cloud.GetOrdersRequest{StartTime: startTime, EndTime: endTime, PageNum: pageNum, PageSize: pageSize})
+		if err != nil {
+			return err
+		}
+
+		err = SaveOrders(accName, provider, res.Orders)
+		if err != nil {
+			return err
+		}
+
+		if len(res.Orders) < pageSize {
+			break
+		}
+		pageNum += 1
+	}
+	return nil
+}
+
+func SaveOrders(accName, provider string, cloudOrder []cloud.Order) error {
+	if len(cloudOrder) == 0 {
+		return nil
+	}
+
+	orders := make([]model.Order, 0)
+	for _, row := range cloudOrder {
+		extend, _ := json.Marshal(row.Extend)
+		orders = append(orders, model.Order{
+			AccountName:    accName,
+			OrderId:        row.OrderId,
+			OrderTime:      row.OrderTime,
+			Product:        row.Product,
+			Quantity:       row.Quantity,
+			UsageStartTime: row.UsageStartTime,
+			UsageEndTime:   row.UsageEndTime,
+			Provider:       provider,
+			RegionId:       row.RegionId,
+			ChargeType:     row.ChargeType,
+			PayStatus:      row.PayStatus,
+			Currency:       row.Currency,
+			Cost:           row.Cost,
+			Extend:         string(extend[:]),
+		})
+	}
+	return model.BatchCreate(orders)
+}

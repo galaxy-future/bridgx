@@ -1,5 +1,9 @@
 package cloud
 
+import (
+	"time"
+)
+
 const (
 	Pending     = "Pending"
 	TaskId      = "TaskId"
@@ -267,4 +271,30 @@ type DescribeGroupRulesRequest struct {
 
 type DescribeGroupRulesResponse struct {
 	Rules []SecurityGroupRule
+}
+
+type GetOrdersRequest struct {
+	StartTime time.Time
+	EndTime   time.Time
+	PageNum   int
+	PageSize  int
+}
+
+type GetOrdersResponse struct {
+	Orders []Order
+}
+
+type Order struct {
+	OrderId        string
+	OrderTime      time.Time
+	Product        string
+	Quantity       int32
+	UsageStartTime time.Time
+	UsageEndTime   time.Time
+	RegionId       string
+	ChargeType     string
+	PayStatus      int8
+	Currency       string
+	Cost           float32
+	Extend         map[string]interface{}
 }

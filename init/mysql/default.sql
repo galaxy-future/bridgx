@@ -297,6 +297,33 @@ CREATE TABLE `user`
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+drop table if exists `order_202101`;
+create table `order_202101`
+(
+    `id` bigint(20) not null auto_increment,
+    `account_name` varchar(64) collate utf8mb4_bin not null default '',
+    `order_id` varchar(32) collate utf8mb4_bin not null,
+    `order_time` timestamp not null,
+    `product` varchar(32) collate utf8mb4_bin not null comment'esc',
+    `quantity` int not null default '1',
+    `usage_start_time` timestamp not null DEFAULT current_timestamp,
+    `usage_end_time` timestamp not null DEFAULT current_timestamp,
+    `provider` varchar(64) collate utf8mb4_bin not null default 'aliyun',
+    `region_id` varchar(64) collate utf8mb4_bin not null default '',
+    `charge_type` varchar(32) collate utf8mb4_bin not null default 'PostPaid',
+    `pay_status` tinyint not null default '1' comment'1:已支付，2：未支付，3：取消',
+    `currency` varchar(8) collate utf8mb4_bin not null default 'CNY',
+    `cost` float not null default '0',
+    `extend` varchar(4096) collate utf8mb4_bin not null default '{"main_order_id":"","order_type":"new"}' comment'拓展字段，json格式',
+    `create_at` timestamp not null DEFAULT current_timestamp,
+    `update_at` timestamp not null DEFAULT current_timestamp on update current_timestamp,
+    primary key(`id`),
+    unique key uniq_account_order_id(`account_name`,`order_id`),
+    index idx_account_order_time(`account_name`,`order_time`),
+    index idx_cost(`cost`),
+    index idx_update_at(`update_at`)
+)engine=innodb default charset=utf8mb4 collate=utf8mb4_bin;
+
 -- init super admin info
 INSERT INTO `user`
 VALUES (1, 'root', '87d9bb400c0634691f0e3baaf1e2fd0d', -1, 'enable', 1, '2021-11-09 12:29:44', '',

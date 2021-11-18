@@ -21,6 +21,10 @@ var schedulers = []*types.Scheduler{
 		Interval: constants.DefaultKillExpireRunningTaskInterval,
 		Monitor:  &monitors.TaskKiller{},
 	},
+	{
+		Interval: constants.DefaultQueryOrderInterval,
+		Monitor:  &monitors.QueryOrderJobs{},
+	},
 }
 
 func Run() {

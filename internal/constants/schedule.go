@@ -11,7 +11,7 @@ const DefaultTFailedTaskInterval = 15
 const DefaultInstanceCountWatcherInterval = 10
 const DefaultKillExpireRunningTaskInterval = 10
 const DefaultInstanceCleanerRunningInterval = 600
-
+const DefaultQueryOrderInterval = 300
 const DefaultTaskMaxRunningDuration = 20 * time.Minute
 
 //DefaultCleanMaxRunningTTL 默认清理任务最大执行时间（秒）
