@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/galaxy-future/BridgX/internal/logs"
+	"github.com/galaxy-future/BridgX/pkg/utils"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
 	ecsClient "github.com/alibabacloud-go/ecs-20140526/v2/client"
@@ -111,7 +112,7 @@ func New(AK, SK, region string) (*Aliyun, error) {
 	return &Aliyun{client: client, vpcClient: vpcClt, ecsClient: ecsClt}, err
 }
 
-// BatchCreate the Maximum of 'num' is 100
+// BatchCreate the maximum of 'num' is 100
 func (p *Aliyun) BatchCreate(m cloud.Params, num int) (instanceIds []string, err error) {
 	request := ecs.CreateRunInstancesRequest()
 	request.Scheme = "https"
@@ -151,7 +152,7 @@ func (p *Aliyun) BatchCreate(m cloud.Params, num int) (instanceIds []string, err
 }
 
 func (p *Aliyun) GetInstances(ids []string) (instances []cloud.Instance, err error) {
-	batchIds := splitArr(ids, 50)
+	batchIds := utils.StringSliceSplit(ids, 50)
 	cloudInstance := make([]ecs.Instance, 0)
 	for _, onceIds := range batchIds {
 		request := ecs.CreateDescribeInstancesRequest()
@@ -168,40 +169,18 @@ func (p *Aliyun) GetInstances(ids []string) (instances []cloud.Instance, err err
 	return
 }
 
-func splitArr(arr []string, limit int) (splitArr [][]string) {
-	max := len(arr)
-	if max < limit {
-		return [][]string{arr}
-	}
-	var quantity int
-	if max%limit == 0 {
-		quantity = max / limit
-	} else {
-		quantity = (max / limit) + 1
-	}
-	var segments = make([][]string, 0)
-	var start, end, i int
-	for i = 1; i <= quantity; i++ {
-		end = i * limit
-		if i != quantity {
-			segments = append(segments, arr[start:end])
-		} else {
-			segments = append(segments, arr[start:])
-		}
-		start = i * limit
-	}
-	return segments
-}
-
-func (p *Aliyun) BatchDelete(ids []string, regionId string) error {
+func (p *Aliyun) BatchDelete(ids []string, regionId string) (err error) {
 	request := ecs.CreateDeleteInstancesRequest()
 	request.Scheme = "https"
 	request.RegionId = regionId
-	request.InstanceId = &ids
 	request.Force = requests.NewBoolean(true)
-
-	response, err := p.client.DeleteInstances(request)
-	fmt.Println(response.RequestId)
+	batchIds := utils.StringSliceSplit(ids, 50)
+	var response *ecs.DeleteInstancesResponse
+	for _, onceIds := range batchIds {
+		request.InstanceId = &onceIds
+		response, err = p.client.DeleteInstances(request)
+		logs.Logger.Infof("[BatchDelete] requestId: %s", response.RequestId)
+	}
 	return err
 }
 
@@ -212,7 +191,7 @@ func (p *Aliyun) StartInstance(id string) error {
 	request.InstanceId = id
 
 	response, err := p.client.StartInstance(request)
-	fmt.Println(response.RequestId)
+	logs.Logger.Infof("[StartInstance] requestId: %s", response.RequestId)
 	return err
 }
 
@@ -222,7 +201,7 @@ func (p *Aliyun) StopInstance(id string) error {
 	request.InstanceId = id
 
 	response, err := p.client.StopInstance(request)
-	fmt.Println(response.RequestId)
+	logs.Logger.Infof("[StopInstance] requestId: %s", response.RequestId)
 	return err
 }
 
