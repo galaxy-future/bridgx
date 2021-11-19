@@ -42,7 +42,7 @@ services:
       dockerfile: ./API.Dockerfile
     #    ports:
     #      - "9090:9090"
-    command: [ "bin/wait-for-it.sh", "127.0.0.1:3306", "--", "/bin/sh","/home/tiger/app/run_api.sh" ]
+    command: [ "bin/wait-for-app.sh" ]
     depends_on:
       - mysql
       - etcd
@@ -53,7 +53,8 @@ services:
     build:
       context: .
       dockerfile: ./SCHEDULER.Dockerfile
-    command: [ "bin/wait-for-it.sh", "127.0.0.1:3306", "--", "/bin/sh","/home/tiger/run_scheduler.sh" ]
+    #    command: [ "bin/wait-for-it.sh", "127.0.0.1:3306", "--", "/bin/sh","/home/tiger/run_scheduler.sh" ]
+    command: [ "bin/wait-for-scheduler.sh" ]
     depends_on:
       - mysql
       - etcd
