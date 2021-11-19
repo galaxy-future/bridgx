@@ -18,8 +18,6 @@ services:
     #      - 3306:3306
     volumes:
       - ./init/mysql:/docker-entrypoint-initdb.d/
-    #    networks:
-    #      - bridgx_net
     restart: always
 
   #######################  etcd  ########################
@@ -44,6 +42,7 @@ services:
       dockerfile: ./API.Dockerfile
     #    ports:
     #      - "9090:9090"
+    command: [ "bin/wait-for-it.sh", "mysql:3306", "--", "/bin/sh","/home/tiger/app/run_api.sh" ]
     depends_on:
       - mysql
       - etcd
@@ -54,6 +53,7 @@ services:
     build:
       context: .
       dockerfile: ./SCHEDULER.Dockerfile
+    command: [ "bin/wait-for-it.sh", "mysql:3306", "--", "/bin/sh","/home/tiger/app/run_scheduler.sh" ]
     depends_on:
       - mysql
       - etcd

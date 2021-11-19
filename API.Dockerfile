@@ -28,6 +28,9 @@ COPY go.sum go.sum
 
 RUN mkdir -p output/conf output/bin
 
+# detect mysql start
+COPY wait-for-it.sh output/bin/wait-for-it.sh
+
 RUN find conf/ -type f ! -name "*_local.*" | xargs -I{} cp {} output/conf/
 RUN cp scripts/run_api.sh output/
 
@@ -44,6 +47,7 @@ RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repo
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 ENV TZ Asia/Shanghai
+
 ENV ServiceName=gf.bridgx.api
 ENV SpecifiedConfig=prod
 
@@ -54,4 +58,4 @@ RUN chown -R tiger:tiger /home/tiger && chmod +x run_api.sh
 
 USER tiger
 EXPOSE 9090
-CMD ["/bin/sh","/home/tiger/app/run_api.sh"]
+#CMD ["/bin/sh","/home/tiger/app/run_api.sh"]
