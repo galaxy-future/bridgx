@@ -54,7 +54,7 @@ ENV SpecifiedConfig=prod
 COPY --from=builder /home/app /home/tiger/app
 RUN addgroup -S tiger && adduser -S tiger -G tiger
 WORKDIR /home/tiger/app
-RUN chown -R tiger:tiger /home/tiger && chmod +x run_api.sh
+RUN chown -R tiger:tiger /home/tiger && chmod +x run_api.sh && chmod +x wait-for-it.sh
 
 USER tiger
 EXPOSE 9090
