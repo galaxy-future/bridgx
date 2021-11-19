@@ -10,3 +10,5 @@ const (
 	Unpaid    = "Unpaid"
 	Cancelled = "Cancelled"
 )
+
+const SubOrderNumPerMain = 3

@@ -724,11 +724,12 @@ func (p *Aliyun) GetOrders(req cloud.GetOrdersRequest) (cloud.GetOrdersResponse,
 	if !response.Success {
 		return cloud.GetOrdersResponse{}, errors.New(response.Message)
 	}
-	if len(response.Data.OrderList.Order) == 0 {
+	orderNum := len(response.Data.OrderList.Order)
+	if orderNum == 0 {
 		return cloud.GetOrdersResponse{}, nil
 	}
 
-	orders := make([]cloud.Order, 0)
+	orders := make([]cloud.Order, 0, orderNum*SubOrderNumPerMain)
 	detailReq := bssopenapi.CreateGetOrderDetailRequest()
 	detailReq.Scheme = "https"
 	for _, row := range response.Data.OrderList.Order {
@@ -751,10 +752,7 @@ func (p *Aliyun) GetOrders(req cloud.GetOrdersRequest) (cloud.GetOrdersResponse,
 			if subOrder.SubscriptionType == PayAsYouGo && usageEndTime.Sub(usageStartTime).Hours() > 24*365*20 {
 				usageEndTime, _ = time.Parse("2006-01-02 15:04:05", "2038-01-01 00:00:00")
 			}
-			extendMap := map[string]interface{}{
-				"main_order_id": subOrder.OrderId,
-				"order_type":    subOrder.OrderType,
-			}
+
 			orders = append(orders, cloud.Order{
 				OrderId:        subOrder.SubOrderId,
 				OrderTime:      orderTime,
@@ -765,9 +763,12 @@ func (p *Aliyun) GetOrders(req cloud.GetOrdersRequest) (cloud.GetOrdersResponse,
 				RegionId:       subOrder.Region,
 				ChargeType:     ChargeType[subOrder.SubscriptionType],
 				PayStatus:      PayStatus[subOrder.PaymentStatus],
-				Currency:       subOrder.PaymentCurrency,
+				Currency:       subOrder.Currency,
 				Cost:           cast.ToFloat32(subOrder.PretaxAmount),
-				Extend:         extendMap,
+				Extend: map[string]interface{}{
+					"main_order_id": subOrder.OrderId,
+					"order_type":    subOrder.OrderType,
+				},
 			})
 		}
 	}

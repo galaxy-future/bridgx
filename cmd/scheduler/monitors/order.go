@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/bcc"
-
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
@@ -17,8 +16,7 @@ type QueryOrderJobs struct {
 
 func (p *QueryOrderJobs) Run() {
 	accounts := make([]model.Account, 0)
-	err := model.QueryAll(map[string]interface{}{}, &accounts, "")
-	if err != nil {
+	if err := model.QueryAll(map[string]interface{}{}, &accounts, ""); err != nil {
 		logs.Logger.Error("query account,", err)
 		return
 	}
@@ -39,8 +37,8 @@ func (p *QueryOrderJobs) Run() {
 			return
 		}
 		for _, region := range regions {
-			err = service.QueryOrders(row.AccountName, row.Provider, row.AccountKey, region.RegionId, startTime, endTime)
-			if err != nil {
+			if err = service.QueryOrders(row.AccountName, row.Provider, row.AccountKey, region.RegionId,
+				startTime, endTime); err != nil {
 				logs.Logger.Error("queryOrders,", err)
 				return
 			}

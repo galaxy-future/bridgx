@@ -1,11 +1,12 @@
 package tests
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
-	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/bssopenapi"
+	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/cloud/aliyun"
 )
 
@@ -20,7 +21,7 @@ func TestGetAliyunClient(t *testing.T) {
 }
 
 func TestQueryOrders(t *testing.T) {
-	client, err := bssopenapi.NewClientWithAccessKey("cn-beijing", "a", "b")
+	cloudCli, err := aliyun.New("a", "b", "cn-beijing")
 	if err != nil {
 		t.Log(err.Error())
 		return
@@ -31,64 +32,31 @@ func TestQueryOrders(t *testing.T) {
 	startTime := endTime.Add(duration)
 	pageNum := 1
 	pageSize := 100
-	request := bssopenapi.CreateQueryOrdersRequest()
-	request.Scheme = "https"
-	request.CreateTimeStart = startTime.Format("2006-01-02T15:04:05Z")
-	request.CreateTimeEnd = endTime.Format("2006-01-02T15:04:05Z")
-	request.PageSize = requests.NewInteger(pageSize)
-	detailReq := bssopenapi.CreateGetOrderDetailRequest()
-	detailReq.Scheme = "https"
 	for {
-		request.PageNum = requests.NewInteger(pageNum)
-		response, err := client.QueryOrders(request)
+		res, err := cloudCli.GetOrders(cloud.GetOrdersRequest{StartTime: startTime, EndTime: endTime,
+			PageNum: pageNum, PageSize: pageSize})
 		if err != nil {
 			t.Log(err.Error())
 			return
 		}
-		if !response.Success {
-			t.Log(response.Message)
-			return
-		}
-		pageNum = response.Data.PageNum + 1
-		if len(response.Data.OrderList.Order) == 0 {
-			break
-		}
+
 		cnt := 0
-		for _, row := range response.Data.OrderList.Order {
-			if row.PretaxAmount == "0" {
-				//continue
-			}
-
-			t.Log("main", row)
-
-			detailReq.OrderId = row.OrderId
-			detailRsp, err := client.GetOrderDetail(detailReq)
-			if err != nil {
-				t.Log(err.Error())
-				return
-			}
-			if !detailRsp.Success {
-				t.Log(detailRsp.Message)
-				continue
-			}
-			if len(detailRsp.Data.OrderList.Order) == 0 {
-				continue
-			}
-			for _, subOrder := range detailRsp.Data.OrderList.Order {
-				t.Log(subOrder)
-			}
-
-			cnt++
-			if cnt > 1 {
+		t.Log("len:", len(res.Orders))
+		for _, row := range res.Orders {
+			cnt += 1
+			if cnt > aliyun.SubOrderNumPerMain {
+				t.Log("---------------")
 				break
 			}
+			t.Log(row)
 		}
 
-		if response.Data.PageNum*response.Data.PageSize >= response.Data.TotalCount {
+		if len(res.Orders) < pageSize {
 			break
 		}
+		pageNum += 1
 	}
-	t.Log("end,", pageNum)
+	t.Log(pageNum)
 }
 
 func TestGetOrderDetail(t *testing.T) {
@@ -99,11 +67,17 @@ func TestGetOrderDetail(t *testing.T) {
 	}
 	request := bssopenapi.CreateGetOrderDetailRequest()
 	request.Scheme = "https"
-	request.OrderId = "211518876370341"
+	request.OrderId = "211577282350149"
 	response, err := client.GetOrderDetail(request)
 	if err != nil {
 		t.Log(err.Error())
 		return
 	}
-	t.Log(response.Data.OrderList)
+
+	orders, err := json.Marshal(response.Data.OrderList)
+	if err != nil {
+		t.Log(err.Error())
+		return
+	}
+	t.Log(string(orders))
 }

@@ -22,8 +22,7 @@ func QueryOrders(accName, provider, ak, regionId string, startTime, endTime time
 			return err
 		}
 
-		err = SaveOrders(accName, provider, res.Orders)
-		if err != nil {
+		if err = SaveOrders(accName, provider, res.Orders); err != nil {
 			return err
 		}
 
@@ -36,11 +35,12 @@ func QueryOrders(accName, provider, ak, regionId string, startTime, endTime time
 }
 
 func SaveOrders(accName, provider string, cloudOrder []cloud.Order) error {
-	if len(cloudOrder) == 0 {
+	orderNum := len(cloudOrder)
+	if orderNum == 0 {
 		return nil
 	}
 
-	orders := make([]model.Order, 0)
+	orders := make([]model.Order, 0, orderNum)
 	for _, row := range cloudOrder {
 		extend, _ := json.Marshal(row.Extend)
 		orders = append(orders, model.Order{
