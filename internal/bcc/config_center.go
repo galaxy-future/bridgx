@@ -10,7 +10,6 @@ var configCenter ConfigCenter
 type ConfigCenter interface {
 	GetConfig(group, dataId string) (string, error)
 	PublishConfig(group, dataId, content string) error
-	SyncRun(TTL int, key string, job func() error) error
 }
 
 func Init(config *config.Config) error {
@@ -28,8 +27,4 @@ func GetConfig(group, dataId string) (string, error) {
 
 func PublishConfig(group, dataId, content string) error {
 	return configCenter.PublishConfig(group, dataId, content)
-}
-
-func SyncRun(TTL int, key string, job func() error) error {
-	return configCenter.SyncRun(TTL, key, job)
 }

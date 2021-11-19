@@ -18,6 +18,10 @@ func main() {
 	logs.Init()
 	clients.Init()
 	crond.Init()
+	err :=Init()
+	if err != nil{
+		return
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(1)

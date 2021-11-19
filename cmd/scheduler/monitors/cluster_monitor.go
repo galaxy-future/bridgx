@@ -2,6 +2,7 @@ package monitors
 
 import (
 	"errors"
+	"github.com/galaxy-future/BridgX/internal/clients"
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/scheduler/crond"
@@ -15,6 +16,7 @@ var lastUpdateTime = time.Date(2021, 10, 1, 0, 0, 0, 0, time.UTC)
 
 //ClusterMonitor 负责发现新建立的cluster，并启动一个定时任务，已监控该集群是否有变更
 type ClusterMonitor struct {
+	LockerClient *clients.EtcdClient
 }
 
 func (m ClusterMonitor) Run() {
@@ -63,8 +65,9 @@ func (m ClusterMonitor) removeClusterMonitorJobs(cluster *model.Cluster) {
 	//crond.RemoveXJob(instanceCountJob.UniqueKey())
 
 	cleanerJob := &InstanceCleaner{
-		clusterName: cluster.ClusterName,
-		VersionNo:   atomic.NewString(""),
+		clusterName:  cluster.ClusterName,
+		VersionNo:    atomic.NewString(""),
+		LockerClient: m.LockerClient,
 	}
 	crond.RemoveXJob(cleanerJob.UniqueKey())
 }

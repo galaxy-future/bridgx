@@ -37,7 +37,7 @@ func NewEtcdClient(config *config.EtcdConfig) (*EtcdClient, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to ping etcd :%w", err)
 		}
-		etcdClt = &EtcdClient{etcdClient: etcdClient}
+		etcdClt = &EtcdClient{etcdClient: etcdClient, config: config}
 		return etcdClt, nil
 	}
 	return nil, errors.New("empty config")
@@ -45,11 +45,11 @@ func NewEtcdClient(config *config.EtcdConfig) (*EtcdClient, error) {
 
 func (e *EtcdClient) SyncRun(TTL int, key string, job func() error) error {
 	//if not config etcd client , just run this job
-	if e.etcdClient == nil {
+	if etcdClt.etcdClient == nil {
 		return job()
 	}
 	// lock and run this job
-	session, err := concurrency.NewSession(e.etcdClient, concurrency.WithTTL(TTL))
+	session, err := concurrency.NewSession(etcdClt.etcdClient, concurrency.WithTTL(TTL))
 	if err != nil {
 		return err
 	}
