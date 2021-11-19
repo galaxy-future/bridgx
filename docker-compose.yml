@@ -1,23 +1,25 @@
 version: '3'
 
 networks:
-  dev:
+  bridgx_net:
 
 services:
-
   #######################  mariadb  ########################
   mysql:
     container_name: mariadb-server
     image: yobasystems/alpine-mariadb:10.5.11
+    network_mode: "host"
     environment:
       MYSQL_ROOT_PASSWORD: mtQ8chN2
       MYSQL_DATABASE: bridgx
       MYSQL_USER: gf
       MYSQL_PASSWORD: db@galaxy-future.com
-    ports:
-      - 3306:3306
+    #    ports:
+    #      - 3306:3306
     volumes:
       - ./init/mysql:/docker-entrypoint-initdb.d/
+    #    networks:
+    #      - bridgx_net
     restart: always
 
   #######################  etcd  ########################
