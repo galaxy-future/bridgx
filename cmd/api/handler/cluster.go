@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -135,7 +136,11 @@ func CreateCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-	m := convertToClusterModel(&clusterInput)
+	m, err := convertToClusterModel(&clusterInput)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), err)
+		return
+	}
 	m.CreateBy = user.Name
 	m.UpdateBy = user.Name
 	err = service.CreateCluster(m)
@@ -175,7 +180,11 @@ func EditCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, err)
 		return
 	}
-	m := convertToClusterModel(&clusterInput)
+	m, err := convertToClusterModel(&clusterInput)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), err)
+		return
+	}
 	m.UpdateBy = user.Name
 	err = service.EditCluster(m)
 	if err != nil {
@@ -186,7 +195,13 @@ func EditCluster(ctx *gin.Context) {
 	return
 }
 
-func convertToClusterModel(clusterInput *types.ClusterInfo) *model.Cluster {
+func convertToClusterModel(clusterInput *types.ClusterInfo) (*model.Cluster, error) {
+	if clusterInput.NetworkConfig == nil {
+		return nil, errors.New("missing network config")
+	}
+	if clusterInput.StorageConfig == nil {
+		return nil, errors.New("missing storage config")
+	}
 	nc, _ := jsoniter.MarshalToString(clusterInput.NetworkConfig)
 	sc, _ := jsoniter.MarshalToString(clusterInput.StorageConfig)
 	m := model.Cluster{
@@ -204,7 +219,7 @@ func convertToClusterModel(clusterInput *types.ClusterInfo) *model.Cluster {
 		NetworkConfig: nc,
 		StorageConfig: sc,
 	}
-	return &m
+	return &m, nil
 }
 
 func AddClusterTags(ctx *gin.Context) {
