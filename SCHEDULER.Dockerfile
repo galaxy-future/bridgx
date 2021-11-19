@@ -47,6 +47,15 @@ RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repo
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 ENV TZ Asia/Shanghai
+
+RUN apk update \
+        && apk upgrade \
+        && apk add --no-cache bash \
+        bash-doc \
+        bash-completion \
+        && rm -rf /var/cache/apk/* \
+        && /bin/bash \
+    
 ENV ServiceName=gf.bridgx.scheduler
 ENV SpecifiedConfig=prod
 

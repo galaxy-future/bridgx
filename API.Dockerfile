@@ -48,6 +48,14 @@ RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repo
     echo "Asia/Shanghai" > /etc/timezone
 ENV TZ Asia/Shanghai
 
+RUN apk update \
+        && apk upgrade \
+        && apk add --no-cache bash \
+        bash-doc \
+        bash-completion \
+        && rm -rf /var/cache/apk/* \
+        && /bin/bash
+
 ENV ServiceName=gf.bridgx.api
 ENV SpecifiedConfig=prod
 
