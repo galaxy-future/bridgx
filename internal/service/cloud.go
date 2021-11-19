@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"runtime/debug"
 	"strconv"
 	"sync"
 	"time"
@@ -133,6 +134,7 @@ func Expand(clusterInfo *types.ClusterInfo, tags []cloud.Tag, num int) (instance
 			defer func() {
 				if bErr := recover(); bErr != nil {
 					logs.Logger.Errorf("[cloud.Expand] recover error. error: %v", bErr)
+					logs.Logger.Errorf("stacktrace from panic: \n" + string(debug.Stack()))
 				}
 			}()
 			batchInstanceIds := make([]string, 0)

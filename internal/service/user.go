@@ -26,7 +26,7 @@ func Login(ctx context.Context, username, password string) *model.User {
 func GetUserList(ctx context.Context, orgId int64, pageNum, pageSize int) (ret []model.User, total int64, err error) {
 	queryMap := map[string]interface{}{"org_id": orgId, "user_type": []int{constants.UserTypeCommonUser}}
 
-	total, err = model.Query(queryMap, pageNum, pageSize, &ret, "create_at DESC", true)
+	total, err = model.Query(queryMap, pageNum, pageSize, &ret, "id DESC", true)
 	if err != nil {
 		return ret, 0, err
 	}
