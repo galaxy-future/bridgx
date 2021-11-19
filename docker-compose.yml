@@ -24,6 +24,7 @@ services:
   etcd:
     container_name: etcd-server
     image: bitnami/etcd:3
+    network_mode: "host"
     restart: always
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes
@@ -35,6 +36,7 @@ services:
   #######################  bridgx 1.0  ########################
   app:
     container_name: gf-bridgx-api
+    network_mode: "host"
     build:
       context: .
       dockerfile: ./API.Dockerfile
@@ -46,6 +48,7 @@ services:
 
   scheduler:
     container_name: gf-bridgx-scheduler
+    network_mode: "host"
     build:
       context: .
       dockerfile: ./SCHEDULER.Dockerfile
