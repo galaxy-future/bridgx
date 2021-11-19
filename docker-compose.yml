@@ -34,7 +34,7 @@ services:
   #      - 2380:2380
 
   #######################  bridgx 1.0  ########################
-  app:
+  api:
     container_name: gf-bridgx-api
     network_mode: "host"
     build:
@@ -42,7 +42,7 @@ services:
       dockerfile: ./API.Dockerfile
     #    ports:
     #      - "9090:9090"
-    command: [ "bin/wait-for-app.sh" ]
+    command: [ "bin/wait-for-api.sh" ]
     depends_on:
       - mysql
       - etcd

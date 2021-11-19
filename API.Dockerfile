@@ -7,10 +7,10 @@ RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repo
     git
 
 RUN mkdir -p /home/build && \
-    mkdir -p /home/app
+    mkdir -p /home/api
 
 ARG build_dir=/home/build
-ARG app_dir=/home/app
+ARG api_dir=/home/api
 
 ENV ServiceName=gf.bridgx.api
 
@@ -29,36 +29,36 @@ COPY go.sum go.sum
 RUN mkdir -p output/conf output/bin
 
 # detect mysql start
-COPY wait-for-app.sh output/bin/wait-for-app.sh
+COPY wait-for-api.sh output/bin/wait-for-api.sh
 
 RUN find conf/ -type f ! -name "*_local.*" | xargs -I{} cp {} output/conf/
 RUN cp scripts/run_api.sh output/
 
 RUN CGO_ENABLED=0 GO111MODULE=on go build -o output/bin/${ServiceName} ./cmd/api
 
-RUN cp -rf output/* $app_dir
+RUN cp -rf output/* $api_dir
 
 # --------------------------------------------------------------------------------- #
 # Executable image
 FROM alpine:3.14
 
-RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repositories && \
-    apk --no-cache add tzdata && \
+RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repositories
+
+RUN apk --no-cache add tzdata && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 ENV TZ Asia/Shanghai
 
-RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repositories && \
-        apk add --no-cache bash
+RUN apk add --no-cache bash
 
 ENV ServiceName=gf.bridgx.api
 ENV SpecifiedConfig=prod
 
-COPY --from=builder /home/app /home/tiger/app
+COPY --from=builder /home/api /home/tiger/api
 RUN addgroup -S tiger && adduser -S tiger -G tiger
-WORKDIR /home/tiger/app
-RUN chown -R tiger:tiger /home/tiger && chmod +x run_api.sh && chmod +x bin/wait-for-app.sh
+WORKDIR /home/tiger/api
+RUN chown -R tiger:tiger /home/tiger && chmod +x run_api.sh && chmod +x bin/wait-for-api.sh
 
 USER tiger
 EXPOSE 9090
-CMD ["/bin/sh","/home/tiger/app/run_api.sh"]
+CMD ["/bin/sh","/home/tiger/api/run_api.sh"]

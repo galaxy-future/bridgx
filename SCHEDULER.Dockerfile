@@ -42,14 +42,14 @@ RUN cp -rf output/* $scheduler_dir
 # Executable image
 FROM alpine:3.14
 
-RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repositories && \
-    apk --no-cache add tzdata && \
+RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repositories
+
+RUN apk --no-cache add tzdata && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 ENV TZ Asia/Shanghai
 
-RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repositories && \
-        apk add --no-cache bash
+RUN apk add --no-cache bash
 
 ENV ServiceName=gf.bridgx.scheduler
 ENV SpecifiedConfig=prod
