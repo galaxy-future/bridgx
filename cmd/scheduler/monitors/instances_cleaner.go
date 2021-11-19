@@ -3,6 +3,7 @@ package monitors
 import (
 	"fmt"
 
+	"github.com/galaxy-future/BridgX/internal/bcc"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -20,7 +21,7 @@ type InstanceCleaner struct {
 
 func (cleaner *InstanceCleaner) Run() {
 	recycleCount := 0
-	err := clients.SyncRun(constants.DefaultCleanMaxRunningTTL, constants.GetClusterScheduleLockKey(cleaner.clusterName), func() error {
+	err := bcc.SyncRun(constants.DefaultCleanMaxRunningTTL, constants.GetClusterScheduleLockKey(cleaner.clusterName), func() error {
 		cluster, err := model.GetByClusterName(cleaner.clusterName)
 		if err != nil {
 			return err

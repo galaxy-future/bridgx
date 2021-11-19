@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/galaxy-future/BridgX/internal/bcc"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -27,7 +28,7 @@ func (m TaskMonitor) Run() {
 
 	for _, task := range tasks {
 		//err := tryRunTask(task)
-		err := clients.SyncRun(constants.DefaultTaskMonitorInterval, constants.TaskMonitorETCDLockKeyPrefix+strconv.FormatInt(task.Id, 10), func() error {
+		err := bcc.SyncRun(constants.DefaultTaskMonitorInterval, constants.TaskMonitorETCDLockKeyPrefix+strconv.FormatInt(task.Id, 10), func() error {
 			return scheduleTask(task)
 		})
 		if err != nil && err != clients.ErrReviewFailed && err != concurrency.ErrLocked {

@@ -71,7 +71,7 @@ func getQueryTimeRange() (time.Time, time.Time, error) {
 
 func updateQueryStartTime(startTime time.Time) {
 	startTimeStr := startTime.Format("2006-01-02 15:04:05")
-	_, err := bcc.PublishConfig(constants.CostConfigGroup, constants.QueryOrderStartTime, startTimeStr)
+	err := bcc.PublishConfig(constants.CostConfigGroup, constants.QueryOrderStartTime, startTimeStr)
 	if err != nil {
 		logs.Logger.Error(err)
 		return

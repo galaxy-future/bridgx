@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/galaxy-future/BridgX/internal/clients"
+	"github.com/galaxy-future/BridgX/internal/bcc"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
@@ -25,7 +25,7 @@ type InstanceCountWatchJob struct {
 
 func (m *InstanceCountWatchJob) Run() {
 	syncKey := constants.GetClusterScheduleLockKey(m.ClusterName)
-	err := clients.SyncRun(constants.DefaultInstanceCountWatcherInterval, syncKey, func() error {
+	err := bcc.SyncRun(constants.DefaultInstanceCountWatcherInterval, syncKey, func() error {
 		return scheduleJob(m.ClusterName)
 	})
 	if err != nil && err != concurrency.ErrLocked {

@@ -1,9 +1,35 @@
 package bcc
 
-func GetConfig(group, dataId string) (string, error) {
-	return "", nil
+import (
+	"github.com/galaxy-future/BridgX/config"
+	"github.com/galaxy-future/BridgX/internal/clients"
+)
+
+var configCenter ConfigCenter
+
+type ConfigCenter interface {
+	GetConfig(group, dataId string) (string, error)
+	PublishConfig(group, dataId, content string) error
+	SyncRun(TTL int, key string, job func() error) error
 }
 
-func PublishConfig(group, dataId, content string) (bool, error) {
-	return false, nil
+func Init(config *config.Config) error {
+	clt, err := clients.NewEtcdClient(config.EtcdConfig)
+	if err != nil {
+		return err
+	}
+	configCenter = clt
+	return nil
+}
+
+func GetConfig(group, dataId string) (string, error) {
+	return configCenter.GetConfig(group, dataId)
+}
+
+func PublishConfig(group, dataId, content string) error {
+	return configCenter.PublishConfig(group, dataId, content)
+}
+
+func SyncRun(TTL int, key string, job func() error) error {
+	return configCenter.SyncRun(TTL, key, job)
 }

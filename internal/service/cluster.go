@@ -415,7 +415,7 @@ func publishExpandIPConfig(clusterName string, expandIPs []string) error {
 	if existingIPs != "" && existingIPs != constants.HasNoneIP {
 		totalIps = append(totalIps, strings.Split(existingIPs, ",")...)
 	}
-	_, err := bcc.PublishConfig(clusterName, constants.WorkingIPs, strings.Join(totalIps, ","))
+	err := bcc.PublishConfig(clusterName, constants.WorkingIPs, strings.Join(totalIps, ","))
 	return err
 }
 
@@ -425,11 +425,7 @@ func publishExpandInstanceConfig(clusterName string, expandInstanceIds []string)
 	if instanceIdsStr != "" && instanceIdsStr != constants.HasNoneInstance {
 		totalInstanceIds = append(totalInstanceIds, strings.Split(instanceIdsStr, ",")...)
 	}
-	result, err := bcc.PublishConfig(clusterName, constants.Instances, strings.Join(totalInstanceIds, ","))
-	if !result {
-		return err
-	}
-	return nil
+	return bcc.PublishConfig(clusterName, constants.Instances, strings.Join(totalInstanceIds, ","))
 }
 
 func publishShrinkConfig(clusterName string) error {
@@ -458,12 +454,12 @@ func publishShrinkConfig(clusterName string) error {
 		restIps = strings.Join(restInstanceIPs, ",")
 	}
 
-	result, err := bcc.PublishConfig(clusterName, constants.Instances, restInstancesStr)
-	if !result {
+	err = bcc.PublishConfig(clusterName, constants.Instances, restInstancesStr)
+	if err != nil {
 		logs.Logger.Errorf("[ExpandCluster] Publish instance_id_list error. cluster name: %s, error: %s", clusterName, err.Error())
 	}
-	result, err = bcc.PublishConfig(clusterName, constants.WorkingIPs, restIps)
-	if !result {
+	err = bcc.PublishConfig(clusterName, constants.WorkingIPs, restIps)
+	if err != nil {
 		logs.Logger.Errorf("[ExpandCluster] Publish ip_list error. cluster name: %s, error: %s", clusterName, err.Error())
 	}
 	return err

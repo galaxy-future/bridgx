@@ -15,12 +15,12 @@ func TestSyncRunWithNilConfig(t *testing.T) {
 		Endpoints:   []string{"127.0.0.1:2379"},
 		DailTimeout: time.Second * 5,
 	}
-	err := initSyncLocker(&conf)
+	clt, err := NewEtcdClient(&conf)
 	if err != nil {
 		t.Error("failed to init sync locker with nil config")
 	}
 
-	err = SyncRun(5, "test", func() error {
+	err = clt.SyncRun(5, "test", func() error {
 		time.Sleep(1 * time.Millisecond)
 		return nil
 	})
@@ -30,7 +30,7 @@ func TestSyncRunWithNilConfig(t *testing.T) {
 	}
 
 	tmpErr := fmt.Errorf("tmp errors")
-	err = SyncRun(5, "test", func() error {
+	err = clt.SyncRun(5, "test", func() error {
 		return tmpErr
 	})
 
@@ -44,13 +44,13 @@ func TestSyncRunWithEtcdConfig(t *testing.T) {
 		Endpoints:   []string{"127.0.0.1:2379"},
 		DailTimeout: time.Second * 5,
 	}
-	err := initSyncLocker(&conf)
+	clt, err := NewEtcdClient(&conf)
 	if err != nil {
 		t.Error("failed to init sync locker with nil config")
 	}
 
 	count := 0
-	err = SyncRun(5, "test", func() error {
+	err = clt.SyncRun(5, "test", func() error {
 		count++
 		return nil
 	})
@@ -62,7 +62,7 @@ func TestSyncRunWithEtcdConfig(t *testing.T) {
 	}
 
 	tmpErr := fmt.Errorf("tmp errors")
-	err = SyncRun(5, "test", func() error {
+	err = clt.SyncRun(5, "test", func() error {
 		return tmpErr
 	})
 	if err != tmpErr {
@@ -80,7 +80,7 @@ func TestSyncRunWithEtcdConfig(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err1 = SyncRun(5, "test", func() error {
+			err1 = clt.SyncRun(5, "test", func() error {
 				time.Sleep(100 * time.Millisecond)
 				count++
 				return nil
@@ -90,7 +90,7 @@ func TestSyncRunWithEtcdConfig(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err2 = SyncRun(5, "test", func() error {
+			err2 = clt.SyncRun(5, "test", func() error {
 				time.Sleep(100 * time.Millisecond)
 				count++
 				return nil
@@ -113,7 +113,7 @@ func TestSyncRunWithEtcdConfig(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err1 = SyncRun(1, "test", func() error {
+			err1 = clt.SyncRun(1, "test", func() error {
 				time.Sleep(100 * time.Millisecond)
 				count++
 				return nil
@@ -124,7 +124,7 @@ func TestSyncRunWithEtcdConfig(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			time.Sleep(200 * time.Millisecond)
-			err2 = SyncRun(1, "test", func() error {
+			err2 = clt.SyncRun(1, "test", func() error {
 				count++
 				return nil
 			})
@@ -146,7 +146,7 @@ func TestSyncRunWithEtcdConfig(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err1 = SyncRun(1, "test1", func() error {
+			err1 = clt.SyncRun(1, "test1", func() error {
 				time.Sleep(100 * time.Millisecond)
 				count++
 				return nil
@@ -157,7 +157,7 @@ func TestSyncRunWithEtcdConfig(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			time.Sleep(50 * time.Millisecond)
-			err2 = SyncRun(1, "test111", func() error {
+			err2 = clt.SyncRun(1, "test111", func() error {
 				count++
 				return nil
 			})

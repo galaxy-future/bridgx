@@ -8,7 +8,7 @@ import (
 func Init() {
 	InitDBClients()
 	if config.GlobalConfig.EtcdConfig != nil {
-		err := initSyncLocker(config.GlobalConfig.EtcdConfig)
+		_, err := NewEtcdClient(config.GlobalConfig.EtcdConfig)
 		if err != nil {
 			panic(err)
 		}

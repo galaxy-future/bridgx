@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/galaxy-future/BridgX/config"
@@ -11,40 +12,44 @@ import (
 	"go.etcd.io/etcd/client/v3/concurrency"
 )
 
-var syncLocker *SyncLocker
 var ErrReviewFailed = errors.New("review key already exists")
+var etcdClt *EtcdClient
 
-type SyncLocker struct {
+type EtcdClient struct {
 	etcdClient *clientv3.Client
+	config     *config.EtcdConfig
 }
 
-func initSyncLocker(config *config.EtcdConfig) error {
-	syncLocker = &SyncLocker{}
+func NewEtcdClient(config *config.EtcdConfig) (*EtcdClient, error) {
+	if etcdClt != nil && equalEtcdConfig(config, etcdClt.config) {
+		return etcdClt, nil
+	}
 	if config != nil {
 		etcdClient, err := clientv3.New(clientv3.Config{
 			Endpoints:   config.Endpoints,
 			DialTimeout: config.DailTimeout,
 		})
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		err = pingEtcdServer(etcdClient)
 		if err != nil {
-			return fmt.Errorf("failed to ping etcd :%w", err)
+			return nil, fmt.Errorf("failed to ping etcd :%w", err)
 		}
-		syncLocker.etcdClient = etcdClient
+		etcdClt = &EtcdClient{etcdClient: etcdClient}
+		return etcdClt, nil
 	}
-	return nil
+	return nil, errors.New("empty config")
 }
 
-func SyncRun(TTL int, key string, job func() error) error {
+func (e *EtcdClient) SyncRun(TTL int, key string, job func() error) error {
 	//if not config etcd client , just run this job
-	if syncLocker.etcdClient == nil {
+	if e.etcdClient == nil {
 		return job()
 	}
 	// lock and run this job
-	session, err := concurrency.NewSession(syncLocker.etcdClient, concurrency.WithTTL(TTL))
+	session, err := concurrency.NewSession(e.etcdClient, concurrency.WithTTL(TTL))
 	if err != nil {
 		return err
 	}
@@ -72,4 +77,34 @@ func pingEtcdServer(etcdClient *clientv3.Client) error {
 		return err
 	}
 	return nil
+}
+
+func (e *EtcdClient) GetConfig(group, dataId string) (string, error) {
+	kvs, err := e.etcdClient.KV.Get(context.Background(), fmtKey(group, dataId), clientv3.WithLimit(1))
+	if err != nil {
+		return "", err
+	}
+	if len(kvs.Kvs) < 1 {
+		return "", nil
+	}
+	return string(kvs.Kvs[0].Value), nil
+}
+
+func fmtKey(group, dataId string) string {
+	return group + "/" + dataId
+}
+
+func (e *EtcdClient) PublishConfig(group, dataId, content string) error {
+	_, err := e.etcdClient.KV.Put(context.Background(), fmtKey(group, dataId), content)
+	return err
+}
+
+func equalEtcdConfig(conf1, conf2 *config.EtcdConfig) bool {
+	if conf1 == conf2 {
+		return true
+	}
+	if reflect.DeepEqual(conf1, conf2) {
+		return true
+	}
+	return false
 }
