@@ -2,4 +2,4 @@
 
 sleep 10
 
-/home/tiger/app/run_api.sh
+/home/tiger/api/run_api.sh
