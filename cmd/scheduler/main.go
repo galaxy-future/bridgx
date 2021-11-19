@@ -18,8 +18,8 @@ func main() {
 	logs.Init()
 	clients.Init()
 	crond.Init()
-	err :=Init()
-	if err != nil{
+	err := Init()
+	if err != nil {
 		return
 	}
 

@@ -2,10 +2,10 @@ package monitors
 
 import (
 	"errors"
-	"github.com/galaxy-future/BridgX/internal/clients"
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/scheduler/crond"
+	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"go.uber.org/atomic"

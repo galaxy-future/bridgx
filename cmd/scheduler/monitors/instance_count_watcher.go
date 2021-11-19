@@ -18,8 +18,8 @@ import (
 
 //InstanceCountWatchJob 负责监控一个cluster是否有变更，如果有变更会schedule一个任务，保证需求可以满足
 type InstanceCountWatchJob struct {
-	ClusterName string
-	VersionNo   *atomic.String
+	ClusterName  string
+	VersionNo    *atomic.String
 	LockerClient *clients.EtcdClient
 	sync.Mutex
 }
