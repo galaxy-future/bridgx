@@ -308,8 +308,20 @@ func exchangeStatus(ctx context.Context) error {
 func RefreshCache(ctx context.Context) error {
 	ins, err := model.ScanInstanceType(ctx)
 	if err != nil {
-		logs.Logger.Error("GetZones Error err:%v", err)
+		logs.Logger.Error("RefreshCache Error err:%v", err)
 		return err
+	}
+	if len(ins) == 0 {
+		err = SyncInstanceTypes(ctx, cloud.ALIYUN)
+		if err != nil {
+			logs.Logger.Error("SyncInstanceTypes Error err:%v", err)
+			return err
+		}
+		ins, err = model.ScanInstanceType(ctx)
+		if err != nil {
+			logs.Logger.Error("ScanInstanceType Error err:%v", err)
+			return err
+		}
 	}
 	for _, in := range ins {
 		provider := in.Provider
