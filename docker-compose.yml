@@ -29,9 +29,9 @@ services:
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes
       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
-    ports:
-      - 2379:2379
-      - 2380:2380
+  #    ports:
+  #      - 2379:2379
+  #      - 2380:2380
 
   #######################  bridgx 1.0  ########################
   app:
@@ -40,8 +40,8 @@ services:
     build:
       context: .
       dockerfile: ./API.Dockerfile
-    ports:
-      - "9090:9090"
+    #    ports:
+    #      - "9090:9090"
     depends_on:
       - mysql
       - etcd
