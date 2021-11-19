@@ -53,7 +53,7 @@ services:
     build:
       context: .
       dockerfile: ./SCHEDULER.Dockerfile
-    command: [ "bin/wait-for-it.sh", "127.0.0.1:3306", "--", "/bin/sh","/home/tiger/app/run_scheduler.sh" ]
+    command: [ "bin/wait-for-it.sh", "127.0.0.1:3306", "--", "/bin/sh","/home/tiger/run_scheduler.sh" ]
     depends_on:
       - mysql
       - etcd
