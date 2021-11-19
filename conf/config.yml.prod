@@ -31,7 +31,7 @@ ReadDB:
 
 EtcdConfig:
   Endpoints:
-    - etcd:2379
+    - 127.0.0.1:2379
   DailTimeout: 5s
 
 JwtToken:
