@@ -33,8 +33,10 @@ func ExpandAndRepair(c *types.ClusterInfo, num int, taskId int64) ([]string, err
 		}}
 	expandInstanceIds := make([]string, 0)
 	needExpandNum := num
+	var err error
+	var ids []string
 	for k := 0; k < constants.Retry; k++ {
-		ids, err := Expand(c, tags, needExpandNum)
+		ids, err = Expand(c, tags, needExpandNum)
 		if err != nil {
 			logs.Logger.Errorf("[ExpandCLuster] Expand retry error, times: %d, error: %s", k, err.Error())
 		}
@@ -47,7 +49,7 @@ func ExpandAndRepair(c *types.ClusterInfo, num int, taskId int64) ([]string, err
 	if len(expandInstanceIds) != num {
 		_ = RepairCluster(c, taskId, expandInstanceIds)
 	}
-	return expandInstanceIds, nil
+	return expandInstanceIds, err
 }
 
 func RepairCluster(c *types.ClusterInfo, taskId int64, instanceIds []string) (err error) {

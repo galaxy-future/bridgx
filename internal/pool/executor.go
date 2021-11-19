@@ -59,7 +59,9 @@ func DoExpand(task *model.Task) {
 
 func taskPartialSuccess(task *model.Task, err error) {
 	task.Status = constants.TaskStatusPartialSuccess
-	task.ErrMsg = err.Error()
+	if err != nil {
+		task.ErrMsg = err.Error()
+	}
 	ft := time.Now()
 	task.FinishTime = &ft
 	_ = model.Save(task)
@@ -78,7 +80,9 @@ func taskSuccess(task *model.Task, s string) {
 
 func taskFailed(task *model.Task, err error) {
 	task.Status = constants.TaskStatusFailed
-	task.ErrMsg = err.Error()
+	if err != nil {
+		task.ErrMsg = err.Error()
+	}
 	ft := time.Now()
 	task.FinishTime = &ft
 	_ = model.Save(task)

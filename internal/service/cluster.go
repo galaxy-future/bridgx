@@ -40,6 +40,7 @@ func EditCluster(cluster *model.Cluster) error {
 	if clusterInDB == nil {
 		return errors.New("editing cluster not exist")
 	}
+	cluster.Id = clusterInDB.Id
 	return model.Save(cluster)
 }
 
@@ -196,9 +197,6 @@ func ConvertToClusterInfo(m *model.Cluster, tags []model.ClusterTag) (*types.Clu
 func ExpandCluster(c *types.ClusterInfo, num int, taskId int64) (instanceIds []cloud.Instance, err error) {
 	//调用云厂商接口进行扩容
 	expandInstanceIds, err := ExpandAndRepair(c, num, taskId)
-	if err != nil {
-		return nil, err
-	}
 
 	//将扩容的Instance信息保存到DB
 	err = saveExpandInstancesToDB(c, expandInstanceIds, taskId)
