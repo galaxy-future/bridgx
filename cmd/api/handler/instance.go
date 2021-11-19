@@ -72,6 +72,9 @@ func GetInstanceList(ctx *gin.Context) {
 	var status []string
 	if statusStr != "" {
 		status = strings.Split(statusStr, ",")
+		for i, st := range status {
+			status[i] = strings.ToUpper(st)
+		}
 	}
 	accountKeys, err := service.GetAksByOrgAkProvider(ctx, user.OrgId, accountKey, provider)
 	pn, ps := getPager(ctx)
