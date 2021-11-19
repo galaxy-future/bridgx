@@ -93,6 +93,13 @@ func defaultTaskDetailByType(task *model.Task) *response.TaskDetailResponse {
 			resp.SuccessNum = taskInfo.Count
 			resp.TotalNum = taskInfo.Count
 			return resp
+		} else {
+			taskInfo := model.ShrinkTaskInfo{}
+			_ = jsoniter.UnmarshalFromString(task.TaskInfo, &taskInfo)
+			resp.SuccessRate = "0.00"
+			resp.FailNum = taskInfo.Count
+			resp.TotalNum = taskInfo.Count
+			return resp
 		}
 	}
 	return nil
@@ -105,7 +112,7 @@ func ConvertToTaskDetailList(ctx context.Context, tasks []model.Task) ([]*respon
 	}
 	for _, task := range tasks {
 		t := task
-		instances, err := service.GetInstancesByTaskId(ctx, cast.ToString(task.Id))
+		instances, err := service.GetInstancesByTaskId(ctx, cast.ToString(task.Id), task.TaskAction)
 		if err != nil {
 			return nil, err
 		}

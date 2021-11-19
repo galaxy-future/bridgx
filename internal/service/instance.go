@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/constants"
@@ -39,9 +40,17 @@ func GetInstanceCountByCluster(ctx context.Context, clusters []model.Cluster) ma
 	return retMap
 }
 
-func GetInstancesByTaskId(ctx context.Context, taskId string) ([]model.Instance, error) {
+func GetInstancesByTaskId(ctx context.Context, taskId string, taskAction string) ([]model.Instance, error) {
 	ret := make([]model.Instance, 0)
-	err := model.QueryAll(map[string]interface{}{"task_id": taskId}, &ret, "")
+	m := make(map[string]interface{}, 0)
+	if taskAction == constants.TaskActionExpand {
+		m["task_id"] = taskId
+	} else if taskAction == constants.TaskActionShrink {
+		m["shrink_task_id"] = taskId
+	} else {
+		return nil, errors.New("not support task action")
+	}
+	err := model.QueryAll(m, &ret, "")
 	if err != nil {
 		return ret, err
 	}

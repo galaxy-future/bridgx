@@ -34,12 +34,12 @@ func GetTaskDescribe(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-	instances, err := service.GetInstancesByTaskId(ctx, taskId)
+	task, err := service.GetTask(ctx, taskId)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	task, err := service.GetTask(ctx, taskId)
+	instances, err := service.GetInstancesByTaskId(ctx, taskId, task.TaskAction)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
