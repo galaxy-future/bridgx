@@ -32,6 +32,7 @@ type ExpandTaskInfo struct {
 	Count          int    `json:"count"`
 	TaskExecHost   string `json:"task_exec_host"`
 	TaskSubmitHost string `json:"task_submit_host"`
+	UserId         int64  `json:"user_id"`
 }
 
 type ExpandTaskRes struct {
@@ -44,6 +45,7 @@ type ShrinkTaskInfo struct {
 	IPs            string `json:"ips"`
 	TaskExecHost   string `json:"task_exec_host"`
 	TaskSubmitHost string `json:"task_submit_host"`
+	UserId         int64  `json:"user_id"`
 }
 
 func CountByTaskStatus(taskFilter string, statuses []string) (int64, error) {

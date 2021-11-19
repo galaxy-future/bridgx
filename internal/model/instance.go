@@ -161,9 +161,9 @@ func GetUsageInstancesBySpecifyDay(ctx context.Context, clusterName []string, cr
 }
 
 //CountActiveInstancesByClusterName 获取clusters下状态不为deleted状态节点数量
-func CountActiveInstancesByClusterName(clusterNames []string) (int64, error) {
+func CountActiveInstancesByClusterName(ctx context.Context, clusterNames []string) (int64, error) {
 	var ret int64
-	if err := clients.ReadDBCli.Model(&Instance{}).Where("cluster_name IN (?) AND status != ? ", clusterNames, constants.Deleted).Count(&ret).Error; err != nil {
+	if err := clients.ReadDBCli.WithContext(ctx).Model(&Instance{}).Where("cluster_name IN (?) AND status != ? ", clusterNames, constants.Deleted).Count(&ret).Error; err != nil {
 		logErr("CountActiveInstancesByClusterName from read db", err)
 		return 0, err
 	}

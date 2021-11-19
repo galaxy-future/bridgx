@@ -56,6 +56,16 @@ func GetByClusterName(clusterName string) (*Cluster, error) {
 	return &out, nil
 }
 
+// GetByClusterNames find first record that match given conditions
+func GetByClusterNames(clusterNames []string) ([]Cluster, error) {
+	out := make([]Cluster, 0)
+	if err := clients.ReadDBCli.Where("cluster_name IN (?)", clusterNames).Find(&out).Error; err != nil {
+		logErr("GetByClusterName from read db", err)
+		return nil, err
+	}
+	return out, nil
+}
+
 //GetClusterById find cluster with given cluster id
 func GetClusterById(id int64) (*Cluster, error) {
 	var cluster Cluster

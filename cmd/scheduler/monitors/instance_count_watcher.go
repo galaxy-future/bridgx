@@ -67,7 +67,7 @@ func scheduleJob(clusterName string) error {
 
 	//扩容
 	if snapshot.Cluster.ExpectCount > len(snapshot.ActiveInstances) {
-		_, err := service.CreateExpandTask(context.Background(), snapshot.Cluster.ClusterName, snapshot.Cluster.ExpectCount-len(snapshot.ActiveInstances), "EXPECT")
+		_, err := service.CreateExpandTask(context.Background(), snapshot.Cluster.ClusterName, snapshot.Cluster.ExpectCount-len(snapshot.ActiveInstances), "EXPECT", 0)
 		if err != nil {
 			logs.Logger.Errorf("CreateExpandTask err:%v", err)
 			return err
@@ -84,7 +84,7 @@ func scheduleJob(clusterName string) error {
 		if len(snapshot.ActiveInstances)-len(deleteIPs) != snapshot.Cluster.ExpectCount {
 			return fmt.Errorf("can not schedule shrink task becasue expect count !=  instance count - deleting instance count")
 		}
-		_, err := service.CreateShrinkTask(context.Background(), snapshot.Cluster.ClusterName, len(deleteIPs), strings.Join(deleteIPs, ","), "EXPECT")
+		_, err := service.CreateShrinkTask(context.Background(), snapshot.Cluster.ClusterName, len(deleteIPs), strings.Join(deleteIPs, ","), "EXPECT", 0)
 		if err != nil {
 			logs.Logger.Errorf("CreateShrinkTask err:%v", err)
 			return err

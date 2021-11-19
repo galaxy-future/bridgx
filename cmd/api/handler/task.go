@@ -152,8 +152,13 @@ func GetTaskInstances(ctx *gin.Context) {
 		PageSize:   ps,
 		Total:      int(total),
 	}
+	cluster, err := service.GetClusterByName(ctx, task.TaskFilter)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
 	resp := &response.TaskInstancesResponse{
-		InstanceList: helper.ConvertToInstanceThumbList(ctx, instances),
+		InstanceList: helper.ConvertToInstanceThumbList(ctx, instances, []model.Cluster{*cluster}),
 		Pager:        pager,
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, resp)

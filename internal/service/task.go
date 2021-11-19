@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-func CreateExpandTask(ctx context.Context, clusterName string, count int, taskName string) (int64, error) {
+func CreateExpandTask(ctx context.Context, clusterName string, count int, taskName string, uid int64) (int64, error) {
 	if hasUnfinishedTask(clusterName) {
 		return 0, errors.New(fmt.Sprintf("Cluster:%v has unfinished task", clusterName))
 	}
@@ -23,6 +23,7 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 		ClusterName:    clusterName,
 		Count:          count,
 		TaskSubmitHost: utils.PrivateIPv4(),
+		UserId:         uid,
 	}
 	s, _ := jsoniter.MarshalToString(info)
 	taskId := id_generator.GetNextId()
@@ -44,7 +45,7 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 	}
 	return task.Id, nil
 }
-func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips string, taskName string) (int64, error) {
+func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips string, taskName string, uid int64) (int64, error) {
 	if hasUnfinishedTask(clusterName) {
 		return 0, errors.New(fmt.Sprintf("Cluster:%v has unfinished task", clusterName))
 	}

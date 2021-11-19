@@ -20,11 +20,23 @@ func GetInstanceCount(ctx context.Context, accountKeys []string, clusterName str
 	if err != nil {
 		return 0, err
 	}
-	ret, err := model.CountActiveInstancesByClusterName(clusterNames)
+	ret, err := model.CountActiveInstancesByClusterName(ctx, clusterNames)
 	if err != nil {
 		return 0, err
 	}
 	return ret, nil
+}
+
+func GetInstanceCountByCluster(ctx context.Context, clusters []model.Cluster) map[string]int64 {
+	retMap := make(map[string]int64, 0)
+	for _, cluster := range clusters {
+		ret, err := model.CountActiveInstancesByClusterName(ctx, []string{cluster.ClusterName})
+		if err != nil {
+			ret = 0
+		}
+		retMap[cluster.ClusterName] = ret
+	}
+	return retMap
 }
 
 func GetInstancesByTaskId(ctx context.Context, taskId string) ([]model.Instance, error) {

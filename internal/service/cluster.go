@@ -81,6 +81,14 @@ func GetClusterByName(ctx context.Context, name string) (*model.Cluster, error) 
 	return cluster, err
 }
 
+func GetClustersByNames(ctx context.Context, names []string) ([]model.Cluster, error) {
+	cluster, err := model.GetByClusterNames(names)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, err
+}
+
 func GetClusterTagsByClusterName(ctx context.Context, name string) ([]model.ClusterTag, error) {
 	clusterTags := make([]model.ClusterTag, 0)
 	err := model.QueryAll(map[string]interface{}{"cluster_name": name}, &clusterTags, "")

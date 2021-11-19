@@ -8,16 +8,17 @@ import (
 	"github.com/spf13/cast"
 )
 
-func ConvertToClusterThumbList(clusters []model.Cluster) []response.ClusterThumb {
+func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int64) []response.ClusterThumb {
 	res := make([]response.ClusterThumb, 0)
 	for _, cluster := range clusters {
 		c := response.ClusterThumb{
-			ClusterId:   cast.ToString(cluster.Id),
-			ClusterName: cluster.ClusterName,
-			Provider:    cluster.Provider,
-			Account:     cluster.AccountKey,
-			CreateAt:    cluster.CreateAt.String(),
-			CreateBy:    cluster.CreateBy,
+			ClusterId:     cast.ToString(cluster.Id),
+			ClusterName:   cluster.ClusterName,
+			InstanceCount: countMap[cluster.ClusterName],
+			Provider:      cluster.Provider,
+			Account:       cluster.AccountKey,
+			CreateAt:      cluster.CreateAt.String(),
+			CreateBy:      cluster.CreateBy,
 		}
 		res = append(res, c)
 	}
