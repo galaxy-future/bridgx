@@ -20,11 +20,23 @@ func GetInstanceCount(ctx context.Context, accountKeys []string, clusterName str
 	if err != nil {
 		return 0, err
 	}
-	ret, err := model.CountActiveInstancesByClusterName(clusterNames)
+	ret, err := model.CountActiveInstancesByClusterName(ctx, clusterNames)
 	if err != nil {
 		return 0, err
 	}
 	return ret, nil
+}
+
+func GetInstanceCountByCluster(ctx context.Context, clusters []model.Cluster) map[string]int64 {
+	retMap := make(map[string]int64, 0)
+	for _, cluster := range clusters {
+		ret, err := model.CountActiveInstancesByClusterName(ctx, []string{cluster.ClusterName})
+		if err != nil {
+			ret = 0
+		}
+		retMap[cluster.ClusterName] = ret
+	}
+	return retMap
 }
 
 func GetInstancesByTaskId(ctx context.Context, taskId string) ([]model.Instance, error) {
@@ -296,8 +308,20 @@ func exchangeStatus(ctx context.Context) error {
 func RefreshCache(ctx context.Context) error {
 	ins, err := model.ScanInstanceType(ctx)
 	if err != nil {
-		logs.Logger.Error("GetZones Error err:%v", err)
+		logs.Logger.Error("RefreshCache Error err:%v", err)
 		return err
+	}
+	if len(ins) == 0 {
+		err = SyncInstanceTypes(ctx, cloud.ALIYUN)
+		if err != nil {
+			logs.Logger.Error("SyncInstanceTypes Error err:%v", err)
+			return err
+		}
+		ins, err = model.ScanInstanceType(ctx)
+		if err != nil {
+			logs.Logger.Error("ScanInstanceType Error err:%v", err)
+			return err
+		}
 	}
 	for _, in := range ins {
 		provider := in.Provider

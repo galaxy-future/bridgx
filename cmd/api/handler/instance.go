@@ -72,21 +72,25 @@ func GetInstanceList(ctx *gin.Context) {
 	var status []string
 	if statusStr != "" {
 		status = strings.Split(statusStr, ",")
+		for i, st := range status {
+			status[i] = strings.ToUpper(st)
+		}
 	}
 	accountKeys, err := service.GetAksByOrgAkProvider(ctx, user.OrgId, accountKey, provider)
 	pn, ps := getPager(ctx)
-	instances, total, err := service.GetInstancesByAccounts(ctx, accountKeys, status, pn, ps, instanceId, ip, clusterName)
+	clusterNames, instances, total, err := service.GetInstancesByAccounts(ctx, accountKeys, status, pn, ps, instanceId, ip, clusterName)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
+	clusters, err := service.GetClustersByNames(ctx, clusterNames)
 	pager := response.Pager{
 		PageNumber: pn,
 		PageSize:   ps,
 		Total:      int(total),
 	}
 	resp := &response.InstanceListResponse{
-		InstanceList: helper.ConvertToInstanceThumbList(ctx, instances),
+		InstanceList: helper.ConvertToInstanceThumbList(ctx, instances, clusters),
 		Pager:        pager,
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, resp)

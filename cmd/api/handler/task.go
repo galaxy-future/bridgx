@@ -2,15 +2,14 @@ package handler
 
 import (
 	"net/http"
-
-	"github.com/spf13/cast"
-
-	"github.com/galaxy-future/BridgX/internal/model"
+	"strings"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
+	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 )
 
 func GetTaskCount(ctx *gin.Context) {
@@ -59,7 +58,7 @@ func GetTaskDescribeAll(ctx *gin.Context) {
 	taskId := ctx.Query("task_id")
 	taskName := ctx.Query("task_name")
 	clusterName := ctx.Query("cluster_name")
-	taskStatus := ctx.Query("task_status")
+	taskStatus := strings.ToUpper(ctx.Query("task_status"))
 	pn, ps := getPager(ctx)
 	accountKeys, _ := service.GetAksByOrgId(user.OrgId)
 	tasks, total, err := service.GetTaskListByCond(ctx, accountKeys, model.TaskSearchCond{
@@ -128,7 +127,7 @@ func GetTaskInstances(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-	instanceStatus := ctx.Query("instance_status")
+	instanceStatus := strings.ToUpper(ctx.Query("instance_status"))
 	pn, ps := getPager(ctx)
 	task, err := service.GetTask(ctx, taskId)
 	if err != nil || task == nil {
@@ -152,8 +151,13 @@ func GetTaskInstances(ctx *gin.Context) {
 		PageSize:   ps,
 		Total:      int(total),
 	}
+	cluster, err := service.GetClusterByName(ctx, task.TaskFilter)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
 	resp := &response.TaskInstancesResponse{
-		InstanceList: helper.ConvertToInstanceThumbList(ctx, instances),
+		InstanceList: helper.ConvertToInstanceThumbList(ctx, instances, []model.Cluster{*cluster}),
 		Pager:        pager,
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, resp)

@@ -4,25 +4,20 @@ import (
 	"context"
 	"time"
 
-	"github.com/galaxy-future/BridgX/internal/types"
-	jsoniter "github.com/json-iterator/go"
-
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
+	"github.com/galaxy-future/BridgX/internal/types"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
 )
 
-func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance) []response.InstanceThumb {
+func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance, clusters []model.Cluster) []response.InstanceThumb {
 	if len(instances) == 0 {
 		return nil
 	}
-	cluster, _ := service.GetClusterByName(ctx, instances[0].ClusterName)
-	var provider string
-	if cluster != nil {
-		provider = cluster.Provider
-	}
+	clusterMap := genClusterMap(clusters)
 	ret := make([]response.InstanceThumb, 0)
 	for _, instance := range instances {
 		startupTime := 0
@@ -30,19 +25,60 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance)
 			startupTime = int(instance.RunningAt.Sub(*instance.CreateAt).Seconds())
 		}
 		r := response.InstanceThumb{
-			InstanceId:   instance.InstanceId,
-			IpInner:      instance.IpInner,
-			IpOuter:      instance.IpOuter,
-			Provider:     provider,
-			ClusterName:  instance.ClusterName,
-			InstanceType: cluster.InstanceType,
-			CreateAt:     instance.CreateAt.String(),
-			Status:       getStringStatus(instance.Status),
-			StartupTime:  startupTime,
+			InstanceId:    instance.InstanceId,
+			IpInner:       instance.IpInner,
+			IpOuter:       instance.IpOuter,
+			Provider:      getProvider(instance.ClusterName, clusterMap),
+			ClusterName:   instance.ClusterName,
+			InstanceType:  getInstanceType(instance.ClusterName, clusterMap),
+			LoginName:     getLoginName(instance.ClusterName, clusterMap),
+			LoginPassword: getLoginPassword(instance.ClusterName, clusterMap),
+			CreateAt:      instance.CreateAt.String(),
+			Status:        getStringStatus(instance.Status),
+			StartupTime:   startupTime,
 		}
 		ret = append(ret, r)
 	}
 	return ret
+}
+
+func getProvider(clusterName string, m map[string]model.Cluster) string {
+	cluster, ok := m[clusterName]
+	if ok {
+		return cluster.Provider
+	}
+	return ""
+}
+
+func getLoginName(clusterName string, m map[string]model.Cluster) string {
+	return "root"
+}
+
+func getLoginPassword(clusterName string, m map[string]model.Cluster) string {
+	cluster, ok := m[clusterName]
+	if ok {
+		return cluster.Password
+	}
+	return ""
+}
+
+func getInstanceType(clusterName string, m map[string]model.Cluster) string {
+	cluster, ok := m[clusterName]
+	if ok {
+		return cluster.InstanceType
+	}
+	return ""
+}
+
+func genClusterMap(clusters []model.Cluster) map[string]model.Cluster {
+	m := make(map[string]model.Cluster)
+	if len(clusters) == 0 {
+		return m
+	}
+	for _, cluster := range clusters {
+		m[cluster.ClusterName] = cluster
+	}
+	return m
 }
 
 func ConvertToInstanceUsageList(ctx context.Context, instances []model.Instance) []response.InstanceUsage {

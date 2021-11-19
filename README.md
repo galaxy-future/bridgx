@@ -57,8 +57,8 @@ http://localhost:8888 可以看到管理控制台界面,初始用户名root和�
 #### 4、用户手册  
 通过[用户手册](https://github.com/galaxy-future/BridgX/blob/master/docs/user-manual.md)，用户可以掌握BridgX的功能使用全貌，方便快速查找使用感兴趣的功能。
 
-#### 5、开发者手册
-通过[开发者手册](https://github.com/galaxy-future/BridgX/blob/master/docs/developer_api.md)，用户可以快速查看各项开发功能的API接口和调用方法，使开发者能够将BridgX集成到第三方平台上。
+#### 5、开发者API手册
+通过[开发者API手册](https://github.com/galaxy-future/BridgX/blob/master/docs/developer_api.md)，用户可以快速查看各项开发功能的API接口和调用方法，使开发者能够将BridgX集成到第三方平台上。
 
 行为准则
 ------

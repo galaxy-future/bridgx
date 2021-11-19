@@ -29,12 +29,13 @@ type TaskThumb struct {
 }
 
 type ClusterThumb struct {
-	ClusterId   string `json:"cluster_id"`
-	ClusterName string `json:"cluster_name"`
-	Provider    string `json:"provider"`
-	Account     string `json:"account"`
-	CreateAt    string `json:"create_at"`
-	CreateBy    string `json:"create_by"`
+	ClusterId     string `json:"cluster_id"`
+	ClusterName   string `json:"cluster_name"`
+	InstanceCount int64  `json:"instance_count"`
+	Provider      string `json:"provider"`
+	Account       string `json:"account"`
+	CreateAt      string `json:"create_at"`
+	CreateBy      string `json:"create_by"`
 }
 
 type TaskDetailResponse struct {
@@ -101,15 +102,17 @@ type InstanceListResponse struct {
 }
 
 type InstanceThumb struct {
-	InstanceId   string `json:"instance_id"`
-	IpInner      string `json:"ip_inner"`
-	IpOuter      string `json:"ip_outer"`
-	Provider     string `json:"provider"`
-	CreateAt     string `json:"create_at"`
-	Status       string `json:"status"`
-	StartupTime  int    `json:"startup_time"`
-	ClusterName  string `json:"cluster_name"`
-	InstanceType string `json:"instance_type"`
+	InstanceId    string `json:"instance_id"`
+	IpInner       string `json:"ip_inner"`
+	IpOuter       string `json:"ip_outer"`
+	Provider      string `json:"provider"`
+	CreateAt      string `json:"create_at"`
+	Status        string `json:"status"`
+	StartupTime   int    `json:"startup_time"`
+	ClusterName   string `json:"cluster_name"`
+	InstanceType  string `json:"instance_type"`
+	LoginName     string `json:"login_name"`
+	LoginPassword string `json:"login_password"`
 }
 
 type InstanceUsage struct {

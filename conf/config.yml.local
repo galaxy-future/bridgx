@@ -7,7 +7,7 @@ CostConfig:
   QueryAliyunOrderPerMin: 1000
 WriteDB:
   Name: bridgx
-  Host: 127.0.0.1
+  Host: 172.16.16.169
   Port: 3306
   User: gf
   Password: db@galaxy-future.com
@@ -19,7 +19,7 @@ WriteDB:
 
 ReadDB:
   Name: bridgx
-  Host: 127.0.0.1
+  Host: 172.16.16.169
   Port: 3306
   User: gf
   Password: db@galaxy-future.com
@@ -31,7 +31,7 @@ ReadDB:
 
 EtcdConfig:
   Endpoints:
-    - 127.0.0.1:2379
+    - 172.16.16.180:2379
   DailTimeout: 5s
 
 JwtToken:
