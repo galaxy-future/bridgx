@@ -2,4 +2,4 @@
 
 sleep 10
 
-/home/tiger/run_scheduler.sh
+/home/tiger/scheduler/run_scheduler.sh
