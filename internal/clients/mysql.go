@@ -26,6 +26,7 @@ func InitDBClients() {
 
 func GetSqlDriver(dbConf config.DBConfig) (*gorm.DB, error) {
 	var dbDialector = getDbDialector(dbConf)
+	fmt.Println("user:%s, passwd:%s, ip:%s, port:%s", dbConf.User, dbConf.Password, dbConf.Port, dbConf.Port)
 	gormDb, err := gorm.Open(dbDialector, &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,

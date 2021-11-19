@@ -9,7 +9,7 @@ WriteDB:
   Name: bridgx
   Host: 127.0.0.1
   Port: 3306
-  User: root
+  User: gf
   Password: db@galaxy-future.com
   Timeout: 50ms
   ReadTimeout: 60ms
@@ -21,7 +21,7 @@ ReadDB:
   Name: bridgx
   Host: 127.0.0.1
   Port: 3306
-  User: root
+  User: gf
   Password: db@galaxy-future.com
   Timeout: 50ms
   ReadTimeout: 60ms

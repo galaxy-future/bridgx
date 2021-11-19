@@ -38,9 +38,6 @@ services:
     build:
       context: .
       dockerfile: ./API.Dockerfile
-    env_file:
-      - env/mysql.env
-      - env/etcd.env
     ports:
       - "9090:9090"
     depends_on:
@@ -52,9 +49,6 @@ services:
     build:
       context: .
       dockerfile: ./SCHEDULER.Dockerfile
-    env_file:
-      - env/mysql.env
-      - env/etcd.env
     depends_on:
       - mysql
       - etcd
