@@ -76,7 +76,7 @@ spec:
               value: release
           volumeMounts:
             - name: configure
-              mountPath: /home/tiger/app/conf
+              mountPath: /home/tiger/api/conf
       volumes:
         - name: configure
           configMap:
