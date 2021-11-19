@@ -48,13 +48,8 @@ RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repo
     echo "Asia/Shanghai" > /etc/timezone
 ENV TZ Asia/Shanghai
 
-RUN apk update \
-        && apk upgrade \
-        && apk add --no-cache bash \
-        bash-doc \
-        bash-completion \
-        && rm -rf /var/cache/apk/* \
-        && /bin/bash
+RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.4/main/" > /etc/apk/repositories && \
+        apk add --no-cache bash
 
 ENV ServiceName=gf.bridgx.api
 ENV SpecifiedConfig=prod
@@ -66,4 +61,4 @@ RUN chown -R tiger:tiger /home/tiger && chmod +x run_api.sh && chmod +x bin/wait
 
 USER tiger
 EXPOSE 9090
-#CMD ["/bin/sh","/home/tiger/app/run_api.sh"]
+CMD ["/bin/sh","/home/tiger/app/run_api.sh"]
