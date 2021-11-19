@@ -7,7 +7,7 @@ CostConfig:
   QueryAliyunOrderPerMin: 1000
 WriteDB:
   Name: bridgx
-  Host: mysql
+  Host: 127.0.0.1
   Port: 3306
   User: gf
   Password: db@galaxy-future.com
@@ -19,7 +19,7 @@ WriteDB:
 
 ReadDB:
   Name: bridgx
-  Host: mysql
+  Host: 127.0.0.1
   Port: 3306
   User: gf
   Password: db@galaxy-future.com
