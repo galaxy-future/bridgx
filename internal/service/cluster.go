@@ -40,6 +40,7 @@ func EditCluster(cluster *model.Cluster) error {
 	if clusterInDB == nil {
 		return errors.New("editing cluster not exist")
 	}
+	cluster.Id = clusterInDB.Id
 	return model.Save(cluster)
 }
 
