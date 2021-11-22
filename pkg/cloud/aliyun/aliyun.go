@@ -24,9 +24,10 @@ import (
 )
 
 const (
-	DirectionIn  = "ingress"
-	DirectionOut = "egress"
-	Instancetype = "InstanceType"
+	DirectionIn    = "ingress"
+	DirectionOut   = "egress"
+	Instancetype   = "InstanceType"
+	AcceptLanguage = "zh-CN"
 )
 
 type Aliyun struct {
@@ -512,7 +513,9 @@ func (p *Aliyun) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRequest)
 }
 
 func (p *Aliyun) GetRegions() (cloud.GetRegionsResponse, error) {
-	response, err := p.vpcClient.DescribeRegions(&vpcClient.DescribeRegionsRequest{})
+	response, err := p.vpcClient.DescribeRegions(&vpcClient.DescribeRegionsRequest{
+		AcceptLanguage: tea.String(AcceptLanguage),
+	})
 	if err != nil {
 		logs.Logger.Errorf("GetRegions Aliyun failed.err: [%v]", err)
 		return cloud.GetRegionsResponse{}, err
