@@ -152,6 +152,7 @@ func refreshAccount(t *SimpleTask) error {
 	updateOrCreateSwitch(ctx, vpcs, t)
 	groups := updateOrCreateSecurityGroups(ctx, vpcs, t)
 	updateOrCreateSecurityGroupRules(ctx, groups, t)
+	RefreshCache(ctx)
 	return nil
 }
 
@@ -204,7 +205,7 @@ func updateOrCreateSwitch(ctx context.Context, vpcs []cloud.VPC, t *SimpleTask) 
 
 func updateOrCreateSecurityGroups(ctx context.Context, vpcs []cloud.VPC, t *SimpleTask) []cloud.SecurityGroup {
 	groups := make([]cloud.SecurityGroup, 0, 64)
-	groupReq := cloud.GetSecurityGroupRequest{}
+	groupReq := cloud.DescribeSecurityGroupsRequest{}
 	for _, vpc := range vpcs {
 		groupReq.VpcId = vpc.VpcId
 		groupReq.RegionId = vpc.RegionId
@@ -213,7 +214,7 @@ func updateOrCreateSecurityGroups(ctx context.Context, vpcs []cloud.VPC, t *Simp
 			logs.Logger.Errorf("getProvider failed.err: %s", err.Error())
 			continue
 		}
-		groupRes, err := provider.GetSecurityGroup(groupReq)
+		groupRes, err := provider.DescribeSecurityGroups(groupReq)
 		if err != nil {
 			continue
 		}

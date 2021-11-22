@@ -127,12 +127,12 @@ type AddSecurityGroupRuleRequest struct {
 	PrefixListId    string
 }
 
-type GetSecurityGroupRequest struct {
+type DescribeSecurityGroupsRequest struct {
 	VpcId    string
 	RegionId string
 }
 
-type GetSecurityGroupResponse struct {
+type DescribeSecurityGroupsResponse struct {
 	Groups []SecurityGroup
 }
 

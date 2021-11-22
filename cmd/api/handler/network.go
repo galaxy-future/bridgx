@@ -218,7 +218,7 @@ func CreateSecurityGroupWithRules(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
-	if len(req.Rules) == 0 {
+	if len(req.Rules) == 0 || req.Rules[0].Protocol == "" {
 		response.MkResponse(ctx, http.StatusOK, response.Success, groupId)
 		return
 	}

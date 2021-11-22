@@ -273,7 +273,10 @@ type InstanceTypeByZone struct {
 	Memory             int    `json:"memory"`
 }
 
-func ListInstanceType(req ListInstanceTypeRequest) (ListInstanceTypeResponse, error) {
+func ListInstanceType(ctx context.Context, req ListInstanceTypeRequest) (ListInstanceTypeResponse, error) {
+	if len(zoneInsTypeCache) == 0 {
+		RefreshCache(ctx)
+	}
 	zoneMap, ok := zoneInsTypeCache[req.Provider]
 	if !ok {
 		return ListInstanceTypeResponse{}, nil

@@ -30,7 +30,7 @@ type Provider interface {
 	CreateSecurityGroup(req CreateSecurityGroupRequest) (CreateSecurityGroupResponse, error)
 	AddIngressSecurityGroupRule(req AddSecurityGroupRuleRequest) error
 	AddEgressSecurityGroupRule(req AddSecurityGroupRuleRequest) error
-	GetSecurityGroup(req GetSecurityGroupRequest) (GetSecurityGroupResponse, error)
+	DescribeSecurityGroups(req DescribeSecurityGroupsRequest) (DescribeSecurityGroupsResponse, error)
 	GetRegions() (GetRegionsResponse, error)
 	GetZones(req GetZonesRequest) (GetZonesResponse, error)
 	DescribeAvailableResource(req DescribeAvailableResourceRequest) (DescribeAvailableResourceResponse, error)

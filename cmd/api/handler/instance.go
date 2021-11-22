@@ -212,7 +212,7 @@ func ListInstanceType(ctx *gin.Context) {
 		return
 	}
 	logs.Logger.Infof("provider:[%s] regionId:[%s] zoneId:[%s]", provider, regionId, zoneId)
-	zones, err := service.ListInstanceType(service.ListInstanceTypeRequest{
+	zones, err := service.ListInstanceType(ctx, service.ListInstanceTypeRequest{
 		Provider: provider,
 		RegionId: regionId,
 		ZoneId:   zoneId,

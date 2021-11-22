@@ -471,7 +471,7 @@ func (p Aliyun) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest
 	return nil
 }
 
-func (p *Aliyun) GetSecurityGroup(req cloud.GetSecurityGroupRequest) (cloud.GetSecurityGroupResponse, error) {
+func (p *Aliyun) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRequest) (cloud.DescribeSecurityGroupsResponse, error) {
 	var page int32 = 1
 	groups := make([]cloud.SecurityGroup, 0, 128)
 
@@ -485,7 +485,7 @@ func (p *Aliyun) GetSecurityGroup(req cloud.GetSecurityGroupRequest) (cloud.GetS
 		response, err := p.ecsClient.DescribeSecurityGroups(request)
 		if err != nil {
 			logs.Logger.Errorf("GetSecurityGroup Aliyun failed.err: [%v], req[%v]", err, req)
-			return cloud.GetSecurityGroupResponse{}, err
+			return cloud.DescribeSecurityGroupsResponse{}, err
 		}
 		if response != nil && response.Body != nil && response.Body.SecurityGroups != nil {
 			for _, group := range response.Body.SecurityGroups.SecurityGroup {
@@ -508,7 +508,7 @@ func (p *Aliyun) GetSecurityGroup(req cloud.GetSecurityGroupRequest) (cloud.GetS
 			logs.Logger.Errorf("GetSecurityGroup failed,error: %v pageNumber:%d pageSize:%d vpcId:%s", err, page, 50, req.VpcId)
 		}
 	}
-	return cloud.GetSecurityGroupResponse{Groups: groups}, nil
+	return cloud.DescribeSecurityGroupsResponse{Groups: groups}, nil
 }
 
 func (p *Aliyun) GetRegions() (cloud.GetRegionsResponse, error) {
