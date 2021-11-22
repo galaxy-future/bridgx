@@ -5,6 +5,7 @@ import (
 
 	"github.com/galaxy-future/BridgX/cmd/api/routers"
 	"github.com/galaxy-future/BridgX/config"
+	"github.com/galaxy-future/BridgX/internal/bcc"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/service"
@@ -14,6 +15,10 @@ func main() {
 	config.Init()
 	logs.Init()
 	clients.Init()
+	if err := bcc.Init(config.GlobalConfig); err != nil {
+		logs.Logger.Fatal(err.Error())
+		return
+	}
 	service.Init(100)
 	r := routers.Init()
 	err := r.Run(fmt.Sprintf(":%d", config.GlobalConfig.ServerPort))

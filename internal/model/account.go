@@ -43,36 +43,19 @@ func (a *Account) AfterFind(tx *gorm.DB) (err error) {
 }
 
 func (a *Account) BeforeCreate(tx *gorm.DB) (err error) {
-	if a == nil {
-		return nil
-	}
-	if a.AccountKey != "" && a.AccountSecret != "" {
-		res, err := encrypt.AESEncrypt(a.AccountKey, a.AccountSecret)
-		if err != nil {
-			logs.Logger.Errorf("encrypt sk failed.err: %s", err.Error())
-			return err
-		}
-		a.AccountSecret = res
-	}
-	return nil
+	return a.aesBeforeOperation(tx)
 }
 
 func (a *Account) BeforeSave(tx *gorm.DB) (err error) {
-	if a == nil {
-		return nil
-	}
-	if a.AccountKey != "" && a.AccountSecret != "" {
-		res, err := encrypt.AESEncrypt(a.AccountKey, a.AccountSecret)
-		if err != nil {
-			logs.Logger.Errorf("encrypt sk failed.err: %s", err.Error())
-			return err
-		}
-		a.AccountSecret = res
-	}
-	return nil
+	return a.aesBeforeOperation(tx)
+
 }
 
 func (a *Account) BeforeUpdate(tx *gorm.DB) (err error) {
+	return a.aesBeforeOperation(tx)
+}
+
+func (a *Account) aesBeforeOperation(tx *gorm.DB) (err error) {
 	if a == nil {
 		return nil
 	}
@@ -86,10 +69,6 @@ func (a *Account) BeforeUpdate(tx *gorm.DB) (err error) {
 	}
 	return nil
 }
-
-
-
-
 
 func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int) ([]Account, int64, error) {
 	res := make([]Account, 0)
