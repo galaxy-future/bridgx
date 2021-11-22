@@ -25,7 +25,7 @@ func ConvertToTaskDetail(instances []model.Instance, task *model.Task) *response
 	ret.TaskResult = task.TaskResult
 	ret.FailReason = task.ErrMsg
 	ret.CreateAt = task.CreateAt.String()
-	ret.TaskId = cast.ToString(instances[0].TaskId)
+	ret.TaskId = cast.ToString(task.Id)
 	var running, suspending, success, fail, total int
 	for _, instance := range instances {
 		total++
