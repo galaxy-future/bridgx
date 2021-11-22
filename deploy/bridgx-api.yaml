@@ -56,7 +56,7 @@ metadata:
   labels:
     app: bridgx-api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: bridgx-api
