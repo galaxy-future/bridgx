@@ -20,8 +20,7 @@ func main() {
 	clients.Init()
 	crond.Init()
 	if err := bcc.Init(config.GlobalConfig); err != nil {
-		logs.Logger.Fatal(err.Error())
-		return
+		panic(err)
 	}
 	err := Init()
 	if err != nil {

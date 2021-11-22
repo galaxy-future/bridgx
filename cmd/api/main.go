@@ -16,8 +16,7 @@ func main() {
 	logs.Init()
 	clients.Init()
 	if err := bcc.Init(config.GlobalConfig); err != nil {
-		logs.Logger.Fatal(err.Error())
-		return
+		panic(err)
 	}
 	service.Init(100)
 	r := routers.Init()
