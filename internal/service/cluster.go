@@ -20,11 +20,13 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func CreateCluster(cluster *model.Cluster) error {
+func CreateCluster(cluster *model.Cluster, username string) error {
 	cluster.Status = constants.ClusterStatusEnable
 	now := time.Now()
 	cluster.CreateAt = &now
 	cluster.UpdateAt = &now
+	cluster.CreateBy = username
+	cluster.UpdateBy = username
 	return model.Create(cluster)
 }
 
@@ -32,7 +34,7 @@ func CreateClusterTags(tags *[]model.ClusterTag) error {
 	return model.Create(tags)
 }
 
-func EditCluster(cluster *model.Cluster) error {
+func EditCluster(cluster *model.Cluster, username string) error {
 	clusterInDB, err := model.GetByClusterName(cluster.ClusterName)
 	if err != nil {
 		return err
@@ -40,7 +42,13 @@ func EditCluster(cluster *model.Cluster) error {
 	if clusterInDB == nil {
 		return errors.New("editing cluster not exist")
 	}
+	now := time.Now()
 	cluster.Id = clusterInDB.Id
+	cluster.Status = clusterInDB.Status
+	cluster.CreateAt = clusterInDB.CreateAt
+	cluster.CreateBy = clusterInDB.CreateBy
+	cluster.UpdateAt = &now
+	cluster.UpdateBy = username
 	return model.Save(cluster)
 }
 

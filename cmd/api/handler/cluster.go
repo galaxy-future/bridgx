@@ -141,9 +141,7 @@ func CreateCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), err)
 		return
 	}
-	m.CreateBy = user.Name
-	m.UpdateBy = user.Name
-	err = service.CreateCluster(m)
+	err = service.CreateCluster(m, user.Name)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
@@ -185,8 +183,7 @@ func EditCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), err)
 		return
 	}
-	m.UpdateBy = user.Name
-	err = service.EditCluster(m)
+	err = service.EditCluster(m, user.Name)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
