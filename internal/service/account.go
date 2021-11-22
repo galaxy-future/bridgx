@@ -100,7 +100,7 @@ func EditCloudAccount(ctx context.Context, id int64, accountName, provider, user
 	account.UpdateBy = username
 	now := time.Now()
 	account.UpdateAt = &now
-	return model.Save(account)
+	return model.Save(&account)
 }
 
 func DeleteCloudAccount(ctx context.Context, ids []int64, orgId int64) error {

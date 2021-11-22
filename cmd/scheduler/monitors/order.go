@@ -31,17 +31,15 @@ func (p *QueryOrderJobs) Run() {
 	}
 	logs.Logger.Debug("start,", startTime, endTime)
 	for _, row := range accounts {
-		regions, err := model.GetRegionByAccKey(row.AccountKey)
+		region, err := model.GetOneRegionByAccKey(row.AccountKey)
 		if err != nil {
-			logs.Logger.Error("GetRegionByAccKey,", err)
+			logs.Logger.Error("GetOneRegionByAccKey,", err)
 			return
 		}
-		for _, region := range regions {
-			if err = service.QueryOrders(row.AccountName, row.Provider, row.AccountKey, region.RegionId,
-				startTime, endTime); err != nil {
-				logs.Logger.Error("queryOrders,", err)
-				return
-			}
+		if err = service.QueryOrders(row.AccountName, row.Provider, row.AccountKey, region.RegionId,
+			startTime, endTime); err != nil {
+			logs.Logger.Error("queryOrders,", err)
+			return
 		}
 	}
 

@@ -27,9 +27,11 @@ func TestQueryOrders(t *testing.T) {
 		return
 	}
 
-	endTime := time.Now().UTC()
-	duration, _ := time.ParseDuration("-5h")
-	startTime := endTime.Add(duration)
+	//endTime := time.Now().UTC()
+	//duration, _ := time.ParseDuration("-5h")
+	//startTime := endTime.Add(duration)
+	startTime, _ := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:40:02")
+	endTime, _ := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:45:02")
 	pageNum := 1
 	pageSize := 100
 	for {
@@ -39,7 +41,6 @@ func TestQueryOrders(t *testing.T) {
 			t.Log(err.Error())
 			return
 		}
-
 		cnt := 0
 		t.Log("len:", len(res.Orders))
 		for _, row := range res.Orders {
@@ -48,9 +49,14 @@ func TestQueryOrders(t *testing.T) {
 				t.Log("---------------")
 				break
 			}
-			t.Log(row)
+			rowStr, _ := json.Marshal(row)
+			t.Log(string(rowStr))
 		}
 
+		//if err = service.SaveOrders("TEST_11", "aliyun", res.Orders); err != nil {
+		//	t.Log(err.Error())
+		//	return
+		//}
 		if len(res.Orders) < pageSize {
 			break
 		}

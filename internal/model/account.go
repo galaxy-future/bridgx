@@ -43,6 +43,19 @@ func (a *Account) AfterFind(tx *gorm.DB) (err error) {
 }
 
 func (a *Account) BeforeCreate(tx *gorm.DB) (err error) {
+	return a.aesBeforeOperation(tx)
+}
+
+func (a *Account) BeforeSave(tx *gorm.DB) (err error) {
+	return a.aesBeforeOperation(tx)
+
+}
+
+func (a *Account) BeforeUpdate(tx *gorm.DB) (err error) {
+	return a.aesBeforeOperation(tx)
+}
+
+func (a *Account) aesBeforeOperation(tx *gorm.DB) (err error) {
 	if a == nil {
 		return nil
 	}

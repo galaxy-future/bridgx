@@ -76,14 +76,14 @@ func GetClusterById(id int64) (*Cluster, error) {
 	return &cluster, nil
 }
 
-//GetRegionByAccKey distinct region_id with given accountKey
-func GetRegionByAccKey(accountKey string) ([]Cluster, error) {
-	clusters := make([]Cluster, 0)
-	if err := clients.ReadDBCli.Where("account_key = ?", accountKey).Distinct("region_id").Find(&clusters).Error; err != nil {
-		logErr("GetRegionByAccKey from read db", err)
+//GetOneRegionByAccKey find one region_id with given accountKey
+func GetOneRegionByAccKey(accountKey string) (*Cluster, error) {
+	var cluster Cluster
+	if err := clients.ReadDBCli.Where("account_key = ?", accountKey).First(&cluster).Error; err != nil {
+		logErr("GetOneRegionByAccKey from read db", err)
 		return nil, err
 	}
-	return clusters, nil
+	return &cluster, nil
 }
 
 //GetUpdatedCluster 获取任务更新时间大于指定时间的所有cluster实例

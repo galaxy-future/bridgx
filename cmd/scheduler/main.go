@@ -9,6 +9,7 @@ import (
 
 	"github.com/galaxy-future/BridgX/cmd/scheduler/crond"
 	"github.com/galaxy-future/BridgX/config"
+	"github.com/galaxy-future/BridgX/internal/bcc"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/logs"
 )
@@ -18,6 +19,9 @@ func main() {
 	logs.Init()
 	clients.Init()
 	crond.Init()
+	if err := bcc.Init(config.GlobalConfig); err != nil {
+		panic(err)
+	}
 	err := Init()
 	if err != nil {
 		return

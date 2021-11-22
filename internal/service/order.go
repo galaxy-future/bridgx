@@ -40,10 +40,9 @@ func SaveOrders(accName, provider string, cloudOrder []cloud.Order) error {
 		return nil
 	}
 
-	orders := make([]model.Order, 0, orderNum)
 	for _, row := range cloudOrder {
 		extend, _ := json.Marshal(row.Extend)
-		orders = append(orders, model.Order{
+		order := &model.Order{
 			AccountName:    accName,
 			OrderId:        row.OrderId,
 			OrderTime:      row.OrderTime,
@@ -58,7 +57,12 @@ func SaveOrders(accName, provider string, cloudOrder []cloud.Order) error {
 			Currency:       row.Currency,
 			Cost:           row.Cost,
 			Extend:         string(extend[:]),
-		})
+		}
+
+		if err := model.CreateIgnoreDuplicate(order); err != nil {
+			return err
+		}
 	}
-	return model.BatchCreate(orders)
+
+	return nil
 }

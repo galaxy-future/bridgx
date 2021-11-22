@@ -3,12 +3,11 @@ package model
 import (
 	"time"
 
-	"gorm.io/gorm"
-
-	"github.com/galaxy-future/BridgX/internal/constants"
-
 	"github.com/galaxy-future/BridgX/internal/clients"
+	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Base struct {
@@ -25,6 +24,14 @@ const (
 func Create(model interface{}) error {
 	err := clients.WriteDBCli.Create(model).Error
 	if err != nil {
+		logErr("create data to write db", err)
+		return err
+	}
+	return nil
+}
+
+func CreateIgnoreDuplicate(model interface{}) error {
+	if err := clients.WriteDBCli.Clauses(clause.OnConflict{DoNothing: true}).Create(model).Error; err != nil {
 		logErr("create data to write db", err)
 		return err
 	}
