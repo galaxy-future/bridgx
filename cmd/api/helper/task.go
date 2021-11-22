@@ -103,7 +103,9 @@ func defaultTaskDetailByType(task *model.Task) *response.TaskDetailResponse {
 			taskInfo := model.ShrinkTaskInfo{}
 			_ = jsoniter.UnmarshalFromString(task.TaskInfo, &taskInfo)
 			resp.SuccessRate = "0.00"
-			resp.FailNum = taskInfo.Count
+			if task.Status == constants.TaskStatusFailed {
+				resp.FailNum = taskInfo.Count
+			}
 			resp.TotalNum = taskInfo.Count
 			return resp
 		}
