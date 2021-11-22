@@ -27,8 +27,8 @@ docker-push-api:
 
 docker-all: clean docker-build-scheduler docker-build-api docker-push-scheduler docker-push-api
 
-# quick start
-# pull images from dockerhub and run
+# Quick start
+# Pull images from dockerhub and run
 docker-run-linux:
 	sh ./run-for-linux.sh
 
@@ -41,3 +41,11 @@ docker-container-stop:
 
 docker-image-rm:
 	docker image prune --force --all
+
+# Immersive experience
+# Compile and run by docker-compose
+docker-compose-start:
+	docker-compose up -d
+
+docker-compose-stop:
+	docker-compose down
