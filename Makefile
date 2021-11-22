@@ -26,3 +26,17 @@ docker-push-api:
 	docker push 172.16.16.172:12380/bridgx/bridgx-api:v0.2
 
 docker-all: clean docker-build-scheduler docker-build-api docker-push-scheduler docker-push-api
+
+# quick start
+# pull images from dockerhub and run
+docker-run-linux:
+	sh ./run-for-iinux.sh
+
+docker-run-mac:
+	sh ./run-for-mac.sh
+
+docker-container-stop:
+	docker stop $(docker ps -aq) && docker rm $(docker ps -aq)
+
+docker-image-rm:
+	docker image prune --force --all
