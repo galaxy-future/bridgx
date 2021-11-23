@@ -7,9 +7,9 @@ require (
 	github.com/alibabacloud-go/ecs-20140526/v2 v2.1.0
 	github.com/alibabacloud-go/tea v1.1.15
 	github.com/alibabacloud-go/vpc-20160428/v2 v2.0.0
-	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.0.68
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-gonic/gin v1.7.4
+	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.0.68
 	github.com/json-iterator/go v1.1.12
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/sony/sonyflake v1.0.0
@@ -36,10 +36,7 @@ require (
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.1 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.1 // indirect
-	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
-	golang.org/x/tools v0.1.7 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
 	google.golang.org/grpc v1.38.0 // indirect
 )

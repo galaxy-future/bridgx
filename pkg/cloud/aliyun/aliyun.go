@@ -275,7 +275,7 @@ func (p *Aliyun) GetVPC(req cloud.GetVpcRequest) (cloud.GetVpcResponse, error) {
 	return cloud.GetVpcResponse{}, err
 }
 
-func (p Aliyun) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.DescribeVpcsResponse, error) {
+func (p *Aliyun) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.DescribeVpcsResponse, error) {
 	var page int32 = 1
 	vpcs := make([]cloud.VPC, 0, 128)
 	for {
@@ -367,7 +367,7 @@ func (p *Aliyun) GetSwitch(req cloud.GetSwitchRequest) (cloud.GetSwitchResponse,
 	return cloud.GetSwitchResponse{}, nil
 }
 
-func (p Aliyun) DescribeSwitches(req cloud.DescribeSwitchesRequest) (cloud.DescribeSwitchesResponse, error) {
+func (p *Aliyun) DescribeSwitches(req cloud.DescribeSwitchesRequest) (cloud.DescribeSwitchesResponse, error) {
 	var page int32 = 1
 	switches := make([]cloud.Switch, 0, 128)
 	for {
@@ -434,7 +434,7 @@ func (p *Aliyun) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest) (clou
 	return cloud.CreateSecurityGroupResponse{}, err
 }
 
-func (p Aliyun) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
+func (p *Aliyun) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
 	request := &ecsClient.AuthorizeSecurityGroupRequest{
 		RegionId:           tea.String(req.RegionId),
 		SecurityGroupId:    tea.String(req.SecurityGroupId),
@@ -453,7 +453,7 @@ func (p Aliyun) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleReques
 	return nil
 }
 
-func (p Aliyun) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
+func (p *Aliyun) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
 	request := &ecsClient.AuthorizeSecurityGroupEgressRequest{
 		RegionId:         tea.String(req.RegionId),
 		SecurityGroupId:  tea.String(req.SecurityGroupId),
@@ -655,7 +655,7 @@ func (p *Aliyun) DescribeImages(req cloud.DescribeImagesRequest) (cloud.Describe
 	return cloud.DescribeImagesResponse{Images: images}, nil
 }
 
-func (Aliyun) ProviderType() string {
+func (*Aliyun) ProviderType() string {
 	return ALIYUN
 }
 

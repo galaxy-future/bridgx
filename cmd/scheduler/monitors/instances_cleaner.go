@@ -20,7 +20,6 @@ type InstanceCleaner struct {
 }
 
 func (cleaner *InstanceCleaner) Run() {
-	recycleCount := 0
 	err := cleaner.LockerClient.SyncRun(constants.DefaultCleanMaxRunningTTL, constants.GetClusterScheduleLockKey(cleaner.clusterName), func() error {
 		cluster, err := model.GetByClusterName(cleaner.clusterName)
 		if err != nil {
@@ -44,7 +43,7 @@ func (cleaner *InstanceCleaner) Run() {
 		if err != nil {
 			return fmt.Errorf("failed to convert cluster to cluster info , %w", err)
 		}
-		recycleCount, err = service.CleanClusterUnusedInstances(info)
+		_, err = service.CleanClusterUnusedInstances(info)
 		return err
 	})
 	if err != concurrency.ErrLocked {
