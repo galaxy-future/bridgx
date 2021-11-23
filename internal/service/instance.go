@@ -324,6 +324,7 @@ func RefreshCache(ctx context.Context) error {
 		return err
 	}
 	if len(ins) == 0 {
+		// TODO: SELECT `provider`,`access_key` FROM ACCOUNT GROUP BY `provider`.
 		err = SyncInstanceTypes(ctx, cloud.ALIYUN)
 		if err != nil {
 			logs.Logger.Error("SyncInstanceTypes Error err:%v", err)

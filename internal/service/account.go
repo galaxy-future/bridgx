@@ -82,6 +82,12 @@ func CreateCloudAccount(ctx context.Context, accountName, provider, ak, sk strin
 		TargetType:   TargetTypeAccount,
 		Retry:        3,
 	})
+	H.SubmitTask(&SimpleTask{
+		ProviderName: provider,
+		AccountKey:   ak,
+		TargetType:   TargetTypeInstanceType,
+		Retry:        5,
+	})
 	return nil
 }
 

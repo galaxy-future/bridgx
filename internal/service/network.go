@@ -26,6 +26,7 @@ const (
 	TargetTypeSecurityGroup
 	TargetTypeNetwork
 	TargetTypeAccount
+	TargetTypeInstanceType
 
 	DefaultRegion = "cn-qingdao"
 )
@@ -124,6 +125,8 @@ func (s *SimpleTaskHandler) taskHandle(t *SimpleTask) {
 		err = refreshSwitch(t)
 	case TargetTypeAccount:
 		err = refreshAccount(t)
+	case TargetTypeInstanceType:
+		err = RefreshCache(context.Background())
 	}
 	if err == nil {
 		return
