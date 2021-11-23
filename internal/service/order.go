@@ -1,11 +1,11 @@
 package service
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
+	jsoniter "github.com/json-iterator/go"
 )
 
 func QueryOrders(accName, provider, ak, regionId string, startTime, endTime time.Time) error {
@@ -41,7 +41,7 @@ func SaveOrders(accName, provider string, cloudOrder []cloud.Order) error {
 	}
 
 	for _, row := range cloudOrder {
-		extend, _ := json.Marshal(row.Extend)
+		extend, _ := jsoniter.Marshal(row.Extend)
 		order := &model.Order{
 			AccountName:    accName,
 			OrderId:        row.OrderId,

@@ -48,6 +48,7 @@ func Init() *gin.Engine {
 		{
 			clusterPath.GET("id/:id", handler.GetClusterById)
 			clusterPath.GET("num", handler.GetClusterCount)
+			clusterPath.GET("instance_stat", handler.GetInstanceStat)
 			clusterPath.GET("name/:name", handler.GetClusterByName)
 			clusterPath.GET("describe_all", handler.ListClusters)
 			clusterPath.POST("create", handler.CreateCluster)
