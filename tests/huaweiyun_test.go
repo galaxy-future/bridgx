@@ -1,8 +1,9 @@
 package tests
 
 import (
-	"github.com/galaxy-future/BridgX/pkg/cloud/huaweiyun"
 	"testing"
+
+	"github.com/galaxy-future/BridgX/pkg/cloud/huaweiyun"
 )
 
 func TestGetHuaweiyunClient(t *testing.T) {

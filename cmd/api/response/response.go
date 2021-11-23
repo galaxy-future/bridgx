@@ -189,3 +189,8 @@ type OrgThumb struct {
 type ListOrgsResponse struct {
 	OrgList []OrgThumb `json:"org_list"`
 }
+
+type InstanceStatResponse struct {
+	InstanceTypeDesc string `json:"instance_type_desc"`
+	InstanceCount    int64  `json:"instance_count"`
+}

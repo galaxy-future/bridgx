@@ -195,6 +195,14 @@ func ScanInstanceType(ctx context.Context) (ins []InstanceType, err error) {
 	return ins, err
 }
 
+func GetInstanceTypeByName(ctx context.Context, instanceTypeName string) (*InstanceType, error) {
+	ins := InstanceType{}
+	err := clients.ReadDBCli.WithContext(ctx).Table(InstanceType{}.TableName()).
+		Where("type_name = ?", instanceTypeName).
+		First(&ins).Error
+	return &ins, err
+}
+
 type InstanceSearchCond struct {
 	Ip           string
 	InstanceId   string

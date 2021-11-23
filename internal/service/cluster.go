@@ -64,6 +64,14 @@ func DeleteClusters(ctx context.Context, ids []int64, orgId int64) error {
 	if len(clusters) == 0 {
 		return nil
 	}
+	for _, cluster := range clusters {
+		c := cluster
+		c.DeleteUniqKey = c.Id
+		err = model.Save(&c)
+		if err != nil {
+			return err
+		}
+	}
 	return model.Delete(clusters)
 }
 

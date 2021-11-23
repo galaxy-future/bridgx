@@ -40,6 +40,10 @@ func GetInstanceCountByCluster(ctx context.Context, clusters []model.Cluster) ma
 	return retMap
 }
 
+func GetInstanceTypeByName(ctx context.Context, instanceTypeName string) (*model.InstanceType, error) {
+	return model.GetInstanceTypeByName(ctx, instanceTypeName)
+}
+
 func GetInstancesByTaskId(ctx context.Context, taskId string, taskAction string) ([]model.Instance, error) {
 	ret := make([]model.Instance, 0)
 	m := make(map[string]interface{}, 0)

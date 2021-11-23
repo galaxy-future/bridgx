@@ -31,9 +31,10 @@ type Cluster struct {
 	StorageConfig string
 	AccountKey    string
 
-	CreateBy  string
-	UpdateBy  string
-	DeletedAt gorm.DeletedAt
+	CreateBy      string
+	UpdateBy      string
+	DeleteUniqKey int64
+	DeletedAt     gorm.DeletedAt
 }
 
 type ClusterSnapshot struct {

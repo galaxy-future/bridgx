@@ -44,6 +44,31 @@ func GetClusterById(ctx *gin.Context) {
 	return
 }
 
+func GetInstanceStat(ctx *gin.Context) {
+	clusterName, ok := ctx.GetQuery("cluster_name")
+	if !ok || clusterName == "" {
+		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
+		return
+	}
+	cluster, err := service.GetClusterByName(ctx, clusterName)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	instanceType, err := service.GetInstanceTypeByName(ctx, cluster.InstanceType)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	instanceCount, err := service.GetInstanceCount(ctx, nil, clusterName)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, helper.ConvertToInstanceStat(instanceType, instanceCount))
+	return
+}
+
 func GetClusterCount(ctx *gin.Context) {
 	user := helper.GetUserClaims(ctx)
 	accountKey := ctx.Query("account")
