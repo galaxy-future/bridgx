@@ -275,7 +275,7 @@ type InstanceTypeByZone struct {
 
 func ListInstanceType(ctx context.Context, req ListInstanceTypeRequest) (ListInstanceTypeResponse, error) {
 	if len(zoneInsTypeCache) == 0 {
-		RefreshCache(ctx)
+		RefreshCache()
 	}
 	zoneMap, ok := zoneInsTypeCache[req.Provider]
 	if !ok {
@@ -310,14 +310,15 @@ func exchangeStatus(ctx context.Context) error {
 		return err
 	}
 	tx.Commit()
-	err = RefreshCache(ctx)
+	err = RefreshCache()
 	if err != nil {
 		logs.Logger.Infof("RefreshCache error:%v", err)
 	}
 	return nil
 }
 
-func RefreshCache(ctx context.Context) error {
+func RefreshCache() error {
+	ctx := context.Background()
 	ins, err := model.ScanInstanceType(ctx)
 	if err != nil {
 		logs.Logger.Error("RefreshCache Error err:%v", err)

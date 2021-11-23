@@ -56,7 +56,7 @@ type SimpleTaskHandler struct {
 func Init(workerCount int) {
 	H = &SimpleTaskHandler{make(chan *SimpleTask, workerCount), workerCount, 0, make([]*SimpleTask, 0, 1000), sync.Mutex{}}
 	H.run()
-	RefreshCache(context.Background())
+	RefreshCache()
 }
 
 func (s *SimpleTaskHandler) SubmitTask(t *SimpleTask) {
@@ -126,7 +126,7 @@ func (s *SimpleTaskHandler) taskHandle(t *SimpleTask) {
 	case TargetTypeAccount:
 		err = refreshAccount(t)
 	case TargetTypeInstanceType:
-		err = RefreshCache(context.Background())
+		err = refreshInstanceType(t)
 	}
 	if err == nil {
 		return
@@ -136,6 +136,10 @@ func (s *SimpleTaskHandler) taskHandle(t *SimpleTask) {
 		t.Retry--
 		s.SubmitTask(t)
 	}
+}
+
+func refreshInstanceType(t *SimpleTask) error {
+	return RefreshCache()
 }
 
 func refreshAccount(t *SimpleTask) error {
@@ -155,7 +159,6 @@ func refreshAccount(t *SimpleTask) error {
 	updateOrCreateSwitch(ctx, vpcs, t)
 	groups := updateOrCreateSecurityGroups(ctx, vpcs, t)
 	updateOrCreateSecurityGroupRules(ctx, groups, t)
-	RefreshCache(ctx)
 	return nil
 }
 
