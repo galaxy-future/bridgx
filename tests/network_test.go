@@ -26,7 +26,7 @@ func TestCreateVPC(t *testing.T) {
 			args: args{
 				ctx: nil,
 				req: service.CreateVPCRequest{
-					Provider:  "aliyun",
+					Provider:  "AlibabaCloud",
 					RegionId:  "cn-qingdao",
 					VpcName:   "vpc测试自动更新",
 					CidrBlock: "",
@@ -188,7 +188,7 @@ func TestCreateNetwork(t *testing.T) {
 			args: args{
 				ctx: nil,
 				req: &service.CreateNetworkRequest{
-					Provider:          "aliyun",
+					Provider:          "AlibabaCloud",
 					RegionId:          "cn-qingdao",
 					VpcName:           "测试一键创建",
 					ZoneId:            "cn-qingdao-b",
@@ -233,7 +233,7 @@ func TestGetVPC(t *testing.T) {
 			args: args{
 				ctx: nil,
 				req: service.GetVPCRequest{
-					Provider:   "aliyun",
+					Provider:   "AlibabaCloud",
 					RegionId:   "cn-qingdao",
 					VpcName:    "测试一键创建",
 					PageNumber: 0,

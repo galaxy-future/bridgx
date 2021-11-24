@@ -8,7 +8,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/types"
-	"github.com/galaxy-future/BridgX/pkg/cloud/aliyun"
+	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 )
 
 func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int) ([]model.Account, int64, error) {
@@ -51,7 +51,7 @@ func GetDefaultAccount(provider string) (*types.OrgKeys, error) {
 }
 
 func CheckAccountValid(ak, sk string) error {
-	cli, err := aliyun.New(ak, sk, DefaultRegion)
+	cli, err := alibaba.New(ak, sk, DefaultRegion)
 	if err != nil {
 		return err
 	}

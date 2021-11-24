@@ -4,7 +4,7 @@ NeedPublishConfig: false #是否需要把扩缩容实例、IP信息发布到配�
 ServerPort: 9090
 CostConfig:
   QueryOrderIntvalSec: 300
-  QueryAliyunOrderPerMin: 1000
+  QueryAlibabaCloudOrderPerMin: 1000
 WriteDB:
   Name: bridgx
   Host: 127.0.0.1

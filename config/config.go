@@ -78,6 +78,6 @@ type EtcdConfig struct {
 }
 
 type CostConfig struct {
-	QueryOrderIntvalSec    int `yaml:"QueryOrderIntvalSec"`
-	QueryAliyunOrderPerMin int `yaml:"QueryAliyunOrderPerMin"`
+	QueryOrderIntvalSec          int `yaml:"QueryOrderIntvalSec"`
+	QueryAlibabaCloudOrderPerMin int `yaml:"QueryAlibabaCloudOrderPerMin"`
 }

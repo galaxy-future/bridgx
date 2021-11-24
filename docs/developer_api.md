@@ -60,7 +60,7 @@
     <td>string</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -280,7 +280,7 @@ PayByTraffic（默认）：按使用流量计费。</td>
 ```JSON
 {
     "name":"测试集群",
-    "provider":"aliyun",
+    "provider":"AlibabaCloud",
     "account_key":"LTAI5t7qCv**Fh3hzSYpSv",
     "charge_type":"PostPaid",
     "region_id":"cn-qingdao",
@@ -456,7 +456,7 @@ PayByTraffic（默认）：按使用流量计费。</td>
     <td>provider</td>
     <td>String</td>
     <td>是</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
     <td></td>
   </tr>
   <tr>
@@ -526,7 +526,7 @@ PayByTraffic（默认）：按使用流量计费。</td>
       {
         "cluster_id": "1319",
         "cluster_name": "gf.bridgx.online",
-        "provider": "aliyun",
+        "provider": "AlibabaCloud",
         "account": "LTAI5tAwAMpXAQ78pePcRb6t",
         "create_at": "2021-11-02 06:09:38 +0800 CST",
         "create_by": ""
@@ -534,7 +534,7 @@ PayByTraffic（默认）：按使用流量计费。</td>
       {
         "cluster_id": "1332",
         "cluster_name": "test6",
-        "provider": "aliyun",
+        "provider": "AlibabaCloud",
         "account": "LTAI5tAwAMpXAQ78pePcRb6t",
         "create_at": "2021-11-04 14:22:15 +0800 CST",
         "create_by": ""
@@ -606,7 +606,7 @@ VPC创建后无法修改网段。<br>
     <td>String</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -684,7 +684,7 @@ VPC创建后无法修改网段。<br>
   </tr>
   <tr>
     <td>provider</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -771,7 +771,7 @@ VPC创建后无法修改网段。<br>
     <td>String</td>
     <td>否</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -887,7 +887,7 @@ Available：可用。</td>
     <td>String []</td>
     <td>是</td>
     <td>所属的云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>vpc_name</td>
@@ -906,7 +906,7 @@ Available：可用。</td>
   </tr>
   <tr>
     <td>provider</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -936,7 +936,7 @@ Available：可用。</td>
                 "VpcName":"vpc测试一",
                 "CidrBlock":"",
                 "SwitchIds":"",
-                "Provider":"aliyun",
+                "Provider":"AlibabaCloud",
                 "Status":"",
                 "CreateAt":"2021-11-11 11:13:34 +0800 CST"
             },
@@ -945,7 +945,7 @@ Available：可用。</td>
                 "VpcName":"vpc测试二",
                 "CidrBlock":"",
                 "SwitchIds":"",
-                "Provider":"aliyun",
+                "Provider":"AlibabaCloud",
                 "Status":"",
                 "CreateAt":"2021-11-05 11:40:16 +0800 CST"
             }
@@ -1871,7 +1871,7 @@ enterprise：企业安全组</td>
     <td>String</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -1993,7 +1993,7 @@ enterprise：企业安全组</td>
   </tr>
   <tr>
     <td>provider</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -2100,7 +2100,7 @@ enterprise：企业安全组</td>
     <td>String</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
 </table>
  
@@ -2144,7 +2144,7 @@ enterprise：企业安全组</td>
   </tr>
   <tr>
     <td>provider</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
 </table>
 
@@ -2224,7 +2224,7 @@ enterprise：企业安全组</td>
     <td>String</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -2275,7 +2275,7 @@ enterprise：企业安全组</td>
   </tr>
   <tr>
     <td>provider</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -2361,7 +2361,7 @@ enterprise：企业安全组</td>
     <td>String</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -2458,7 +2458,7 @@ enterprise：企业安全组</td>
   </tr>
   <tr>
     <td>provider</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -2553,7 +2553,7 @@ enterprise：企业安全组</td>
     <td>String</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -2638,7 +2638,7 @@ enterprise：企业安全组</td>
   </tr>
   <tr>
     <td>provider</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -3248,7 +3248,7 @@ enterprise：企业安全组</td>
     <td>String</td>
     <td>否</td>
     <td>特定云厂商，精确匹配</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>cluster_name</td>
@@ -3361,7 +3361,7 @@ enterprise：企业安全组</td>
     <td>String</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td></td>
@@ -3425,7 +3425,7 @@ enterprise：企业安全组</td>
   </tr>
   <tr>
     <td>provider</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>cluster_name</td>
@@ -3457,7 +3457,7 @@ enterprise：企业安全组</td>
                 "instance_id":"i-2ze40**rrjk7mi6",
                 "ip_inner":"10.192.221.25",
                 "ip_outer":"",
-                "provider":"aliyun",
+                "provider":"AlibabaCloud",
                 "create_at":"2021-11-12 09:38:31 +0800 CST",
                 "status":"Deleted",
                 "startup_time":0,
@@ -3468,7 +3468,7 @@ enterprise：企业安全组</td>
                 "instance_id":"i-2ze25xv**vu06m0p2",
                 "ip_inner":"10.192.221.123",
                 "ip_outer":"",
-                "provider":"aliyun",
+                "provider":"AlibabaCloud",
                 "create_at":"2021-11-12 19:58:21 +0800 CST",
                 "status":"Deleted",
                 "startup_time":5,
@@ -3607,7 +3607,7 @@ enterprise：企业安全组</td>
     <td>String</td>
     <td>是</td>
     <td>云厂商</td>
-    <td>aliyun</td>
+    <td>AlibabaCloud</td>
   </tr>
   <tr>
     <td>region_id</td>
@@ -3784,7 +3784,7 @@ enterprise：企业安全组</td>
     "code":200,
     "data":{
         "instance_id":"i-2ze40hb**hrrjk7mi6",
-        "provider":"aliyun",
+        "provider":"AlibabaCloud",
         "region_id":"cn-beijing",
         "image_id":"m-2ze**m3aadve22aq",
         "instance_type":"ecs.s6-c1m1.small",

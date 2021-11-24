@@ -1,4 +1,4 @@
-package huaweiyun
+package huawei
 
 import (
 	"fmt"
@@ -10,11 +10,11 @@ import (
 	region "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/region"
 )
 
-type Huaweiyun struct {
+type HuaweiCloud struct {
 	ecsClient *ecs.EcsClient
 }
 
-func New(AK, SK, regionId string) *Huaweiyun {
+func New(AK, SK, regionId string) *HuaweiCloud {
 	auth := basic.NewCredentialsBuilder().
 		WithAk(AK).
 		WithSk(SK).
@@ -25,10 +25,10 @@ func New(AK, SK, regionId string) *Huaweiyun {
 			WithRegion(region.ValueOf(regionId)).
 			WithCredential(auth).
 			Build())
-	return &Huaweiyun{ecsClient: client}
+	return &HuaweiCloud{ecsClient: client}
 }
 
-func (p *Huaweiyun) GetInstances(ids []string) (instances []cloud.Instance, err error) {
+func (p *HuaweiCloud) GetInstances(ids []string) (instances []cloud.Instance, err error) {
 	request := &model.ListServersDetailsRequest{}
 	response, err := p.ecsClient.ListServersDetails(request)
 	if err == nil {

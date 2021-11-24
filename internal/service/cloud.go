@@ -17,7 +17,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/types"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
-	"github.com/galaxy-future/BridgX/pkg/cloud/aliyun"
+	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 )
 
 var clientMap sync.Map
@@ -203,18 +203,18 @@ func getBatch(num, eachMax int) int {
 
 func getProvider(provider, ak, regionId string) (cloud.Provider, error) {
 	switch provider {
-	case aliyun.ALIYUN:
-		return getAliyunClient(ak, regionId)
+	case alibaba.CloudName:
+		return getAlibabaCloudClient(ak, regionId)
 	default:
 		return nil, errors.New("unavailable provider")
 	}
 }
 
-func getAliyunClient(ak, region string) (cloud.Provider, error) {
+func getAlibabaCloudClient(ak, region string) (cloud.Provider, error) {
 	key := ak + region
 	v, exist := clientMap.Load(key)
 	if exist {
-		cast, ok := v.(*aliyun.Aliyun)
+		cast, ok := v.(*alibaba.AlibabaCloud)
 		if ok {
 			return cast, nil
 		}
@@ -223,7 +223,7 @@ func getAliyunClient(ak, region string) (cloud.Provider, error) {
 	if sk == "" {
 		return nil, errors.New("no sk found")
 	}
-	client, err := aliyun.New(ak, sk, region)
+	client, err := alibaba.New(ak, sk, region)
 	clientMap.Store(key, client)
 	return client, err
 }

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/service"
-	"github.com/galaxy-future/BridgX/pkg/cloud/aliyun"
+	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 )
 
 func TestSyncInstanceTypes(t *testing.T) {
@@ -23,7 +23,7 @@ func TestSyncInstanceTypes(t *testing.T) {
 			name: "",
 			args: args{
 				ctx:      context.Background(),
-				provider: aliyun.ALIYUN,
+				provider: alibaba.CloudName,
 			},
 			wantErr: false,
 		},
