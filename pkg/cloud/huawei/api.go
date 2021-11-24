@@ -1,4 +1,4 @@
-package huaweiyun
+package huawei
 
 import (
 	"fmt"
