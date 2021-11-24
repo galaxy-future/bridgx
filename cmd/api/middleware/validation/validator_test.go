@@ -17,6 +17,7 @@ const (
 
 func testValidator() (*validator.Validate, error) {
 	v := validator.New()
+	RegisterCustom()
 	err := RegisterTools(v)
 	if err != nil {
 		return nil, err

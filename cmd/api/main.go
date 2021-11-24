@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/galaxy-future/BridgX/cmd/api/middleware"
 	"github.com/galaxy-future/BridgX/cmd/api/routers"
 	"github.com/galaxy-future/BridgX/config"
 	"github.com/galaxy-future/BridgX/internal/bcc"
@@ -19,6 +20,7 @@ func main() {
 		panic(err)
 	}
 	service.Init(100)
+	middleware.Init()
 	r := routers.Init()
 	err := r.Run(fmt.Sprintf(":%d", config.GlobalConfig.ServerPort))
 	if err != nil {
