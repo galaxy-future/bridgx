@@ -6,7 +6,7 @@ import (
 	"github.com/galaxy-future/BridgX/pkg/cloud/huawei"
 )
 
-func TestGetHuaweiyunClient(t *testing.T) {
+func TestGetHuaweiCloudClient(t *testing.T) {
 	p := huawei.New("", "", "cn-north-4")
 	_, err := p.GetInstances(make([]string, 0))
 	t.Logf("err:%v\n", err)
