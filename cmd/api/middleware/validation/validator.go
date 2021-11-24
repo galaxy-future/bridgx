@@ -50,19 +50,19 @@ func initZhTranslator() ut.Translator {
 	return trans
 }
 
-func RegisterTools(v *validator.Validate) error {
+func RegisterValidators(v *validator.Validate) error {
 	err := registerZHTranslator(v)
 	if err != nil {
 		return err
 	}
-	err = registerCustomValidation(v)
+	err = registerValidationAndTranslation(v)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func registerCustomValidation(v *validator.Validate) error {
+func registerValidationAndTranslation(v *validator.Validate) error {
 	if v == nil {
 		return errors.New("empty validator")
 	}

@@ -18,8 +18,8 @@ const (
 
 func testValidator() (*validator.Validate, error) {
 	v := validator.New()
-	RegisterCustom()
-	err := RegisterTools(v)
+	RegisterCustomValidators()
+	err := RegisterValidators(v)
 	if err != nil {
 		return nil, err
 	}

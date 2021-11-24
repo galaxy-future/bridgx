@@ -63,7 +63,7 @@ func getStructFieldName(fe validator.FieldError) string {
 	return f[len(f)-1]
 }
 
-func RegisterCustom() {
+func RegisterCustomValidators() {
 	appendMultiTagValidation(
 		// Add your custom Validation here.
 		Validation{

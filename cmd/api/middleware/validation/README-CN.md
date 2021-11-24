@@ -32,7 +32,7 @@ func translateLT3Err(ut ut.Translator, fe validator.FieldError) string {
 
 在下列函数中添加 validation 即可.
 ```go
-func RegisterCustom() {
+func RegisterCustomValidators() {
     appendMultiTagValidation(
         // Add your custom Validation here.
         Validation{
@@ -60,8 +60,8 @@ type ValidateCase struct {
 
 func main() {
     v := validator.New()
-    RegisterCustom()
-    err := RegisterTools(v)
+    RegisterCustomValidators()
+    err := RegisterValidators(v)
     c := ValidateCase{Name: "1234"}
     err := v.Struct(c)
     fmt.Println(Translate2Chinese(err))
@@ -78,7 +78,7 @@ type validateCase struct {
 func main() {
     middleware.Init()
     if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-        err := validation.RegisterTools(v)
+        err := validation.RegisterValidators(v)
         if err != nil {
         ...
         }

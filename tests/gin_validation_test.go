@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/galaxy-future/BridgX/cmd/api/middleware"
-
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/validation"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/gin-gonic/gin"
@@ -25,7 +24,7 @@ func testServer(t *testing.T) *gin.Engine {
 	middleware.Init()
 	r := gin.Default()
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		err := validation.RegisterTools(v)
+		err := validation.RegisterValidators(v)
 		if err != nil {
 			t.Errorf("register tools failed.err:[%s]", err.Error())
 			return r
