@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/galaxy-future/BridgX/cmd/api/middleware"
+
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/validation"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/gin-gonic/gin"
@@ -20,6 +22,7 @@ type validateCase struct {
 }
 
 func testServer(t *testing.T) *gin.Engine {
+	middleware.Init()
 	r := gin.Default()
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		err := validation.RegisterTools(v)
@@ -39,7 +42,7 @@ func TestValidator_GET(t *testing.T) {
 		if err == nil {
 			t.Errorf("validate failed")
 		}
-		if trans := validation.Translate2Chinese(err); validation.CharTypeGT3TransErr != trans {
+		if trans := validation.Translate2Chinese(err); "[Name] "+validation.CharTypeGT3TransErr != trans {
 			t.Errorf("validate failed.want:[%s] got:[%s]", validation.CharTypeGT3TransErr, trans)
 			return
 		}
@@ -56,7 +59,7 @@ func TestValidator_POST(t *testing.T) {
 		if err == nil {
 			t.Errorf("validate failed")
 		}
-		if trans := validation.Translate2Chinese(err); validation.CharTypeGT3TransErr != trans {
+		if trans := validation.Translate2Chinese(err); "[Name] "+validation.CharTypeGT3TransErr != trans {
 			t.Errorf("validate failed.want:[%s] got:[%s]", validation.CharTypeGT3TransErr, trans)
 			return
 		}

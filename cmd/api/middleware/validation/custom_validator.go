@@ -1,6 +1,9 @@
 package validation
 
 import (
+	"fmt"
+	"strings"
+
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 )
@@ -47,7 +50,17 @@ func validateCharacterTypeGT3(fl validator.FieldLevel) bool {
 }
 
 func translateCharacterErr(ut ut.Translator, fe validator.FieldError) string {
-	return CharTypeGT3TransErr
+	return wrapErrWithStructFieldName(fe, CharTypeGT3TransErr)
+}
+
+// wrapErrWithStructFieldName will wrap msg with "[`StructFieldName`] "
+func wrapErrWithStructFieldName(fe validator.FieldError, msg string) string {
+	return fmt.Sprintf("[%s] %s", getStructFieldName(fe), msg)
+}
+
+func getStructFieldName(fe validator.FieldError) string {
+	f := strings.Split(fe.StructNamespace(), ".")
+	return f[len(f)-1]
 }
 
 func RegisterCustom() {

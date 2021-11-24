@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
@@ -29,6 +30,7 @@ func Test_validateAllCharacter(t *testing.T) {
 	type args struct {
 		Password string
 	}
+	errMsg := fmt.Sprintf("[Password] %s", CharTypeGT3TransErr)
 	tests := []struct {
 		name string
 		args args
@@ -53,70 +55,70 @@ func Test_validateAllCharacter(t *testing.T) {
 			args: args{
 				Password: tenNumbers,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证纯大写字母",
 			args: args{
 				Password: tenUpperLetters,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证纯小写字母",
 			args: args{
 				Password: tenLowerLetters,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证纯特殊字符",
 			args: args{
 				Password: tenSpecialChar,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证2种字符类型:数字+大写字母",
 			args: args{
 				Password: tenNumbers + tenUpperLetters,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证2种字符类型:数字+小写字母",
 			args: args{
 				Password: tenNumbers + tenLowerLetters,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证2种字符类型:数字+特殊字符",
 			args: args{
 				Password: tenNumbers + tenSpecialChar,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证2种字符类型:大写字母+小写字母",
 			args: args{
 				Password: tenUpperLetters + tenLowerLetters,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证2种字符类型:大写字母+特殊字符",
 			args: args{
 				Password: tenUpperLetters + tenSpecialChar,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证2种字符类型:小写字母+特殊字符",
 			args: args{
 				Password: tenLowerLetters + tenSpecialChar,
 			},
-			want: "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）",
+			want: errMsg,
 		},
 		{
 			name: "验证3种字符类型:数字+大写字母+小写字母",
