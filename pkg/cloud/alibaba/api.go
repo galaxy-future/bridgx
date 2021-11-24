@@ -1,4 +1,4 @@
-package aliyun
+package alibaba
 
 import (
 	"errors"
@@ -30,7 +30,7 @@ const (
 	AcceptLanguage = "zh-CN"
 )
 
-type Aliyun struct {
+type AlibabaCloud struct {
 	client    *ecs.Client
 	vpcClient *vpcClient.Client
 	ecsClient *ecsClient.Client
@@ -38,7 +38,7 @@ type Aliyun struct {
 	lock      sync.Mutex
 }
 
-func (p *Aliyun) GetInstancesByTags(region string, tags []cloud.Tag) (instances []cloud.Instance, err error) {
+func (p *AlibabaCloud) GetInstancesByTags(region string, tags []cloud.Tag) (instances []cloud.Instance, err error) {
 	request := ecs.CreateDescribeInstancesRequest()
 	request.Scheme = "https"
 
@@ -75,7 +75,7 @@ func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance
 		instances = append(instances, cloud.Instance{
 			Id:       instance.InstanceId,
 			CostWay:  instance.InstanceChargeType,
-			Provider: ALIYUN,
+			Provider: CloudName,
 			IpInner:  strings.Join(instance.VpcAttributes.PrivateIpAddress.IpAddress, ","),
 			IpOuter:  ipOuter,
 			ImageId:  instance.ImageId,
@@ -93,10 +93,10 @@ func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance
 }
 
 const (
-	ALIYUN = "aliyun"
+	CloudName = "AlibabaCloud"
 )
 
-func New(AK, SK, region string) (*Aliyun, error) {
+func New(AK, SK, region string) (*AlibabaCloud, error) {
 	client, err := ecs.NewClientWithAccessKey(region, AK, SK)
 	if err != nil {
 		return nil, err
@@ -118,11 +118,11 @@ func New(AK, SK, region string) (*Aliyun, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Aliyun{client: client, vpcClient: vpcClt, ecsClient: ecsClt, bssClient: bssCtl}, err
+	return &AlibabaCloud{client: client, vpcClient: vpcClt, ecsClient: ecsClt, bssClient: bssCtl}, err
 }
 
 // BatchCreate the maximum of 'num' is 100
-func (p *Aliyun) BatchCreate(m cloud.Params, num int) (instanceIds []string, err error) {
+func (p *AlibabaCloud) BatchCreate(m cloud.Params, num int) (instanceIds []string, err error) {
 	request := ecs.CreateRunInstancesRequest()
 	request.Scheme = "https"
 
@@ -160,7 +160,7 @@ func (p *Aliyun) BatchCreate(m cloud.Params, num int) (instanceIds []string, err
 	return response.InstanceIdSets.InstanceIdSet, err
 }
 
-func (p *Aliyun) GetInstances(ids []string) (instances []cloud.Instance, err error) {
+func (p *AlibabaCloud) GetInstances(ids []string) (instances []cloud.Instance, err error) {
 	batchIds := utils.StringSliceSplit(ids, 50)
 	cloudInstance := make([]ecs.Instance, 0)
 	for _, onceIds := range batchIds {
@@ -178,7 +178,7 @@ func (p *Aliyun) GetInstances(ids []string) (instances []cloud.Instance, err err
 	return
 }
 
-func (p *Aliyun) BatchDelete(ids []string, regionId string) (err error) {
+func (p *AlibabaCloud) BatchDelete(ids []string, regionId string) (err error) {
 	request := ecs.CreateDeleteInstancesRequest()
 	request.Scheme = "https"
 	request.RegionId = regionId
@@ -193,7 +193,7 @@ func (p *Aliyun) BatchDelete(ids []string, regionId string) (err error) {
 	return err
 }
 
-func (p *Aliyun) StartInstance(id string) error {
+func (p *AlibabaCloud) StartInstance(id string) error {
 	request := ecs.CreateStartInstanceRequest()
 	request.Scheme = "https"
 
@@ -204,7 +204,7 @@ func (p *Aliyun) StartInstance(id string) error {
 	return err
 }
 
-func (p *Aliyun) StopInstance(id string) error {
+func (p *AlibabaCloud) StopInstance(id string) error {
 	request := ecs.CreateStopInstanceRequest()
 	request.Scheme = "https"
 	request.InstanceId = id
@@ -214,14 +214,14 @@ func (p *Aliyun) StopInstance(id string) error {
 	return err
 }
 
-func (p *Aliyun) GetInstancesByCluster(regionId, clusterName string) (instances []cloud.Instance, err error) {
+func (p *AlibabaCloud) GetInstancesByCluster(regionId, clusterName string) (instances []cloud.Instance, err error) {
 	return p.GetInstancesByTags(regionId, []cloud.Tag{{
 		Key:   cloud.ClusterName,
 		Value: clusterName,
 	}})
 }
 
-func (p *Aliyun) CreateVPC(req cloud.CreateVpcRequest) (cloud.CreateVpcResponse, error) {
+func (p *AlibabaCloud) CreateVPC(req cloud.CreateVpcRequest) (cloud.CreateVpcResponse, error) {
 	request := &vpcClient.CreateVpcRequest{
 		RegionId:  &req.RegionId,
 		CidrBlock: &req.CidrBlock,
@@ -230,7 +230,7 @@ func (p *Aliyun) CreateVPC(req cloud.CreateVpcRequest) (cloud.CreateVpcResponse,
 
 	response, err := p.vpcClient.CreateVpc(request)
 	if err != nil {
-		logs.Logger.Errorf("CreateVPC Aliyun failed.err: [%v], req[%v]", err, req)
+		logs.Logger.Errorf("CreateVPC AlibabaCloud failed.err: [%v], req[%v]", err, req)
 		return cloud.CreateVpcResponse{}, err
 	}
 	if response != nil && response.Body != nil {
@@ -242,7 +242,7 @@ func (p *Aliyun) CreateVPC(req cloud.CreateVpcRequest) (cloud.CreateVpcResponse,
 	return cloud.CreateVpcResponse{}, nil
 }
 
-func (p *Aliyun) GetVPC(req cloud.GetVpcRequest) (cloud.GetVpcResponse, error) {
+func (p *AlibabaCloud) GetVPC(req cloud.GetVpcRequest) (cloud.GetVpcResponse, error) {
 	request := &vpcClient.DescribeVpcAttributeRequest{
 		VpcId:    tea.String(req.VpcId),
 		RegionId: tea.String(req.RegionId),
@@ -250,7 +250,7 @@ func (p *Aliyun) GetVPC(req cloud.GetVpcRequest) (cloud.GetVpcResponse, error) {
 
 	response, err := p.vpcClient.DescribeVpcAttribute(request)
 	if err != nil {
-		logs.Logger.Errorf("GetVPC Aliyun failed.err: [%v], req[%v]", err, req)
+		logs.Logger.Errorf("GetVPC AlibabaCloud failed.err: [%v], req[%v]", err, req)
 		return cloud.GetVpcResponse{}, err
 	}
 	if response != nil && response.Body != nil {
@@ -275,7 +275,7 @@ func (p *Aliyun) GetVPC(req cloud.GetVpcRequest) (cloud.GetVpcResponse, error) {
 	return cloud.GetVpcResponse{}, err
 }
 
-func (p *Aliyun) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.DescribeVpcsResponse, error) {
+func (p *AlibabaCloud) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.DescribeVpcsResponse, error) {
 	var page int32 = 1
 	vpcs := make([]cloud.VPC, 0, 128)
 	for {
@@ -286,7 +286,7 @@ func (p *Aliyun) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.DescribeVpcs
 		}
 		response, err := p.vpcClient.DescribeVpcs(request)
 		if err != nil {
-			logs.Logger.Errorf("DescribeVpcs Aliyun failed.err: [%v], req[%v]", err, req)
+			logs.Logger.Errorf("DescribeVpcs AlibabaCloud failed.err: [%v], req[%v]", err, req)
 			return cloud.DescribeVpcsResponse{}, err
 		}
 		if response != nil && response.Body != nil && response.Body.Vpcs != nil {
@@ -314,7 +314,7 @@ func (p *Aliyun) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.DescribeVpcs
 	return cloud.DescribeVpcsResponse{Vpcs: vpcs}, nil
 }
 
-func (p *Aliyun) CreateSwitch(req cloud.CreateSwitchRequest) (cloud.CreateSwitchResponse, error) {
+func (p *AlibabaCloud) CreateSwitch(req cloud.CreateSwitchRequest) (cloud.CreateSwitchResponse, error) {
 	request := &vpcClient.CreateVSwitchRequest{
 		ZoneId:      tea.String(req.ZoneId),
 		RegionId:    tea.String(req.RegionId),
@@ -325,7 +325,7 @@ func (p *Aliyun) CreateSwitch(req cloud.CreateSwitchRequest) (cloud.CreateSwitch
 
 	response, err := p.vpcClient.CreateVSwitch(request)
 	if err != nil {
-		logs.Logger.Errorf("CreateSwitch Aliyun failed.err: [%v], req[%v]", err, req)
+		logs.Logger.Errorf("CreateSwitch AlibabaCloud failed.err: [%v], req[%v]", err, req)
 		return cloud.CreateSwitchResponse{}, err
 	}
 	if response != nil && response.Body != nil {
@@ -337,13 +337,13 @@ func (p *Aliyun) CreateSwitch(req cloud.CreateSwitchRequest) (cloud.CreateSwitch
 	return cloud.CreateSwitchResponse{}, err
 }
 
-func (p *Aliyun) GetSwitch(req cloud.GetSwitchRequest) (cloud.GetSwitchResponse, error) {
+func (p *AlibabaCloud) GetSwitch(req cloud.GetSwitchRequest) (cloud.GetSwitchResponse, error) {
 	request := &vpcClient.DescribeVSwitchAttributesRequest{
 		VSwitchId: tea.String(req.SwitchId),
 	}
 	response, err := p.vpcClient.DescribeVSwitchAttributes(request)
 	if err != nil {
-		logs.Logger.Errorf("GetSwitch Aliyun failed.err: [%v], req[%v]", err, req)
+		logs.Logger.Errorf("GetSwitch AlibabaCloud failed.err: [%v], req[%v]", err, req)
 		return cloud.GetSwitchResponse{}, err
 	}
 	if response != nil && response.Body != nil {
@@ -367,7 +367,7 @@ func (p *Aliyun) GetSwitch(req cloud.GetSwitchRequest) (cloud.GetSwitchResponse,
 	return cloud.GetSwitchResponse{}, nil
 }
 
-func (p *Aliyun) DescribeSwitches(req cloud.DescribeSwitchesRequest) (cloud.DescribeSwitchesResponse, error) {
+func (p *AlibabaCloud) DescribeSwitches(req cloud.DescribeSwitchesRequest) (cloud.DescribeSwitchesResponse, error) {
 	var page int32 = 1
 	switches := make([]cloud.Switch, 0, 128)
 	for {
@@ -378,7 +378,7 @@ func (p *Aliyun) DescribeSwitches(req cloud.DescribeSwitchesRequest) (cloud.Desc
 		}
 		response, err := p.vpcClient.DescribeVSwitches(request)
 		if err != nil {
-			logs.Logger.Errorf("DescribeSwitches Aliyun failed.err: [%v], req[%v]", err, req)
+			logs.Logger.Errorf("DescribeSwitches AlibabaCloud failed.err: [%v], req[%v]", err, req)
 			return cloud.DescribeSwitchesResponse{}, err
 		}
 		if response != nil && response.Body != nil && response.Body.VSwitches != nil {
@@ -412,7 +412,7 @@ func (p *Aliyun) DescribeSwitches(req cloud.DescribeSwitchesRequest) (cloud.Desc
 	return cloud.DescribeSwitchesResponse{Switches: switches}, nil
 }
 
-func (p *Aliyun) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest) (cloud.CreateSecurityGroupResponse, error) {
+func (p *AlibabaCloud) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest) (cloud.CreateSecurityGroupResponse, error) {
 	request := &ecsClient.CreateSecurityGroupRequest{
 		RegionId:          tea.String(req.RegionId),
 		SecurityGroupName: tea.String(req.SecurityGroupName),
@@ -422,7 +422,7 @@ func (p *Aliyun) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest) (clou
 
 	response, err := p.ecsClient.CreateSecurityGroup(request)
 	if err != nil {
-		logs.Logger.Errorf("CreateSecurityGroup Aliyun failed.err: [%v], req[%v]", err, req)
+		logs.Logger.Errorf("CreateSecurityGroup AlibabaCloud failed.err: [%v], req[%v]", err, req)
 		return cloud.CreateSecurityGroupResponse{}, err
 	}
 	if response != nil && response.Body != nil {
@@ -434,7 +434,7 @@ func (p *Aliyun) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest) (clou
 	return cloud.CreateSecurityGroupResponse{}, err
 }
 
-func (p *Aliyun) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
+func (p *AlibabaCloud) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
 	request := &ecsClient.AuthorizeSecurityGroupRequest{
 		RegionId:           tea.String(req.RegionId),
 		SecurityGroupId:    tea.String(req.SecurityGroupId),
@@ -447,13 +447,13 @@ func (p *Aliyun) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleReque
 
 	_, err := p.ecsClient.AuthorizeSecurityGroup(request)
 	if err != nil {
-		logs.Logger.Errorf("AddIngressSecurityGroupRule Aliyun failed.err: [%v], req[%v]", err, req)
+		logs.Logger.Errorf("AddIngressSecurityGroupRule AlibabaCloud failed.err: [%v], req[%v]", err, req)
 		return err
 	}
 	return nil
 }
 
-func (p *Aliyun) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
+func (p *AlibabaCloud) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
 	request := &ecsClient.AuthorizeSecurityGroupEgressRequest{
 		RegionId:         tea.String(req.RegionId),
 		SecurityGroupId:  tea.String(req.SecurityGroupId),
@@ -466,13 +466,13 @@ func (p *Aliyun) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleReques
 
 	_, err := p.ecsClient.AuthorizeSecurityGroupEgress(request)
 	if err != nil {
-		logs.Logger.Errorf("AddEgressSecurityGroupRule Aliyun failed.err: [%v], req[%v]", err, req)
+		logs.Logger.Errorf("AddEgressSecurityGroupRule AlibabaCloud failed.err: [%v], req[%v]", err, req)
 		return err
 	}
 	return nil
 }
 
-func (p *Aliyun) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRequest) (cloud.DescribeSecurityGroupsResponse, error) {
+func (p *AlibabaCloud) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRequest) (cloud.DescribeSecurityGroupsResponse, error) {
 	var page int32 = 1
 	groups := make([]cloud.SecurityGroup, 0, 128)
 
@@ -485,7 +485,7 @@ func (p *Aliyun) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRequest)
 		}
 		response, err := p.ecsClient.DescribeSecurityGroups(request)
 		if err != nil {
-			logs.Logger.Errorf("GetSecurityGroup Aliyun failed.err: [%v], req[%v]", err, req)
+			logs.Logger.Errorf("GetSecurityGroup AlibabaCloud failed.err: [%v], req[%v]", err, req)
 			return cloud.DescribeSecurityGroupsResponse{}, err
 		}
 		if response != nil && response.Body != nil && response.Body.SecurityGroups != nil {
@@ -512,12 +512,12 @@ func (p *Aliyun) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRequest)
 	return cloud.DescribeSecurityGroupsResponse{Groups: groups}, nil
 }
 
-func (p *Aliyun) GetRegions() (cloud.GetRegionsResponse, error) {
+func (p *AlibabaCloud) GetRegions() (cloud.GetRegionsResponse, error) {
 	response, err := p.vpcClient.DescribeRegions(&vpcClient.DescribeRegionsRequest{
 		AcceptLanguage: tea.String(AcceptLanguage),
 	})
 	if err != nil {
-		logs.Logger.Errorf("GetRegions Aliyun failed.err: [%v]", err)
+		logs.Logger.Errorf("GetRegions AlibabaCloud failed.err: [%v]", err)
 		return cloud.GetRegionsResponse{}, err
 	}
 	if response != nil && response.Body != nil {
@@ -535,12 +535,12 @@ func (p *Aliyun) GetRegions() (cloud.GetRegionsResponse, error) {
 	return cloud.GetRegionsResponse{}, nil
 }
 
-func (p *Aliyun) GetZones(req cloud.GetZonesRequest) (cloud.GetZonesResponse, error) {
+func (p *AlibabaCloud) GetZones(req cloud.GetZonesRequest) (cloud.GetZonesResponse, error) {
 	response, err := p.vpcClient.DescribeZones(&vpcClient.DescribeZonesRequest{
 		RegionId: tea.String(req.RegionId),
 	})
 	if err != nil {
-		logs.Logger.Errorf("GetZones Aliyun failed.err: [%v] req[%v]", err, req)
+		logs.Logger.Errorf("GetZones AlibabaCloud failed.err: [%v] req[%v]", err, req)
 		return cloud.GetZonesResponse{}, err
 	}
 	if response != nil && response.Body != nil {
@@ -558,7 +558,7 @@ func (p *Aliyun) GetZones(req cloud.GetZonesRequest) (cloud.GetZonesResponse, er
 	return cloud.GetZonesResponse{}, err
 }
 
-func (p *Aliyun) DescribeAvailableResource(req cloud.DescribeAvailableResourceRequest) (cloud.DescribeAvailableResourceResponse, error) {
+func (p *AlibabaCloud) DescribeAvailableResource(req cloud.DescribeAvailableResourceRequest) (cloud.DescribeAvailableResourceResponse, error) {
 	response, err := p.ecsClient.DescribeAvailableResource(&ecsClient.DescribeAvailableResourceRequest{
 		RegionId:            tea.String(req.RegionId),
 		ZoneId:              tea.String(req.ZoneId),
@@ -566,7 +566,7 @@ func (p *Aliyun) DescribeAvailableResource(req cloud.DescribeAvailableResourceRe
 		NetworkCategory:     tea.String("vpc"),
 	})
 	if err != nil {
-		logs.Logger.Errorf("DescribeAvailableResource Aliyun failed.err: [%v] req[%v]", err, req)
+		logs.Logger.Errorf("DescribeAvailableResource AlibabaCloud failed.err: [%v] req[%v]", err, req)
 		return cloud.DescribeAvailableResourceResponse{}, err
 	}
 	if response != nil && response.Body != nil && response.Body.AvailableZones != nil {
@@ -599,12 +599,12 @@ func (p *Aliyun) DescribeAvailableResource(req cloud.DescribeAvailableResourceRe
 	return cloud.DescribeAvailableResourceResponse{}, err
 }
 
-func (p *Aliyun) DescribeInstanceTypes(req cloud.DescribeInstanceTypesRequest) (cloud.DescribeInstanceTypesResponse, error) {
+func (p *AlibabaCloud) DescribeInstanceTypes(req cloud.DescribeInstanceTypesRequest) (cloud.DescribeInstanceTypesResponse, error) {
 	response, err := p.ecsClient.DescribeInstanceTypes(&ecsClient.DescribeInstanceTypesRequest{
 		InstanceTypes: tea.StringSlice(req.TypeName),
 	})
 	if err != nil {
-		logs.Logger.Errorf("DescribeInstanceTypes Aliyun failed.err: [%v] req[%v]", err, req)
+		logs.Logger.Errorf("DescribeInstanceTypes AlibabaCloud failed.err: [%v] req[%v]", err, req)
 		return cloud.DescribeInstanceTypesResponse{}, err
 	}
 	if response != nil && response.Body != nil && response.Body.InstanceTypes != nil {
@@ -624,7 +624,7 @@ func (p *Aliyun) DescribeInstanceTypes(req cloud.DescribeInstanceTypesRequest) (
 	return cloud.DescribeInstanceTypesResponse{}, err
 }
 
-func (p *Aliyun) DescribeImages(req cloud.DescribeImagesRequest) (cloud.DescribeImagesResponse, error) {
+func (p *AlibabaCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.DescribeImagesResponse, error) {
 	var page int32 = 1
 	images := make([]cloud.Image, 0)
 	for {
@@ -655,11 +655,11 @@ func (p *Aliyun) DescribeImages(req cloud.DescribeImagesRequest) (cloud.Describe
 	return cloud.DescribeImagesResponse{Images: images}, nil
 }
 
-func (*Aliyun) ProviderType() string {
-	return ALIYUN
+func (*AlibabaCloud) ProviderType() string {
+	return CloudName
 }
 
-func (p *Aliyun) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (cloud.DescribeGroupRulesResponse, error) {
+func (p *AlibabaCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (cloud.DescribeGroupRulesResponse, error) {
 	rules := make([]cloud.SecurityGroupRule, 0, 128)
 	request := &ecsClient.DescribeSecurityGroupAttributeRequest{
 		RegionId:        tea.String(req.RegionId),
@@ -667,7 +667,7 @@ func (p *Aliyun) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (cloud.
 	}
 	response, err := p.ecsClient.DescribeSecurityGroupAttribute(request)
 	if err != nil {
-		logs.Logger.Errorf("DescribeGroupRules Aliyun failed.err: [%v], req[%v]", err, req)
+		logs.Logger.Errorf("DescribeGroupRules AlibabaCloud failed.err: [%v], req[%v]", err, req)
 		return cloud.DescribeGroupRulesResponse{}, err
 	}
 	if response != nil && response.Body != nil && response.Body.Permissions != nil {
@@ -713,7 +713,7 @@ var PayStatus = map[string]int8{
 	Cancelled: constants.Cancelled,
 }
 
-func (p *Aliyun) GetOrders(req cloud.GetOrdersRequest) (cloud.GetOrdersResponse, error) {
+func (p *AlibabaCloud) GetOrders(req cloud.GetOrdersRequest) (cloud.GetOrdersResponse, error) {
 	request := bssopenapi.CreateQueryOrdersRequest()
 	request.Scheme = "https"
 	request.CreateTimeStart = req.StartTime.Format("2006-01-02T15:04:05Z")

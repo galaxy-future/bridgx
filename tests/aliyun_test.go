@@ -7,11 +7,11 @@ import (
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/bssopenapi"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
-	"github.com/galaxy-future/BridgX/pkg/cloud/aliyun"
+	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 )
 
-func TestGetAliyunClient(t *testing.T) {
-	c, err := aliyun.New("a", "b", "cn-beijing")
+func TestGetAlibabaCloudClient(t *testing.T) {
+	c, err := alibaba.New("a", "b", "cn-beijing")
 	t.Logf("err:%v\n", err)
 	region, err := c.GetRegions()
 
@@ -21,7 +21,7 @@ func TestGetAliyunClient(t *testing.T) {
 }
 
 func TestQueryOrders(t *testing.T) {
-	cloudCli, err := aliyun.New("a", "b", "cn-beijing")
+	cloudCli, err := alibaba.New("a", "b", "cn-beijing")
 	if err != nil {
 		t.Log(err.Error())
 		return
@@ -45,18 +45,13 @@ func TestQueryOrders(t *testing.T) {
 		t.Log("len:", len(res.Orders))
 		for _, row := range res.Orders {
 			cnt += 1
-			if cnt > aliyun.SubOrderNumPerMain {
+			if cnt > alibaba.SubOrderNumPerMain {
 				t.Log("---------------")
 				break
 			}
 			rowStr, _ := json.Marshal(row)
 			t.Log(string(rowStr))
 		}
-
-		//if err = service.SaveOrders("TEST_11", "aliyun", res.Orders); err != nil {
-		//	t.Log(err.Error())
-		//	return
-		//}
 		if len(res.Orders) < pageSize {
 			break
 		}

@@ -309,7 +309,7 @@ create table `order_202101`
     `quantity`         int                               not null default '1',
     `usage_start_time` timestamp                         not null DEFAULT current_timestamp,
     `usage_end_time`   timestamp                         not null DEFAULT current_timestamp,
-    `provider`         varchar(64) collate utf8mb4_bin   not null default 'aliyun',
+    `provider`         varchar(64) collate utf8mb4_bin   not null default 'AlibabaCloud',
     `region_id`        varchar(64) collate utf8mb4_bin   not null default '',
     `charge_type`      varchar(32) collate utf8mb4_bin   not null default 'PostPaid',
     `pay_status`       tinyint                           not null default '1' comment '1:已支付，2：未支付，3：取消',

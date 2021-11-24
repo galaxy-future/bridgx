@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetAccounts(t *testing.T) {
-	accounts, total, err := service.GetAccounts("aliyun", "TES", "", 1, 10)
+	accounts, total, err := service.GetAccounts("AlibabaCloud", "TES", "", 1, 10)
 	assert.Nil(t, err)
 	assert.Len(t, accounts, 2)
 	assert.EqualValues(t, total, 2)

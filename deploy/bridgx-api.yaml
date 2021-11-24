@@ -10,7 +10,7 @@ data:
     ServerPort: 9090
     CostConfig:
       QueryOrderIntvalSec: 300
-      QueryAliyunOrderPerMin: 1000
+      QueryAlibabaCloudOrderPerMin: 1000
     WriteDB:
       Name: bridgx
       Host: 172.16.16.169

@@ -4,12 +4,12 @@ type ProviderType int
 
 const (
 	InvalidProvider ProviderType = iota
-	AliyunProvider
-	HuaWeiProvider
+	AlibabaCloudProvider
+	HuaWeiCloudProvider
 )
 
 const (
-	ALIYUN             = "aliyun"
+	AlibabaCloud       = "AlibabaCloud"
 	VPCStatusPending   = "Pending"
 	VPCStatusAvailable = "Available"
 )
