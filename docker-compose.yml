@@ -36,7 +36,7 @@ services:
   #######################  bridgx 1.0  ########################
   api:
     container_name: gf-bridgx-api
-    image: "bridgx_api"
+    image: bridgx_api:${VERSION}
     network_mode: "host"
     build:
       context: .
@@ -50,7 +50,7 @@ services:
 
   scheduler:
     container_name: gf-bridgx-scheduler
-    image: "bridgx_scheduler"
+    image: bridgx_scheduler:${VERSION}
     network_mode: "host"
     build:
       context: .
