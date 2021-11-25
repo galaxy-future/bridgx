@@ -1,0 +1,29 @@
+name: Push Docker Images
+
+on:
+  push:
+    branches: [ master, dev ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Build & Publish API to Registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: galaxyfuture/bridgx-api
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          dockerfile: API.Dockerfile
+          tags: "latest"
+
+      - uses: actions/checkout@master
+      - name: Build & Publish Scheduler to Registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: galaxyfuture/bridgx-scheduler
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          dockerfile: SCHEDULER.Dockerfile
+          tags: "latest"
