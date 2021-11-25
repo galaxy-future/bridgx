@@ -1,3 +1,5 @@
+check:
+	go vet ./...
 format:
 	#go get golang.org/x/tools/cmd/goimports
 	find . -name '*.go' | grep -Ev 'vendor|thrift_gen' | xargs goimports -w
