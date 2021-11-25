@@ -1,6 +1,8 @@
 package request
 
-import "github.com/galaxy-future/BridgX/internal/service"
+import (
+	"github.com/galaxy-future/BridgX/internal/service"
+)
 
 type AddTagRequest struct {
 	ClusterName string            `json:"cluster_name"`

@@ -7,17 +7,17 @@ import (
 type ClusterInfo struct {
 	//Base Config
 	Id           int64  `json:"id"`
-	Name         string `json:"name"`
+	Name         string `json:"name" binding:"required,max=20"`
 	Desc         string `json:"desc"`
-	RegionId     string `json:"region_id"`
-	ZoneId       string `json:"zone_id"`
-	InstanceType string `json:"instance_type"`
-	ChargeType   string `json:"charge_type"`
-	Image        string `json:"image"`
-	Provider     string `json:"provider"`
+	RegionId     string `json:"region_id" binding:"required"`
+	ZoneId       string `json:"zone_id" binding:"required"`
+	InstanceType string `json:"instance_type" binding:"required"`
+	ChargeType   string `json:"charge_type" binding:"required"`
+	Image        string `json:"image" binding:"required"`
+	Provider     string `json:"provider" binding:"required,mustIn=cloud"`
 	Username     string `json:"username"`
-	Password     string `json:"password"`
-	AccountKey   string `json:"account_key"` //阿里云ak
+	Password     string `json:"password" binding:"required,min=8,max=30,charTypeGT3"`
+	AccountKey   string `json:"account_key" binding:"required"` //阿里云ak
 
 	//Advanced Config
 	NetworkConfig *NetworkConfig `json:"network_config"`
@@ -28,9 +28,9 @@ type ClusterInfo struct {
 }
 
 type NetworkConfig struct {
-	Vpc                     string `json:"vpc"`
-	SubnetId                string `json:"subnet_id"`
-	SecurityGroup           string `json:"security_group"`
+	Vpc                     string `json:"vpc" binding:"required"`
+	SubnetId                string `json:"subnet_id" binding:"required"`
+	SecurityGroup           string `json:"security_group" binding:"required"`
 	InternetChargeType      string `json:"internet_charge_type"`
 	InternetMaxBandwidthOut int    `json:"internet_max_bandwidth_out"`
 }

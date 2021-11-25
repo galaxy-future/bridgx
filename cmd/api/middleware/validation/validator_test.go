@@ -167,3 +167,41 @@ func Test_validateAllCharacter(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateOneOfMembers(t *testing.T) {
+	type args struct {
+		Provider string
+	}
+	errMsg := fmt.Sprintf(mustInTransErr, getMustInErrMsg(mustInCloudParam))
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "一个部署于 cloud 的成员",
+			args: args{
+				Provider: "TencentCloud",
+			},
+			want: fmt.Sprintf("[Password] %s", errMsg),
+		},
+	}
+	type ValidateCase struct {
+		Provider string `validate:"mustIn=cloud"`
+	}
+	v, err := testValidator()
+	if err != nil {
+		t.Fatalf("init validator failed.err:[%s]", err.Error())
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := ValidateCase{Provider: tt.args.Provider}
+			err := v.Struct(c)
+			if got := Translate2Chinese(err); got != tt.want {
+				t.Errorf("allchar failed. got:[%s] want:[%s]", got, tt.want)
+			}
+		})
+	}
+	return
+}

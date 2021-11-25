@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
+	"github.com/galaxy-future/BridgX/cmd/api/middleware/validation"
 	"github.com/galaxy-future/BridgX/cmd/api/request"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -156,9 +157,9 @@ func CreateCluster(ctx *gin.Context) {
 		return
 	}
 	clusterInput := types.ClusterInfo{}
-	err := ctx.BindJSON(&clusterInput)
+	err := ctx.ShouldBindJSON(&clusterInput)
 	if err != nil {
-		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
+		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
 		return
 	}
 	m, err := convertToClusterModel(&clusterInput)
@@ -198,9 +199,9 @@ func EditCluster(ctx *gin.Context) {
 		return
 	}
 	clusterInput := types.ClusterInfo{}
-	err := ctx.BindJSON(&clusterInput)
+	err := ctx.ShouldBindJSON(&clusterInput)
 	if err != nil {
-		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, err)
+		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), err)
 		return
 	}
 	m, err := convertToClusterModel(&clusterInput)

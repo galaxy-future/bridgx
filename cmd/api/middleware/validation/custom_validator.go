@@ -2,7 +2,9 @@ package validation
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+	"sync"
 
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
@@ -11,6 +13,11 @@ import (
 const (
 	CharTypeGT3         = "charTypeGT3"
 	CharTypeGT3TransErr = "必须同时包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）"
+
+	mustIn           = "mustIn"
+	mustInTransErr   = "必须是 [%s] 之一"
+	mustInCloudParam = "cloud"
+	delimiter        = "、"
 )
 
 var (
@@ -23,7 +30,41 @@ var (
 		'(': {}, ')': {}, '`': {}, '~': {}, '!': {}, '@': {}, '#': {}, '$': {}, '%': {}, '^': {}, '&': {}, '*': {}, '_': {},
 		'-': {}, '+': {}, '=': {}, '|': {}, '{': {}, '}': {}, '[': {}, ']': {}, ':': {}, ';': {}, '\'': {}, '<': {}, '>': {}, ',': {}, '.': {}, '?': {}, '/': {},
 	}
+
+	mustInMembers = map[string]map[string]struct{}{
+		mustInCloudParam: {"AlibabaCloud": {}, "HuaweiCloud": {}},
+	}
+	mustInErrMsgCache       = map[string]string{}
+	mustInErrMsgCacheRWLock = sync.RWMutex{}
 )
+
+func RegisterCustomValidators() {
+	appendMultiTagValidation(
+		// Add your custom Validation here.
+		Validation{
+			validateFunc:     validateCharacterTypeGT3,
+			translateFunc:    translateCharacterErr,
+			translateRegFunc: defaultTranslateRegFunc,
+			tag:              CharTypeGT3,
+		},
+		Validation{
+			validateFunc:     validateMustIn,
+			translateFunc:    translateMustIn,
+			translateRegFunc: defaultTranslateRegFunc,
+			tag:              mustIn,
+		},
+	)
+}
+
+func getStructFieldName(fe validator.FieldError) string {
+	f := strings.Split(fe.StructNamespace(), ".")
+	return f[len(f)-1]
+}
+
+// wrapErrWithStructFieldName will wrap msg with "[`StructFieldName`] "
+func wrapErrWithStructFieldName(fe validator.FieldError, msg string) string {
+	return fmt.Sprintf("[%s] %s", getStructFieldName(fe), msg)
+}
 
 func validateCharacterTypeGT3(fl validator.FieldLevel) bool {
 	field := []byte(fl.Field().String())
@@ -53,24 +94,39 @@ func translateCharacterErr(ut ut.Translator, fe validator.FieldError) string {
 	return wrapErrWithStructFieldName(fe, CharTypeGT3TransErr)
 }
 
-// wrapErrWithStructFieldName will wrap msg with "[`StructFieldName`] "
-func wrapErrWithStructFieldName(fe validator.FieldError, msg string) string {
-	return fmt.Sprintf("[%s] %s", getStructFieldName(fe), msg)
+func validateMustIn(fl validator.FieldLevel) bool {
+	param := fl.Param()
+	members, ok := mustInMembers[param]
+	if !ok {
+		return true
+	}
+	if len(members) > 0 {
+		_, ok = members[fl.Field().String()]
+		return ok
+	}
+	return true
 }
 
-func getStructFieldName(fe validator.FieldError) string {
-	f := strings.Split(fe.StructNamespace(), ".")
-	return f[len(f)-1]
+func translateMustIn(ut ut.Translator, fe validator.FieldError) string {
+	return wrapErrWithStructFieldName(fe, fmt.Sprintf(mustInTransErr, getMustInErrMsg(fe.Param())))
 }
 
-func RegisterCustomValidators() {
-	appendMultiTagValidation(
-		// Add your custom Validation here.
-		Validation{
-			validateFunc:     validateCharacterTypeGT3,
-			translateFunc:    translateCharacterErr,
-			translateRegFunc: defaultTranslateRegFunc,
-			tag:              CharTypeGT3,
-		},
-	)
+func getMustInErrMsg(param string) string {
+	mustInErrMsgCacheRWLock.RLock()
+	msg, ok := mustInErrMsgCache[param]
+	mustInErrMsgCacheRWLock.RUnlock()
+	if !ok {
+		mustInErrMsgCacheRWLock.Lock()
+		members := make([]string, 0)
+		for mem := range mustInMembers[param] {
+			members = append(members, mem)
+		}
+		sort.Slice(members, func(i, j int) bool {
+			return members[i] < members[j]
+		})
+		msg = strings.Join(members, delimiter)
+		mustInErrMsgCache[param] = msg
+		mustInErrMsgCacheRWLock.Unlock()
+	}
+	return msg
 }
