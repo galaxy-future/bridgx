@@ -8,11 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type GetImageListRequest struct {
-	RegionId string `json:"region_id" binding:"required"`
-	Provider string `json:"provider" binding:"required"`
-}
-
 func GetImageList(ctx *gin.Context) {
 	account, err := GetOrgKeys(ctx)
 	if err != nil {
