@@ -15,7 +15,10 @@ import (
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 )
 
-var zoneInsTypeCache = map[string]map[string][]InstanceTypeByZone{} // key: provider key: zoneID
+var (
+	zoneInsTypeCache  = map[string]map[string][]InstanceTypeByZone{} // key: provider key: zoneID
+	instanceTypeCache = map[string]InstanceTypeByZone{}              // key: type_name
+)
 
 func GetInstanceCount(ctx context.Context, accountKeys []string, clusterName string) (int64, error) {
 	clusterNames, err := GetEnabledClusterNamesByCond(ctx, "", clusterName, accountKeys, true)
@@ -41,8 +44,8 @@ func GetInstanceCountByCluster(ctx context.Context, clusters []model.Cluster) ma
 	return retMap
 }
 
-func GetInstanceTypeByName(ctx context.Context, instanceTypeName string) (*model.InstanceType, error) {
-	return model.GetInstanceTypeByName(ctx, instanceTypeName)
+func GetInstanceTypeByName(instanceTypeName string) InstanceTypeByZone {
+	return instanceTypeCache[instanceTypeName]
 }
 
 func GetInstancesByTaskId(ctx context.Context, taskId string, taskAction string) ([]model.Instance, error) {
@@ -355,12 +358,16 @@ func RefreshCache() error {
 		if !ok {
 			providerMap[zoneId] = make([]InstanceTypeByZone, 0, 400)
 		}
-		providerMap[zoneId] = append(providerMap[zoneId], InstanceTypeByZone{
+		i := InstanceTypeByZone{
 			InstanceTypeFamily: in.Family,
 			InstanceType:       in.TypeName,
 			Core:               in.Core,
 			Memory:             in.Memory,
-		})
+		}
+		providerMap[zoneId] = append(providerMap[zoneId], i)
+		if _, ok := instanceTypeCache[in.TypeName]; !ok {
+			instanceTypeCache[in.TypeName] = i
+		}
 	}
 	for provider, zoneMap := range zoneInsTypeCache {
 		for zone, typeList := range zoneMap {

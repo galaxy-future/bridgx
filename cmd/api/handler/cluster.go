@@ -56,11 +56,7 @@ func GetInstanceStat(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	instanceType, err := service.GetInstanceTypeByName(ctx, cluster.InstanceType)
-	if err != nil {
-		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
-		return
-	}
+	instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
 	instanceCount, err := service.GetInstanceCount(ctx, nil, clusterName)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/spf13/cast"
 )
 
@@ -26,9 +27,9 @@ func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int
 	return res
 }
 
-func ConvertToInstanceStat(instanceType *model.InstanceType, count int64) response.InstanceStatResponse {
+func ConvertToInstanceStat(instanceType service.InstanceTypeByZone, count int64) response.InstanceStatResponse {
 	return response.InstanceStatResponse{
-		InstanceTypeDesc: fmt.Sprintf("%v核%vG(%v)", instanceType.Core, instanceType.Memory, instanceType.TypeName),
+		InstanceTypeDesc: fmt.Sprintf("%v核%vG(%v)", instanceType.Core, instanceType.Memory, instanceType.InstanceType),
 		InstanceCount:    count,
 	}
 }
