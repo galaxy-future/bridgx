@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Account cloud provider account info
 type Account struct {
 	Base
 	AccountName   string `json:"account_name"`
@@ -23,10 +24,12 @@ type Account struct {
 	DeletedAt     gorm.DeletedAt
 }
 
+// TableName table name in DB
 func (a Account) TableName() string {
 	return "account"
 }
 
+//AfterFind decrypt account secret
 func (a *Account) AfterFind(tx *gorm.DB) (err error) {
 	if a == nil {
 		return nil
@@ -42,6 +45,7 @@ func (a *Account) AfterFind(tx *gorm.DB) (err error) {
 	return nil
 }
 
+//BeforeSave encrypt account secret before insert DB
 func (a *Account) BeforeSave(tx *gorm.DB) (err error) {
 	if a == nil {
 		return nil
@@ -57,6 +61,7 @@ func (a *Account) BeforeSave(tx *gorm.DB) (err error) {
 	return nil
 }
 
+//GetAccounts search accounts by condition
 func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int) ([]Account, int64, error) {
 	res := make([]Account, 0)
 
@@ -82,6 +87,7 @@ func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int
 	return res, cnt, err
 }
 
+//GetAccountSecretByAccountKey get sk(decrypt) by ak
 func GetAccountSecretByAccountKey(ak string) string {
 	var ac Account
 	if err := clients.ReadDBCli.Where("account_key = ?", ak).First(&ac).Error; err != nil {
@@ -90,6 +96,8 @@ func GetAccountSecretByAccountKey(ak string) string {
 	}
 	return ac.AccountSecret
 }
+
+//GetAccountsByOrgId get accounts belongs to specify orgId
 func GetAccountsByOrgId(orgId int64) (accounts []Account, err error) {
 	if err := clients.ReadDBCli.Where("org_id = ?", orgId).Find(&accounts).Error; err != nil {
 		logErr("GetAccountSecretByAccountKey from read db", err)
@@ -98,6 +106,7 @@ func GetAccountsByOrgId(orgId int64) (accounts []Account, err error) {
 	return accounts, nil
 }
 
+//GetDefaultAccountByProvider return default accounts by provider
 func GetDefaultAccountByProvider(provider string) (account Account, err error) {
 	if err := clients.ReadDBCli.Where("provider = ?", provider).First(&account).Error; err != nil {
 		logErr("GetAccountSecretByAccountKey from read db", err)
@@ -106,6 +115,7 @@ func GetDefaultAccountByProvider(provider string) (account Account, err error) {
 	return account, nil
 }
 
+//GetAksByOrgAkProvider get aks by ak and provider
 func GetAksByOrgAkProvider(ctx context.Context, orgId int64, ak, provider string) ([]string, error) {
 	aks := make([]string, 0)
 	query := clients.ReadDBCli.WithContext(ctx).
@@ -126,6 +136,7 @@ func GetAksByOrgAkProvider(ctx context.Context, orgId int64, ak, provider string
 	return aks, nil
 }
 
+// GetAccountsByAk get first account by ak
 func GetAccountsByAk(ctx context.Context, ak string) (a Account, err error) {
 	err = clients.ReadDBCli.WithContext(ctx).
 		Where("account_key = ?", ak).

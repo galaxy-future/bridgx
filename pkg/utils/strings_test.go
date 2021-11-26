@@ -22,9 +22,9 @@ func TestStringSliceSplit(t *testing.T) {
 				singleLen: 2,
 			},
 			want: [][]string{
-				[]string{"a", "b"},
-				[]string{"c", "d"},
-				[]string{"e"},
+				{"a", "b"},
+				{"c", "d"},
+				{"e"},
 			},
 		},
 		{
@@ -34,7 +34,7 @@ func TestStringSliceSplit(t *testing.T) {
 				singleLen: 5,
 			},
 			want: [][]string{
-				[]string{"a", "b", "c", "d", "e"},
+				{"a", "b", "c", "d", "e"},
 			},
 		},
 		{
@@ -44,7 +44,7 @@ func TestStringSliceSplit(t *testing.T) {
 				singleLen: 6,
 			},
 			want: [][]string{
-				[]string{"a", "b", "c", "d", "e"},
+				{"a", "b", "c", "d", "e"},
 			},
 		},
 	}

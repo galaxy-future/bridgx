@@ -83,7 +83,7 @@ func scheduleJob(clusterName string) error {
 			}
 		}
 		if len(snapshot.ActiveInstances)-len(deleteIPs) != snapshot.Cluster.ExpectCount {
-			return fmt.Errorf("can not schedule shrink task becasue expect count !=  instance count - deleting instance count")
+			return fmt.Errorf("can not schedule shrink task because expect count != instance count - deleting instance count")
 		}
 		_, err := service.CreateShrinkTask(context.Background(), snapshot.Cluster.ClusterName, len(deleteIPs), strings.Join(deleteIPs, ","), "EXPECT", 0)
 		if err != nil {
