@@ -13,6 +13,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/types"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
+	"golang.org/x/sync/errgroup"
 )
 
 const instanceTypeTmpl = "%d核%dG(%s)"
@@ -201,48 +202,20 @@ func SyncInstanceTypes(ctx context.Context, provider string) error {
 		return err
 	}
 	ak := getFirstAk(accounts, provider)
-	instanceInfoMap := make(map[string]*cloud.InstanceInfo)
-	insInfoReq := make([]string, 0, 10)
-	instanceTypes := make([]model.InstanceType, 0, 1000)
-	for _, region := range regions {
-		p, err := getProvider(provider, ak, region.RegionId)
-		if err != nil {
-			logs.Logger.Errorf("region[%s] getProvider failed,err: %v", region.RegionId, err)
-			continue
-		}
-		res, err := p.DescribeAvailableResource(cloud.DescribeAvailableResourceRequest{
-			RegionId: region.RegionId,
-		})
-		if err != nil {
-			logs.Logger.Errorf("region[%s] DescribeAvailableResource failed,err: %v", region.RegionId, err)
-		}
-		for zone, ins := range res.InstanceTypes {
-			for i, in := range ins {
-				if _, ok := instanceInfoMap[in.Value]; !ok {
-					instanceInfoMap[in.Value] = new(cloud.InstanceInfo)
-					insInfoReq = append(insInfoReq, in.Value)
-				}
-				if len(insInfoReq) == 10 || len(ins)-1 == i && len(insInfoReq) > 0 {
-					res, err := p.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: insInfoReq})
-					if err != nil {
-						logs.Logger.Errorf("region[%s] DescribeInstanceTypes failed,err: %v req: %v", region.RegionId, err, insInfoReq)
-					}
-					for _, info := range res.Infos {
-						instanceInfoMap[info.InsTypeName].Family = info.Family
-						instanceInfoMap[info.InsTypeName].Memory = info.Memory
-						instanceInfoMap[info.InsTypeName].Core = info.Core
-					}
-					insInfoReq = insInfoReq[0:0]
-				}
-				instanceTypes = append(instanceTypes, model.InstanceType{
-					Provider: provider,
-					RegionId: region.RegionId,
-					ZoneId:   zone,
-					TypeName: in.Value,
-				})
-			}
-		}
 
+	var eg errgroup.Group
+	instanceTypes := make([]model.InstanceType, 1000)
+	instanceInfoMap := make(map[string]*cloud.InstanceInfo)
+	eg.Go(func() error {
+		instanceTypes, err = getAvailableResource(regions, provider, ak)
+		return err
+	})
+	eg.Go(func() error {
+		instanceInfoMap, err = getInstanceTypeFromCloud(provider, ak)
+		return err
+	})
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 	inss := make([]model.InstanceType, 0, 100)
 	for i, insType := range instanceTypes {
@@ -263,6 +236,52 @@ func SyncInstanceTypes(ctx context.Context, provider string) error {
 		inss = append(inss, insType)
 	}
 	return exchangeStatus(ctx)
+}
+
+func getAvailableResource(regions []cloud.Region, provider, ak string) ([]model.InstanceType, error) {
+	instanceTypes := make([]model.InstanceType, 0, 1000)
+	for _, region := range regions {
+		p, err := getProvider(provider, ak, region.RegionId)
+		if err != nil {
+			logs.Logger.Errorf("region[%s] getProvider failed,err: %v", region.RegionId, err)
+			continue
+		}
+		res, err := p.DescribeAvailableResource(cloud.DescribeAvailableResourceRequest{
+			RegionId: region.RegionId,
+		})
+		if err != nil {
+			logs.Logger.Errorf("region[%s] DescribeAvailableResource failed,err: %v", region.RegionId, err)
+		}
+		for zone, ins := range res.InstanceTypes {
+			for _, in := range ins {
+				instanceTypes = append(instanceTypes, model.InstanceType{
+					Provider: provider,
+					RegionId: region.RegionId,
+					ZoneId:   zone,
+					TypeName: in.Value,
+				})
+			}
+		}
+
+	}
+	return instanceTypes, nil
+}
+
+func getInstanceTypeFromCloud(provider, ak string) (map[string]*cloud.InstanceInfo, error) {
+	instanceInfoMap := make(map[string]*cloud.InstanceInfo)
+	p, err := getProvider(provider, ak, DefaultRegion)
+	if err != nil {
+		logs.Logger.Errorf("region[%s] getProvider failed,err: %v", DefaultRegion, err)
+		return instanceInfoMap, err
+	}
+	res, err := p.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{})
+	if err != nil {
+		return instanceInfoMap, err
+	}
+	for _, instanceType := range res.Infos {
+		instanceInfoMap[instanceType.InsTypeName] = &instanceType
+	}
+	return instanceInfoMap, nil
 }
 
 type ListInstanceTypeRequest struct {

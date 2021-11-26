@@ -106,9 +106,9 @@ type LoginRequest struct {
 
 type CreateCloudAccountRequest struct {
 	AccountName   string `json:"account_name"`
-	Provider      string `json:"provider"`
-	AccountKey    string `json:"account_key"`
-	AccountSecret string `json:"account_secret"`
+	Provider      string `json:"provider" binding:"required,mustIn=cloud"`
+	AccountKey    string `json:"account_key" binding:"required"`
+	AccountSecret string `json:"account_secret" binding:"required"`
 }
 
 type EditCloudAccountRequest struct {
