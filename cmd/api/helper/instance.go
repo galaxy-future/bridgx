@@ -2,7 +2,6 @@ package helper
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
@@ -12,10 +11,6 @@ import (
 	"github.com/galaxy-future/BridgX/internal/types"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
-)
-
-const (
-	instanceTypeTmpl = "%d核%dG(%s)"
 )
 
 func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance, clusters []model.Cluster) []response.InstanceThumb {
@@ -35,7 +30,7 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 			IpOuter:       instance.IpOuter,
 			Provider:      getProvider(instance.ClusterName, clusterMap),
 			ClusterName:   instance.ClusterName,
-			InstanceType:  getInstanceType(instance.ClusterName, clusterMap),
+			InstanceType:  getInstanceTypeDesc(instance.ClusterName, clusterMap),
 			LoginName:     getLoginName(instance.ClusterName, clusterMap),
 			LoginPassword: getLoginPassword(instance.ClusterName, clusterMap),
 			CreateAt:      instance.CreateAt.String(),
@@ -69,9 +64,16 @@ func getLoginPassword(clusterName string, m map[string]model.Cluster) string {
 
 func getInstanceType(clusterName string, m map[string]model.Cluster) string {
 	cluster, ok := m[clusterName]
-	instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
 	if ok {
-		return fmt.Sprintf(instanceTypeTmpl, instanceType.Core, instanceType.Memory, instanceType.InstanceType)
+		return cluster.InstanceType
+	}
+	return ""
+}
+func getInstanceTypeDesc(clusterName string, m map[string]model.Cluster) string {
+	cluster, ok := m[clusterName]
+	if ok {
+		instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
+		return instanceType.GetDesc()
 	}
 	return ""
 }

@@ -1,7 +1,6 @@
 package helper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
@@ -29,7 +28,7 @@ func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int
 
 func ConvertToInstanceStat(instanceType service.InstanceTypeByZone, count int64) response.InstanceStatResponse {
 	return response.InstanceStatResponse{
-		InstanceTypeDesc: fmt.Sprintf("%v核%vG(%v)", instanceType.Core, instanceType.Memory, instanceType.InstanceType),
+		InstanceTypeDesc: instanceType.GetDesc(),
 		InstanceCount:    count,
 	}
 }

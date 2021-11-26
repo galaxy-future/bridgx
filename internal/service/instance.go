@@ -3,17 +3,19 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 	"time"
 
-	"github.com/galaxy-future/BridgX/internal/constants"
-
 	"github.com/galaxy-future/BridgX/internal/clients"
+	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/types"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 )
+
+const instanceTypeTmpl = "%d核%dG(%s)"
 
 var (
 	zoneInsTypeCache  = map[string]map[string][]InstanceTypeByZone{} // key: provider key: zoneID
@@ -279,6 +281,13 @@ type InstanceTypeByZone struct {
 	InstanceType       string `json:"instance_type"`
 	Core               int    `json:"core"`
 	Memory             int    `json:"memory"`
+}
+
+func (i *InstanceTypeByZone) GetDesc() string {
+	if i == nil {
+		return ""
+	}
+	return fmt.Sprintf(instanceTypeTmpl, i.Core, i.Memory, i.InstanceType)
 }
 
 func ListInstanceType(ctx context.Context, req ListInstanceTypeRequest) (ListInstanceTypeResponse, error) {
