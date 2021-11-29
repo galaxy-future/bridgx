@@ -218,15 +218,18 @@ func SyncInstanceTypes(ctx context.Context, provider string) error {
 		return err
 	}
 	inss := make([]model.InstanceType, 0, 100)
-	for i, insType := range instanceTypes {
+	for _, insType := range instanceTypes {
 		insInfo := instanceInfoMap[insType.TypeName]
+		if insInfo == nil {
+			continue
+		}
 		insType.Family = insInfo.Family
 		insType.Memory = insInfo.Memory
 		insType.Core = insInfo.Core
 		now := time.Now()
 		insType.CreateAt = &now
 		insType.UpdateAt = &now
-		if len(inss) == 100 || len(instanceTypes)-1 == i {
+		if len(inss) == 100 {
 			err := BatchCreateInstanceType(ctx, inss)
 			if err != nil {
 				logs.Logger.Errorf("inss[%v] BatchCreateInstanceType failed,err: %v", inss, err)
@@ -234,6 +237,12 @@ func SyncInstanceTypes(ctx context.Context, provider string) error {
 			inss = inss[0:0]
 		}
 		inss = append(inss, insType)
+	}
+	if len(inss) > 0 {
+		err := BatchCreateInstanceType(ctx, inss)
+		if err != nil {
+			logs.Logger.Errorf("inss[%v] BatchCreateInstanceType failed,err: %v", inss, err)
+		}
 	}
 	return exchangeStatus(ctx)
 }
