@@ -204,11 +204,11 @@ func SyncInstanceTypes(ctx context.Context, provider string) error {
 	ak := getFirstAk(accounts, provider)
 
 	var eg errgroup.Group
-	instanceTypes := make([]model.InstanceType, 1000)
+	var instanceTypes  []model.InstanceType
 	instanceInfoMap := make(map[string]*cloud.InstanceInfo)
 	eg.Go(func() error {
-		instanceTypes, err = getAvailableResource(regions, provider, ak)
-		return err
+		instanceTypes, _ = getAvailableResource(regions, provider, ak)
+		return nil
 	})
 	eg.Go(func() error {
 		instanceInfoMap, err = getInstanceTypeFromCloud(provider, ak)
@@ -248,7 +248,7 @@ func SyncInstanceTypes(ctx context.Context, provider string) error {
 }
 
 func getAvailableResource(regions []cloud.Region, provider, ak string) ([]model.InstanceType, error) {
-	instanceTypes := make([]model.InstanceType, 0, 1000)
+	instanceTypes := make([]model.InstanceType, 0, 16384)
 	for _, region := range regions {
 		p, err := getProvider(provider, ak, region.RegionId)
 		if err != nil {
