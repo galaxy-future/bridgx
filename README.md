@@ -21,8 +21,8 @@ BridgX是业界领先的基于全链路Serverless技术的云原生基础架构�
 ![image](https://user-images.githubusercontent.com/94337797/142592631-0bed59e6-7840-4c1c-870e-13dd9edd0c9b.png)
 
 微信交流群:<br>
+![image](https://user-images.githubusercontent.com/94337797/144010978-0fc51458-e03f-47c2-bae4-0745841b84f3.png)
 
-![8cm](https://user-images.githubusercontent.com/94337797/142594216-073aaa91-1b05-4551-b5ff-97895e52e11b.jpg)
 
 
 上手指南
