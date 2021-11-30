@@ -28,6 +28,7 @@ type Instance struct {
 	CreateAt     *time.Time
 	DeleteAt     *time.Time
 	RunningAt    *time.Time
+	ChargeType   string
 }
 
 func (Instance) TableName() string {

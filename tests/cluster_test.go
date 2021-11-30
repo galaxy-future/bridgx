@@ -29,7 +29,6 @@ func TestCreateClusterByApi(t *testing.T) {
 		RegionId: "cn-qingdao",
 		//ZoneId:       "cn-beijing-h",
 		InstanceType: "ecs.g6.large",
-		ChargeType:   "PostPaid",
 		Image:        "centos_8_4_uefi_x64_20G_alibase_20210611.vhd",
 		Provider:     alibaba.CloudName,
 		Password:     "ASDqwe123",
@@ -48,6 +47,7 @@ func TestCreateClusterByApi(t *testing.T) {
 				}},
 			},
 		},
+		ChargeConfig: &types.ChargeConfig{ChargeType: "PostPaid"},
 	}
 	b, _ := jsoniter.MarshalToString(cluster)
 	t.Logf(b)
@@ -81,7 +81,6 @@ func TestExpandClusterUseMockCluster(t *testing.T) {
 		RegionId:     "cn-beijing",
 		ZoneId:       "cn-beijing-h",
 		InstanceType: "ecs.s6-c1m1.small",
-		ChargeType:   "PostPaid",
 		Image:        "centos_7_9_x64_20G_alibase_20210623.vhd",
 		Provider:     alibaba.CloudName,
 		Password:     "ASDqwe123",
@@ -100,6 +99,7 @@ func TestExpandClusterUseMockCluster(t *testing.T) {
 				}},
 			},
 		},
+		ChargeConfig: &types.ChargeConfig{ChargeType: "PostPaid"},
 	}
 	instanceIds, err := service.Expand(&cluster, nil, 2)
 	t.Logf("instanceIds: %v", strings.Join(instanceIds, ","))

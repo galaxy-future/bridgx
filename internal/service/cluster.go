@@ -178,11 +178,16 @@ func GetEnabledClusterNamesByAccounts(ctx context.Context, accountKeys []string)
 func ConvertToClusterInfo(m *model.Cluster, tags []model.ClusterTag) (*types.ClusterInfo, error) {
 	networkConfig := &types.NetworkConfig{}
 	storageConfig := &types.StorageConfig{}
+	chargeConfig := &types.ChargeConfig{}
 	err := jsoniter.UnmarshalFromString(m.NetworkConfig, networkConfig)
 	if err != nil {
 		return nil, err
 	}
 	err = jsoniter.UnmarshalFromString(m.StorageConfig, storageConfig)
+	if err != nil {
+		return nil, err
+	}
+	err = jsoniter.UnmarshalFromString(m.ChargeConfig, chargeConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -197,13 +202,13 @@ func ConvertToClusterInfo(m *model.Cluster, tags []model.ClusterTag) (*types.Clu
 		RegionId:      m.RegionId,
 		ZoneId:        m.ZoneId,
 		InstanceType:  m.InstanceType,
-		ChargeType:    m.ChargeType,
 		Image:         m.Image,
 		Provider:      m.Provider,
 		Username:      constants.DefaultUsername,
 		Password:      m.Password,
 		NetworkConfig: networkConfig,
 		StorageConfig: storageConfig,
+		ChargeConfig:  chargeConfig,
 		AccountKey:    m.AccountKey,
 		Tags:          mt,
 	}
@@ -400,6 +405,7 @@ func saveExpandInstancesToDB(c *types.ClusterInfo, expandInstanceIds []string, t
 			Status:      constants.Pending,
 			ClusterName: c.Name,
 			CreateAt:    &now,
+			ChargeType:  c.ChargeConfig.ChargeType,
 		})
 	}
 	return model.BatchCreateInstance(instances)

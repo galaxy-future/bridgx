@@ -204,7 +204,7 @@ func SyncInstanceTypes(ctx context.Context, provider string) error {
 	ak := getFirstAk(accounts, provider)
 
 	var eg errgroup.Group
-	var instanceTypes  []model.InstanceType
+	var instanceTypes []model.InstanceType
 	instanceInfoMap := make(map[string]*cloud.InstanceInfo)
 	eg.Go(func() error {
 		instanceTypes, _ = getAvailableResource(regions, provider, ak)

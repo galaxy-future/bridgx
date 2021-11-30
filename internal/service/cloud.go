@@ -191,6 +191,11 @@ func generateParams(clusterInfo *types.ClusterInfo, tags []cloud.Tag) (params cl
 	params.Zone = clusterInfo.ZoneId
 	params.Disks = clusterInfo.StorageConfig.Disks
 	params.Tags = tags
+	params.Charge = &cloud.Charge{
+		ChargeType: clusterInfo.ChargeConfig.ChargeType,
+		Period:     clusterInfo.ChargeConfig.Period,
+		PeriodUnit: clusterInfo.ChargeConfig.PeriodUnit,
+	}
 	return
 }
 

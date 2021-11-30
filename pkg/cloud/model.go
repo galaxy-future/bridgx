@@ -18,6 +18,7 @@ type Params struct {
 	Zone         string
 	Region       string
 	Disks        *Disks
+	Charge       *Charge
 	Password     string
 	Tags         []Tag
 }
@@ -44,6 +45,12 @@ type Network struct {
 	SecurityGroup           string `json:"security_group"`
 	InternetChargeType      string `json:"internet_charge_type"`
 	InternetMaxBandwidthOut int    `json:"internet_max_bandwidth_out"`
+}
+
+type Charge struct {
+	Period     int    `json:"period"`
+	PeriodUnit string `json:"period_unit"`
+	ChargeType string `json:"charge_type"`
 }
 
 type Disks struct {

@@ -29,6 +29,7 @@ type Cluster struct {
 	//Advanced Config
 	NetworkConfig string
 	StorageConfig string
+	ChargeConfig  string
 	AccountKey    string
 
 	CreateBy      string

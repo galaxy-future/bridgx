@@ -12,7 +12,6 @@ type ClusterInfo struct {
 	RegionId     string `json:"region_id" binding:"required"`
 	ZoneId       string `json:"zone_id" binding:"required"`
 	InstanceType string `json:"instance_type" binding:"required"`
-	ChargeType   string `json:"charge_type" binding:"required"`
 	Image        string `json:"image" binding:"required"`
 	Provider     string `json:"provider" binding:"required,mustIn=cloud"`
 	Username     string `json:"username"`
@@ -22,6 +21,7 @@ type ClusterInfo struct {
 	//Advanced Config
 	NetworkConfig *NetworkConfig `json:"network_config"`
 	StorageConfig *StorageConfig `json:"storage_config"`
+	ChargeConfig  *ChargeConfig  `json:"charge_config"`
 
 	//Custom Config
 	Tags map[string]string `json:"tags"`
@@ -39,6 +39,12 @@ type StorageConfig struct {
 	MountPoint string       `json:"mount_point"`
 	NAS        string       `json:"nas"`
 	Disks      *cloud.Disks `json:"disks"`
+}
+
+type ChargeConfig struct {
+	ChargeType string `json:"charge_type"`
+	Period     int    `json:"period"`
+	PeriodUnit string `json:"period_unit"`
 }
 
 type OrgKeys struct {
