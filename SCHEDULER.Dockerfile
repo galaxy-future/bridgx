@@ -55,9 +55,10 @@ ENV ServiceName=gf.bridgx.scheduler
 ENV SpecifiedConfig=prod
 
 COPY --from=builder /home/scheduler /home/tiger/scheduler
-RUN addgroup -S tiger && adduser -S tiger -G tiger
+#RUN addgroup -S tiger && adduser -S tiger -G tiger
 WORKDIR /home/tiger/scheduler
-RUN chown -R tiger:tiger /home/tiger && chmod +x run_scheduler.sh && chmod +x bin/wait-for-scheduler.sh
+#RUN chown -R tiger:tiger /home/tiger && chmod +x run_scheduler.sh && chmod +x bin/wait-for-scheduler.sh
+RUN chmod +x run_scheduler.sh && chmod +x bin/wait-for-scheduler.sh
 
 USER tiger
 CMD ["/bin/sh","/home/tiger/scheduler/run_scheduler.sh"]

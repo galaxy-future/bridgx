@@ -55,9 +55,10 @@ ENV ServiceName=gf.bridgx.api
 ENV SpecifiedConfig=prod
 
 COPY --from=builder /home/api /home/tiger/api
-RUN addgroup -S tiger && adduser -S tiger -G tiger
+#RUN addgroup -S tiger && adduser -S tiger -G tiger
 WORKDIR /home/tiger/api
-RUN chown -R tiger:tiger /home/tiger && chmod +x run_api.sh && chmod +x bin/wait-for-api.sh
+#RUN chown -R tiger:tiger /home/tiger && chmod +x run_api.sh && chmod +x bin/wait-for-api.sh
+RUN chmod +x run_api.sh && chmod +x bin/wait-for-api.sh
 
 USER tiger
 EXPOSE 9090
