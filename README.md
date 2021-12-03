@@ -21,8 +21,9 @@ BridgX是业界领先的基于全链路Serverless技术的云原生基础架构�
 微信公众号：GalaxyFutureTech <br>
 ![image](https://user-images.githubusercontent.com/94337797/142592631-0bed59e6-7840-4c1c-870e-13dd9edd0c9b.png)
 
-微信交流群:<br>
-![image](https://user-images.githubusercontent.com/94337797/144010978-0fc51458-e03f-47c2-bae4-0745841b84f3.png)
+企业微信交流群:<br>
+![image](https://user-images.githubusercontent.com/94337797/144558612-e7f36bd4-4afd-45ba-aa18-8be6d39c4537.png)
+
 
 
 
