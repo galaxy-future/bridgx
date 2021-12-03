@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 )
 
+const AesKeySalt = "bridgx"
+
 func AESEncrypt(key, plaintext string) (string, error) {
 	// 注意,这里的 key必须是 16, 24, or 32 bytes
 	keyB := ensureKeyLength(key)

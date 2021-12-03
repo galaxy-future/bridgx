@@ -11,8 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const aesKeySalt = "bridgx"
-
 // Account cloud provider account info
 type Account struct {
 	Base
@@ -37,7 +35,7 @@ func (a *Account) AfterFind(tx *gorm.DB) (err error) {
 		return nil
 	}
 	if a.AccountKey != "" && a.AccountSecret != "" {
-		res, err := encrypt.AESDecrypt(a.AccountKey+aesKeySalt, a.AccountSecret)
+		res, err := encrypt.AESDecrypt(a.AccountKey+encrypt.AesKeySalt, a.AccountSecret)
 		if err != nil {
 			logs.Logger.Errorf("decrypt sk failed.err: %s", err.Error())
 			return err
@@ -53,7 +51,7 @@ func (a *Account) BeforeSave(tx *gorm.DB) (err error) {
 		return nil
 	}
 	if a.AccountKey != "" && a.AccountSecret != "" {
-		res, err := encrypt.AESEncrypt(a.AccountKey+aesKeySalt, a.AccountSecret)
+		res, err := encrypt.AESEncrypt(a.AccountKey+encrypt.AesKeySalt, a.AccountSecret)
 		if err != nil {
 			logs.Logger.Errorf("encrypt sk failed.err: %s", err.Error())
 			return err
