@@ -16,6 +16,16 @@ func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int
 	return res, total, err
 }
 
+//GetAccount query account info by provider and accountKey
+func GetAccount(provider, accountKey string) (*model.Account, error) {
+	var ret model.Account
+	err := model.QueryFirst(map[string]interface{}{"provider": provider, "account_key": accountKey}, &ret)
+	if err != nil {
+		return nil, err
+	}
+	return &ret, nil
+}
+
 func GetAccountsByOrgId(orgId int64) (*types.OrgKeys, error) {
 	a, err := model.GetAccountsByOrgId(orgId)
 	if err != nil {

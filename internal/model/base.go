@@ -66,6 +66,15 @@ func Delete(model interface{}) error {
 	return nil
 }
 
+func QueryFirst(where map[string]interface{}, out interface{}) error {
+	err := clients.ReadDBCli.Where(where).First(out).Error
+	if err != nil {
+		logErr("query data from read db", err)
+		return err
+	}
+	return nil
+}
+
 // Query records
 func Query(where map[string]interface{}, page int, pageSize int, models interface{}, order string, withCount bool) (count int64, err error) {
 	if page <= 0 {

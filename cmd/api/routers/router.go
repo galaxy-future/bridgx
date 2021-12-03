@@ -40,6 +40,7 @@ func Init() *gin.Engine {
 		{
 			cloudAccountPath.POST("create", handler.CreateCloudAccount)
 			cloudAccountPath.GET("list", handler.ListCloudAccounts)
+			cloudAccountPath.GET("info", handler.GetAccountInfo)
 			cloudAccountPath.POST("edit", handler.EditCloudAccount)
 			cloudAccountPath.DELETE("delete/:ids", handler.DeleteCloudAccount)
 		}

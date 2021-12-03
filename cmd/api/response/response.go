@@ -165,6 +165,13 @@ type CloudAccount struct {
 	CreateBy    string `json:"create_by"`
 }
 
+type EncryptCloudAccountInfo struct {
+	AccountName          string `json:"account_name"`
+	AccountKey           string `json:"account_key"`
+	AccountSecretEncrypt string `json:"account_secret_encrypt"`
+	Provider             string `json:"provider"`
+}
+
 type TaskInstancesResponse struct {
 	InstanceList []InstanceThumb `json:"instance_list"`
 	Pager        Pager           `json:"pager"`

@@ -3,7 +3,7 @@ RUN_NAME="gf.bridgx.api"
 mkdir -p output/conf output/bin
 sudo mkdir -p /tmp/bridgx/logs/
 
-find conf/ -type f ! -name "*_local.*" | xargs -I{} cp {} output/conf/
+find conf/ -type f ! -name "*local*" -print0 | xargs -0 -I{} cp {} output/conf/
 cp scripts/run_api.sh output/
 
 go fmt ./...

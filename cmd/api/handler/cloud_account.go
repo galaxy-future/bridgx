@@ -96,3 +96,33 @@ func DeleteCloudAccount(ctx *gin.Context) {
 	response.MkResponse(ctx, http.StatusOK, response.Success, nil)
 	return
 }
+
+//GetAccountInfo get accountKey and encrypt accountSecret by clusterName
+func GetAccountInfo(ctx *gin.Context) {
+	clusterName, ok := ctx.GetQuery("cluster_name")
+	if !ok || clusterName == "" {
+		response.MkResponse(ctx, http.StatusBadRequest, "missing param cluster_name", nil)
+		return
+	}
+	cluster, err := service.GetClusterByName(ctx, clusterName)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	account, err := service.GetAccount(cluster.Provider, cluster.AccountKey)
+	if account == nil {
+		response.MkResponse(ctx, http.StatusBadRequest, "account not found", nil)
+		return
+	}
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	resp, err := helper.ConvertToEncryptAccountInfo(account)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
+	return
+}

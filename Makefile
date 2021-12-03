@@ -7,8 +7,7 @@ vet:
 		exit 1; \
 	fi
 
-check:
-	go vet ./...
+check: vet
 
 format:
 	#go get golang.org/x/tools/cmd/goimports

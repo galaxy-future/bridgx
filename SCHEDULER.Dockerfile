@@ -31,7 +31,7 @@ RUN mkdir -p output/conf output/bin
 # detect mysql start
 COPY wait-for-scheduler.sh output/bin/wait-for-scheduler.sh
 
-RUN find conf/ -type f ! -name "*_local.*" | xargs -I{} cp {} output/conf/
+RUN find conf/ -type f ! -name "*local*" -print0 | xargs -0 -I{} cp {} output/conf/
 RUN cp scripts/run_scheduler.sh output/
 
 RUN CGO_ENABLED=0 GO111MODULE=on go build -o output/bin/${ServiceName} ./cmd/scheduler

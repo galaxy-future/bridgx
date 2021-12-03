@@ -13,3 +13,13 @@ func TestGetAccounts(t *testing.T) {
 	assert.Len(t, accounts, 2)
 	assert.EqualValues(t, total, 2)
 }
+
+func TestGetAccount(t *testing.T) {
+	account, err := service.GetAccount("AlibabaCloud", "TES")
+	assert.Nil(t, err)
+	assert.NotNil(t, account)
+
+	account, err = service.GetAccount("AlibabaCloud", "xxxx")
+	assert.NotNil(t, err)
+	assert.Nil(t, account)
+}
