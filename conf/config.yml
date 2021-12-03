@@ -39,3 +39,6 @@ JwtToken:
   JwtTokenCreatedExpires: 28800   #创建时token默认有效秒数（token生成时间加上该时间秒数，算做有效期）,3600*8=28800 等于8小时
   JwtTokenRefreshExpires: 36000  #对于过期的token，支持从相关接口刷新获取新的token，它有效期为10个小时，3600*10=36000 等于10小时
   BindContextKeyName: "userToken"  #用户在 header 头部提交的token绑定到上下文时的键名，方便直接从上下文(gin.context)直接获取每个用户的id等信息
+
+AESEncryptConfig:
+  AESKeySalt: "bridgx"
