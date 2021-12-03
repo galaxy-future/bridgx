@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/galaxy-future/BridgX/config"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/pkg/encrypt"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"gorm.io/gorm"
 )
+
+const aesKeySalt = "bridgx"
 
 // Account cloud provider account info
 type Account struct {
@@ -36,7 +37,7 @@ func (a *Account) AfterFind(tx *gorm.DB) (err error) {
 		return nil
 	}
 	if a.AccountKey != "" && a.AccountSecret != "" {
-		res, err := encrypt.AESDecrypt(a.AccountKey+config.GlobalConfig.AESEncryptConfig.AESKeySalt, a.AccountSecret)
+		res, err := encrypt.AESDecrypt(a.AccountKey+aesKeySalt, a.AccountSecret)
 		if err != nil {
 			logs.Logger.Errorf("decrypt sk failed.err: %s", err.Error())
 			return err
@@ -52,7 +53,7 @@ func (a *Account) BeforeSave(tx *gorm.DB) (err error) {
 		return nil
 	}
 	if a.AccountKey != "" && a.AccountSecret != "" {
-		res, err := encrypt.AESEncrypt(a.AccountKey+config.GlobalConfig.AESEncryptConfig.AESKeySalt, a.AccountSecret)
+		res, err := encrypt.AESEncrypt(a.AccountKey+aesKeySalt, a.AccountSecret)
 		if err != nil {
 			logs.Logger.Errorf("encrypt sk failed.err: %s", err.Error())
 			return err

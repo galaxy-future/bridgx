@@ -42,19 +42,14 @@ func composeConfigFileName(basePath string, suffix string) string {
 }
 
 type Config struct {
-	DebugMode         bool             `yaml:"DebugMode"`
-	NeedPublishConfig bool             `yaml:"NeedPublishConfig"`
-	ServerPort        int              `yaml:"ServerPort"`
-	CostCfg           CostConfig       `yaml:"CostConfig"`
-	WriteDB           DBConfig         `yaml:"WriteDB"`
-	ReadDB            DBConfig         `yaml:"ReadDB"`
-	EtcdConfig        *EtcdConfig      `yaml:"EtcdConfig"`
-	JwtToken          JwtTokenConfig   `yaml:"JwtToken"`
-	AESEncryptConfig  AESEncryptConfig `yaml:"AESEncryptConfig"`
-}
-
-type AESEncryptConfig struct {
-	AESKeySalt string `yaml:"AESKeySalt"`
+	DebugMode         bool           `yaml:"DebugMode"`
+	NeedPublishConfig bool           `yaml:"NeedPublishConfig"`
+	ServerPort        int            `yaml:"ServerPort"`
+	CostCfg           CostConfig     `yaml:"CostConfig"`
+	WriteDB           DBConfig       `yaml:"WriteDB"`
+	ReadDB            DBConfig       `yaml:"ReadDB"`
+	EtcdConfig        *EtcdConfig    `yaml:"EtcdConfig"`
+	JwtToken          JwtTokenConfig `yaml:"JwtToken"`
 }
 
 type JwtTokenConfig struct {
