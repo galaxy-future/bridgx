@@ -25,7 +25,7 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 		return 0, err
 	}
 	if cluster == nil {
-		return 0, utils.NewErrf(constants.ErrClusterNotExist, clusterName)
+		return 0, fmt.Errorf(constants.ErrClusterNotExist, clusterName)
 	}
 	currentCount, err := model.CountActiveInstancesByClusterName(ctx, []string{clusterName})
 	if err != nil {
@@ -67,7 +67,7 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 		return 0, err
 	}
 	if cluster == nil {
-		return 0, utils.NewErrf(constants.ErrClusterNotExist, clusterName)
+		return 0, fmt.Errorf(constants.ErrClusterNotExist, clusterName)
 	}
 	if chargeType := cluster.GetChargeType(); chargeType == alibaba.PrePaid {
 		return 0, errors.New(constants.ErrPrePaidShrinkNotSupported)

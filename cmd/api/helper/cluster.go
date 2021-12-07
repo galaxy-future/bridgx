@@ -12,10 +12,13 @@ import (
 func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int64) []response.ClusterThumb {
 	res := make([]response.ClusterThumb, 0)
 	for _, cluster := range clusters {
+		instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
 		c := response.ClusterThumb{
 			ClusterId:     cast.ToString(cluster.Id),
 			ClusterName:   cluster.ClusterName,
 			InstanceCount: countMap[cluster.ClusterName],
+			InstanceType:  instanceType.GetDesc(),
+			ChargeType:    cluster.GetChargeType(),
 			Provider:      cluster.Provider,
 			Account:       cluster.AccountKey,
 			CreateAt:      cluster.CreateAt.String(),

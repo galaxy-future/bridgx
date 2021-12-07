@@ -32,6 +32,8 @@ type ClusterThumb struct {
 	ClusterId     string `json:"cluster_id"`
 	ClusterName   string `json:"cluster_name"`
 	InstanceCount int64  `json:"instance_count"`
+	InstanceType  string `json:"instance_type"`
+	ChargeType    string `json:"charge_type"`
 	Provider      string `json:"provider"`
 	Account       string `json:"account"`
 	CreateAt      string `json:"create_at"`
