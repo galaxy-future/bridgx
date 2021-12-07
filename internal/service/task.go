@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
+
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/pkg/id_generator"
@@ -18,6 +20,13 @@ import (
 func CreateExpandTask(ctx context.Context, clusterName string, count int, taskName string, uid int64) (int64, error) {
 	if hasUnfinishedTask(clusterName) {
 		return 0, errors.New(fmt.Sprintf("Cluster:%v has unfinished task", clusterName))
+	}
+	cluster, err := model.GetByClusterName(clusterName)
+	if err != nil {
+		return 0, err
+	}
+	if cluster == nil {
+		return 0, utils.NewErrf(constants.ErrClusterNotExist, clusterName)
 	}
 	info := &model.ExpandTaskInfo{
 		ClusterName:    clusterName,
@@ -39,7 +48,7 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 	task.Id = int64(taskId)
 	task.CreateAt = &now
 	task.UpdateAt = &now
-	err := model.Create(task)
+	err = model.Create(task)
 	if err != nil {
 		return 0, err
 	}
@@ -48,6 +57,16 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips string, taskName string, uid int64) (int64, error) {
 	if hasUnfinishedTask(clusterName) {
 		return 0, errors.New(fmt.Sprintf("Cluster:%v has unfinished task", clusterName))
+	}
+	cluster, err := model.GetByClusterName(clusterName)
+	if err != nil {
+		return 0, err
+	}
+	if cluster == nil {
+		return 0, utils.NewErrf(constants.ErrClusterNotExist, clusterName)
+	}
+	if chargeType := cluster.GetChargeType(); chargeType == alibaba.PrePaid {
+		return 0, errors.New(constants.ErrPrePaidShrinkNotSupported)
 	}
 	info := &model.ShrinkTaskInfo{
 		ClusterName:    clusterName,
@@ -70,7 +89,7 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 	task.Id = int64(taskId)
 	task.CreateAt = &now
 	task.UpdateAt = &now
-	err := model.Create(task)
+	err = model.Create(task)
 	if err != nil {
 		return 0, err
 	}

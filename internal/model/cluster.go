@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/galaxy-future/BridgX/internal/types"
+	jsoniter "github.com/json-iterator/go"
+
 	"gorm.io/gorm"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
@@ -35,6 +38,29 @@ type Cluster struct {
 	UpdateBy      string
 	DeleteUniqKey int64
 	DeletedAt     gorm.DeletedAt
+}
+
+func (c *Cluster) GetChargeType() string {
+	if c == nil {
+		return ""
+	}
+	conf, err := c.UnmarshalChargeConfig()
+	if err != nil {
+		return ""
+	}
+	return conf.ChargeType
+}
+
+func (c *Cluster) UnmarshalChargeConfig() (*types.ChargeConfig, error) {
+	if c == nil {
+		return nil, nil
+	}
+	chargeConfig := &types.ChargeConfig{}
+	err := jsoniter.UnmarshalFromString(c.ChargeConfig, chargeConfig)
+	if err != nil {
+		return nil, err
+	}
+	return chargeConfig, nil
 }
 
 type ClusterSnapshot struct {
