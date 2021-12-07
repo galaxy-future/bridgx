@@ -56,6 +56,7 @@ type TaskDetailResponse struct {
 	SuccessRate         string `json:"success_rate"`
 	ExecuteTime         int    `json:"execute_time"`
 	BeforeInstanceCount int    `json:"before_instance_count"`
+	AfterInstanceCount  int    `json:"after_instance_count"`
 	ExpectInstanceCount int    `json:"expect_instance_count"`
 	CreateAt            string `json:"create_at"`
 }
@@ -117,6 +118,7 @@ type InstanceThumb struct {
 	InstanceType  string `json:"instance_type"`
 	LoginName     string `json:"login_name"`
 	LoginPassword string `json:"login_password"`
+	ChargeType    string `json:"charge_type"`
 }
 
 type InstanceUsage struct {

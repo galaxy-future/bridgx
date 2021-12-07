@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/galaxy-future/BridgX/pkg/cloud"
+
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
-	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 	"github.com/galaxy-future/BridgX/pkg/id_generator"
 	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
@@ -69,7 +70,7 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 	if cluster == nil {
 		return 0, fmt.Errorf(constants.ErrClusterNotExist, clusterName)
 	}
-	if chargeType := cluster.GetChargeType(); chargeType == alibaba.PrePaid {
+	if chargeType := cluster.GetChargeType(); chargeType == cloud.InstanceChargeTypePrePaid {
 		return 0, errors.New(constants.ErrPrePaidShrinkNotSupported)
 	}
 	currentCount, err := model.CountActiveInstancesByClusterName(ctx, []string{clusterName})

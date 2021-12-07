@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	Pending     = "Pending"
-	TaskId      = "TaskId"
-	ClusterName = "ClusterName"
+	Pending                   = "Pending"
+	TaskId                    = "TaskId"
+	ClusterName               = "ClusterName"
+	InstanceChargeTypePrePaid = "PrePaid"
 )
 
 type Params struct {

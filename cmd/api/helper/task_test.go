@@ -8,6 +8,7 @@ import (
 )
 
 func Test_getTaskInfoCountDiff(t *testing.T) {
+	success := 1
 	type args struct {
 		task *model.Task
 	}
@@ -16,6 +17,7 @@ func Test_getTaskInfoCountDiff(t *testing.T) {
 		args       args
 		wantBefore int
 		wantExpect int
+		wantAfter  int
 	}{
 		{
 			name: "expand instance count diff",
@@ -27,6 +29,7 @@ func Test_getTaskInfoCountDiff(t *testing.T) {
 			},
 			wantBefore: 10,
 			wantExpect: 15,
+			wantAfter:  11,
 		},
 		{
 			name: "shrink instance count diff",
@@ -38,16 +41,20 @@ func Test_getTaskInfoCountDiff(t *testing.T) {
 			},
 			wantBefore: 10,
 			wantExpect: 4,
+			wantAfter:  9,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotBefore, gotExpect := getTaskInfoCountDiff(tt.args.task)
+			gotBefore, gotAfter, gotExpect := getTaskInfoCountDiff(tt.args.task, success)
 			if gotBefore != tt.wantBefore {
 				t.Errorf("getTaskInfoCountDiff() gotBefore = %v, want %v", gotBefore, tt.wantBefore)
 			}
 			if gotExpect != tt.wantExpect {
 				t.Errorf("getTaskInfoCountDiff() gotExpect = %v, want %v", gotExpect, tt.wantExpect)
+			}
+			if gotAfter != tt.wantAfter {
+				t.Errorf("getTaskInfoCountDiff() gotAfter = %v, want %v", gotAfter, tt.wantAfter)
 			}
 		})
 	}

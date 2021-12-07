@@ -28,7 +28,6 @@ const (
 	DirectionOut   = "egress"
 	Instancetype   = "InstanceType"
 	AcceptLanguage = "zh-CN"
-	PrePaid        = "PrePaid"
 )
 
 type AlibabaCloud struct {
@@ -148,7 +147,7 @@ func (p *AlibabaCloud) BatchCreate(m cloud.Params, num int) (instanceIds []strin
 	request.DataDisk = &dataDisks
 	request.Amount = requests.NewInteger(num)
 	request.MinAmount = requests.NewInteger(num)
-	if m.Charge.ChargeType == PrePaid {
+	if m.Charge.ChargeType == cloud.InstanceChargeTypePrePaid {
 		request.InstanceChargeType = m.Charge.ChargeType
 		request.PeriodUnit = m.Charge.PeriodUnit
 		request.Period = requests.NewInteger(m.Charge.Period)

@@ -53,12 +53,12 @@ func (c *Cluster) UnmarshalChargeConfig() (*types.ChargeConfig, error) {
 	if c == nil {
 		return nil, nil
 	}
-	chargeConfig := &types.ChargeConfig{}
-	err := jsoniter.UnmarshalFromString(c.ChargeConfig, chargeConfig)
+	chargeConfig := types.ChargeConfig{}
+	err := jsoniter.UnmarshalFromString(c.ChargeConfig, &chargeConfig)
 	if err != nil {
 		return nil, err
 	}
-	return chargeConfig, nil
+	return &chargeConfig, nil
 }
 
 type ClusterSnapshot struct {
