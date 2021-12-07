@@ -25,6 +25,9 @@ type ClusterInfo struct {
 
 	//Custom Config
 	Tags map[string]string `json:"tags"`
+
+	InstanceCore   int `json:"instance_core"`   // 核心数量,单位 核
+	InstanceMemory int `json:"instance_memory"` // 内存大小,单位 G
 }
 
 type NetworkConfig struct {

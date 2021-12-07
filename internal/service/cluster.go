@@ -191,22 +191,25 @@ func ConvertToClusterInfo(m *model.Cluster, tags []model.ClusterTag) (*types.Clu
 	for _, clusterTag := range tags {
 		mt[clusterTag.TagKey] = clusterTag.TagValue
 	}
+	instanceType := GetInstanceTypeByName(m.InstanceType)
 	clusterInfo := &types.ClusterInfo{
-		Id:            m.Id,
-		Name:          m.ClusterName,
-		Desc:          m.ClusterDesc,
-		RegionId:      m.RegionId,
-		ZoneId:        m.ZoneId,
-		InstanceType:  m.InstanceType,
-		Image:         m.Image,
-		Provider:      m.Provider,
-		Username:      constants.DefaultUsername,
-		Password:      m.Password,
-		NetworkConfig: networkConfig,
-		StorageConfig: storageConfig,
-		ChargeConfig:  chargeConfig,
-		AccountKey:    m.AccountKey,
-		Tags:          mt,
+		Id:             m.Id,
+		Name:           m.ClusterName,
+		Desc:           m.ClusterDesc,
+		RegionId:       m.RegionId,
+		ZoneId:         m.ZoneId,
+		InstanceType:   m.InstanceType,
+		Image:          m.Image,
+		Provider:       m.Provider,
+		Username:       constants.DefaultUsername,
+		Password:       m.Password,
+		AccountKey:     m.AccountKey,
+		NetworkConfig:  networkConfig,
+		StorageConfig:  storageConfig,
+		ChargeConfig:   chargeConfig,
+		Tags:           mt,
+		InstanceCore:   instanceType.Core,
+		InstanceMemory: instanceType.Memory,
 	}
 	return clusterInfo, nil
 }
