@@ -73,6 +73,11 @@ func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance
 		if len(instance.PublicIpAddress.IpAddress) > 0 {
 			ipOuter = instance.PublicIpAddress.IpAddress[0]
 		}
+		expireAt, err := time.Parse("2006-01-02T15:04Z", instance.ExpiredTime)
+		var expireAtPtr *time.Time
+		if err == nil {
+			expireAtPtr = &expireAt
+		}
 		instances = append(instances, cloud.Instance{
 			Id:       instance.InstanceId,
 			CostWay:  instance.InstanceChargeType,
@@ -80,6 +85,7 @@ func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance
 			IpInner:  strings.Join(instance.VpcAttributes.PrivateIpAddress.IpAddress, ","),
 			IpOuter:  ipOuter,
 			ImageId:  instance.ImageId,
+			ExpireAt: expireAtPtr,
 			Network: &cloud.Network{
 				VpcId:                   instance.VpcAttributes.VpcId,
 				SubnetId:                instance.VpcAttributes.VSwitchId,

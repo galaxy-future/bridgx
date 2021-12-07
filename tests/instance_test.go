@@ -1,12 +1,14 @@
 package tests
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/constants"
-
 	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/internal/service"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateInstance(t *testing.T) {
@@ -65,4 +67,9 @@ func TestBatchUpdate(t *testing.T) {
 	instanceIds := []string{"test1", "test2"}
 	err := model.BatchUpdateByInstanceIds(instanceIds, model.Instance{Status: constants.Deleted})
 	t.Log(err)
+}
+
+func TestSyncInstanceExpireTime(t *testing.T) {
+	err := service.SyncInstanceExpireTime(context.Background(), "gf.cloud_4")
+	assert.Nil(t, err)
 }

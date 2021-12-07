@@ -107,6 +107,7 @@ func Init() *gin.Engine {
 			instancePath.GET("describe_all", handler.GetInstanceList)
 			instancePath.GET("usage_total", handler.GetInstanceUsageTotal)
 			instancePath.GET("usage_statistics", handler.GetInstanceUsageStatistics)
+			instancePath.POST("sync_expire_time", handler.SyncInstanceExpireTime)
 		}
 		taskPath := v1Api.Group("task/")
 		{

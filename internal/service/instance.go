@@ -337,6 +337,42 @@ func BatchCreateInstanceType(ctx context.Context, inss []model.InstanceType) err
 	return model.BatchCreate(inss)
 }
 
+func SyncInstanceExpireTime(ctx context.Context, clusterName string) error {
+	cluster, err := GetClusterByName(ctx, clusterName)
+	if err != nil {
+		return err
+	}
+	provider, err := getProvider(cluster.Provider, cluster.AccountKey, cluster.RegionId)
+	if err != nil {
+		return err
+	}
+	logs.Logger.Infof("SyncInstanceExpireTime cluster:%v, provider:%v", clusterName, cluster.Provider)
+	instances, err := provider.GetInstancesByCluster(cluster.RegionId, clusterName)
+	if err != nil {
+		return err
+	}
+	for _, cloudInstance := range instances {
+		if cloudInstance.CostWay != cloud.InstanceChargeTypePrePaid {
+			logs.Logger.Warnf("Ignore SyncInstanceExpireTime cluster:%v, instance:%v, cost_way:%v", clusterName, cloudInstance.Id, cloudInstance.CostWay)
+			continue
+		}
+		logs.Logger.Infof("cloud instance expire:%v", *cloudInstance.ExpireAt)
+		ins := model.Instance{
+			InstanceId: cloudInstance.Id,
+			//TODO sync status when huawei cloud provider ready
+			//Status:     toLocalStatus(cloudInstance.Status),
+			ExpireAt: cloudInstance.ExpireAt,
+		}
+		err = model.UpdateByInstanceId(ins)
+		if err != nil {
+			logs.Logger.Errorf("SyncInstanceExpireTime cluster:%v error:%v", clusterName, err)
+			return err
+		}
+		logs.Logger.Infof("SyncInstanceExpireTime cluster:%v, instance:%v, expire_at:%v", clusterName, ins.InstanceId, *ins.ExpireAt)
+	}
+	return nil
+}
+
 func exchangeStatus(ctx context.Context) error {
 	tx := clients.WriteDBCli.Begin()
 	err := model.UpdateInstanceTypeIStatus(ctx, tx, model.InstanceTypeStatusExpired)

@@ -8,6 +8,7 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/bssopenapi"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAlibabaCloudClient(t *testing.T) {
@@ -81,4 +82,16 @@ func TestGetOrderDetail(t *testing.T) {
 		return
 	}
 	t.Log(string(orders))
+}
+
+func TestInstanceExpireTimeParse(t *testing.T) {
+	expireAt, err := time.Parse("2006-01-02T15:04:05Z", "2099-11-01T01:03:04Z")
+	assert.Nil(t, err)
+	t.Logf("expire at:%v", expireAt)
+	expireAt, err = time.Parse("2006-01-02T15:04:05Z", "2099x-11-01T01:03:04Z")
+	assert.NotNil(t, err)
+	t.Logf("expire at:%v", expireAt)
+	var tt *time.Time
+	assert.Nil(t, tt)
+	t.Logf("tt:%v", tt)
 }

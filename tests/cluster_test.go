@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/galaxy-future/BridgX/internal/types"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
@@ -149,4 +150,10 @@ func TestGetClusterCount(t *testing.T) {
 	cnt, err = service.GetClusterCount(context.Background(), []string{"account_not_exist"})
 	assert.Nil(t, err)
 	assert.Zero(t, cnt)
+}
+
+func TestGetInstanceCount(t *testing.T) {
+	cnt, err := model.CountActiveInstancesByClusterName(context.Background(), nil)
+	assert.Nil(t, err)
+	assert.EqualValues(t, cnt, 0)
 }

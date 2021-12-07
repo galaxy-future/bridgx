@@ -1,4 +1,4 @@
-/conf/config.yml.local
+config.yml.local
 output
 .idea
 standalone-logs

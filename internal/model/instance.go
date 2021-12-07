@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"gorm.io/gorm"
 )
 
 const (
@@ -25,10 +24,11 @@ type Instance struct {
 	ClusterName  string
 	TaskId       int64 //扩容任务ID
 	ShrinkTaskId int64 //缩容任务ID
+	ChargeType   string
 	CreateAt     *time.Time
 	DeleteAt     *time.Time
 	RunningAt    *time.Time
-	ChargeType   string
+	ExpireAt     *time.Time //PrePaid instance expire time
 }
 
 func (Instance) TableName() string {
@@ -163,6 +163,10 @@ func GetUsageInstancesBySpecifyDay(ctx context.Context, clusterName []string, cr
 
 //CountActiveInstancesByClusterName 获取clusters下状态不为deleted状态节点数量
 func CountActiveInstancesByClusterName(ctx context.Context, clusterNames []string) (int64, error) {
+	if len(clusterNames) == 0 {
+		return 0, nil
+
+	}
 	var ret int64
 	if err := clients.ReadDBCli.WithContext(ctx).Model(&Instance{}).Where("cluster_name IN (?) AND status != ? ", clusterNames, constants.Deleted).Count(&ret).Error; err != nil {
 		logErr("CountActiveInstancesByClusterName from read db", err)

@@ -165,3 +165,7 @@ type ListClusterByTagsRequest struct {
 	PageNumber int               `json:"page_number"`
 	PageSize   int               `json:"page_size"`
 }
+
+type SyncInstanceExpireTimeRequest struct {
+	ClusterName string `json:"cluster_name" binding:"required"`
+}
