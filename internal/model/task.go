@@ -27,12 +27,24 @@ func (Task) TableName() string {
 	return "task"
 }
 
+type TaskInfo interface {
+	GetExpectAndBeforeInstanceCount() (beforeCount int, expectCount int)
+}
+
 type ExpandTaskInfo struct {
 	ClusterName    string `json:"cluster_name"`
 	Count          int    `json:"count"`
 	TaskExecHost   string `json:"task_exec_host"`
 	TaskSubmitHost string `json:"task_submit_host"`
 	UserId         int64  `json:"user_id"`
+	BeforeCount    int    `json:"before_count"`
+}
+
+func (e *ExpandTaskInfo) GetExpectAndBeforeInstanceCount() (beforeCount int, expectCount int) {
+	if e == nil {
+		return 0, 0
+	}
+	return e.BeforeCount, e.BeforeCount + e.Count
 }
 
 type ExpandTaskRes struct {
@@ -46,6 +58,14 @@ type ShrinkTaskInfo struct {
 	TaskExecHost   string `json:"task_exec_host"`
 	TaskSubmitHost string `json:"task_submit_host"`
 	UserId         int64  `json:"user_id"`
+	BeforeCount    int    `json:"before_count"`
+}
+
+func (e *ShrinkTaskInfo) GetExpectAndBeforeInstanceCount() (beforeCount int, expectCount int) {
+	if e == nil {
+		return 0, 0
+	}
+	return e.BeforeCount, e.BeforeCount - e.Count
 }
 
 func CountByTaskStatus(taskFilter string, statuses []string) (int64, error) {

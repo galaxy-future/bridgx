@@ -7,10 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
-
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 	"github.com/galaxy-future/BridgX/pkg/id_generator"
 	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
@@ -28,11 +27,16 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 	if cluster == nil {
 		return 0, utils.NewErrf(constants.ErrClusterNotExist, clusterName)
 	}
+	currentCount, err := model.CountActiveInstancesByClusterName(ctx, []string{clusterName})
+	if err != nil {
+		return 0, err
+	}
 	info := &model.ExpandTaskInfo{
 		ClusterName:    clusterName,
 		Count:          count,
 		TaskSubmitHost: utils.PrivateIPv4(),
 		UserId:         uid,
+		BeforeCount:    int(currentCount),
 	}
 	s, _ := jsoniter.MarshalToString(info)
 	taskId := id_generator.GetNextId()
@@ -68,12 +72,17 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 	if chargeType := cluster.GetChargeType(); chargeType == alibaba.PrePaid {
 		return 0, errors.New(constants.ErrPrePaidShrinkNotSupported)
 	}
+	currentCount, err := model.CountActiveInstancesByClusterName(ctx, []string{clusterName})
+	if err != nil {
+		return 0, err
+	}
 	info := &model.ShrinkTaskInfo{
 		ClusterName:    clusterName,
 		Count:          count,
 		IPs:            ips,
 		TaskSubmitHost: utils.PrivateIPv4(),
 		UserId:         uid,
+		BeforeCount:    int(currentCount),
 	}
 	s, _ := jsoniter.MarshalToString(info)
 	taskId := id_generator.GetNextId()
