@@ -54,6 +54,7 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 		Count:          count,
 		IPs:            ips,
 		TaskSubmitHost: utils.PrivateIPv4(),
+		UserId:         uid,
 	}
 	s, _ := jsoniter.MarshalToString(info)
 	taskId := id_generator.GetNextId()

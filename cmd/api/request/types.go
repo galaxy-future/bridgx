@@ -34,6 +34,11 @@ type ShrinkClusterRequest struct {
 	Count       int      `json:"count" binding:"required,min=1,max=10000"`
 }
 
+type ShrinkAllInstancesRequest struct {
+	TaskName    string `json:"task_name"`
+	ClusterName string `json:"cluster_name" binding:"required"`
+}
+
 type CreateVpcRequest struct {
 	Provider  string `json:"provider"`
 	RegionId  string `json:"region_id"`

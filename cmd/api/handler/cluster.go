@@ -460,3 +460,24 @@ func ShrinkCluster(ctx *gin.Context) {
 	response.MkResponse(ctx, http.StatusOK, response.Success, taskId)
 	return
 }
+
+func ShrinkAllInstances(ctx *gin.Context) {
+	user := helper.GetUserClaims(ctx)
+	if user == nil {
+		response.MkResponse(ctx, http.StatusBadRequest, response.PermissionDenied, nil)
+		return
+	}
+	req := request.ShrinkAllInstancesRequest{}
+	err := ctx.Bind(&req)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
+		return
+	}
+	taskId, err := service.CreateShrinkAllTask(ctx, req.ClusterName, req.TaskName, user.UserId)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, taskId)
+	return
+}

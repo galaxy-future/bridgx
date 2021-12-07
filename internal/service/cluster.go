@@ -296,6 +296,14 @@ func ShrinkCluster(c *types.ClusterInfo, num int, taskId int64) (err error) {
 	return err
 }
 
+func CreateShrinkAllTask(ctx context.Context, clusterName, taskName string, uid int64) (int64, error) {
+	count, err := model.CountActiveInstancesByClusterName(ctx, []string{clusterName})
+	if err != nil {
+		return 0, err
+	}
+	return CreateShrinkTask(ctx, clusterName, int(count), "", taskName, uid)
+}
+
 //CleanClusterUnusedInstances 清除由于系统异常导致的云厂商中残留的机器
 func CleanClusterUnusedInstances(clusterInfo *types.ClusterInfo) (int, error) {
 	instancesInBridgx, err := model.GetActiveInstancesByClusterName(clusterInfo.Name)

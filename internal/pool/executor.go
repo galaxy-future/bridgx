@@ -5,12 +5,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/galaxy-future/BridgX/pkg/utils"
-
+	"github.com/Rican7/retry"
+	"github.com/Rican7/retry/backoff"
+	"github.com/Rican7/retry/strategy"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
+	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -111,11 +113,15 @@ func doShrink(task *model.Task) {
 		return
 	}
 	deletingIPs := calcDeletingIPs(taskInfo.IPs)
-	if deletingIPs > 0 {
-		err = service.ShrinkClusterBySpecificIps(clusterInfo, taskInfo.IPs, taskInfo.Count, task.Id)
-	} else {
-		err = service.ShrinkCluster(clusterInfo, taskInfo.Count, task.Id)
+	shrink := func(attempt uint) error {
+		logs.Logger.Infof("shrink cluster:%v with retry times:%v", clusterInfo.Name, attempt)
+		if deletingIPs > 0 {
+			return service.ShrinkClusterBySpecificIps(clusterInfo, taskInfo.IPs, taskInfo.Count, task.Id)
+		} else {
+			return service.ShrinkCluster(clusterInfo, taskInfo.Count, task.Id)
+		}
 	}
+	err = retry.Retry(shrink, strategy.Limit(3), strategy.Backoff(backoff.BinaryExponential(time.Second)))
 	if err != nil {
 		taskFailed(task, err)
 		return

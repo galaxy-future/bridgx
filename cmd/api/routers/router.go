@@ -64,6 +64,7 @@ func Init() *gin.Engine {
 
 			clusterPath.POST("expand", handler.ExpandCluster)
 			clusterPath.POST("shrink", handler.ShrinkCluster)
+			clusterPath.POST("shrink_all", handler.ShrinkAllInstances)
 		}
 		vpcPath := v1Api.Group("vpc/")
 		{
