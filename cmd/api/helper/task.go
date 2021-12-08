@@ -68,13 +68,13 @@ func getTaskInfoCountDiff(task *model.Task, success int) (before int, after, exp
 	case constants.TaskActionExpand:
 		info := model.ExpandTaskInfo{}
 		_ = jsoniter.UnmarshalFromString(task.TaskInfo, &info)
-		before, expect = info.GetExpectAndBeforeInstanceCount()
+		before, expect = info.GetBeforeAndExpectInstanceCount()
 		after = before + success
 
 	case constants.TaskActionShrink:
 		info := model.ShrinkTaskInfo{}
 		_ = jsoniter.UnmarshalFromString(task.TaskInfo, &info)
-		before, expect = info.GetExpectAndBeforeInstanceCount()
+		before, expect = info.GetBeforeAndExpectInstanceCount()
 		after = before - success
 	}
 	return

@@ -28,7 +28,7 @@ func (Task) TableName() string {
 }
 
 type TaskInfo interface {
-	GetExpectAndBeforeInstanceCount() (beforeCount int, expectCount int)
+	GetBeforeAndExpectInstanceCount() (beforeCount int, expectCount int)
 }
 
 type ExpandTaskInfo struct {
@@ -40,7 +40,7 @@ type ExpandTaskInfo struct {
 	BeforeCount    int    `json:"before_count"`
 }
 
-func (e *ExpandTaskInfo) GetExpectAndBeforeInstanceCount() (beforeCount int, expectCount int) {
+func (e *ExpandTaskInfo) GetBeforeAndExpectInstanceCount() (beforeCount int, expectCount int) {
 	if e == nil {
 		return 0, 0
 	}
@@ -61,7 +61,7 @@ type ShrinkTaskInfo struct {
 	BeforeCount    int    `json:"before_count"`
 }
 
-func (e *ShrinkTaskInfo) GetExpectAndBeforeInstanceCount() (beforeCount int, expectCount int) {
+func (e *ShrinkTaskInfo) GetBeforeAndExpectInstanceCount() (beforeCount int, expectCount int) {
 	if e == nil {
 		return 0, 0
 	}
