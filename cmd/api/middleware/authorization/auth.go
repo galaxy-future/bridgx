@@ -1,6 +1,7 @@
 package authorization
 
 import (
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"net/http"
 	"strings"
 
@@ -25,6 +26,7 @@ func CheckTokenAuth() gin.HandlerFunc {
 		if len(token) == 2 && len(token[1]) >= 20 {
 			isTokenValid := CreateUserTokenFactory().IsValid(token[1])
 			if isTokenValid {
+				ctx.Set(gf_cluster.HeaderTokenName, token[1])
 				if customToken, err := CreateUserTokenFactory().ParseToken(token[1]); err == nil {
 					key := config.GlobalConfig.JwtToken.BindContextKeyName
 					ctx.Set(key, customToken)
