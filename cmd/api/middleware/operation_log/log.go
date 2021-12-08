@@ -36,10 +36,15 @@ type Remark []interface{}
 
 func (w bodyLogWriter) Write(b []byte) (int, error) {
 	w.body.Write(b)
+	bWithoutRemark := removeRemarkFromResponse(b)
+	return w.ResponseWriter.Write(bWithoutRemark)
+}
+
+func removeRemarkFromResponse(b []byte) []byte {
 	res := Res{}
 	_ = jsoniter.Unmarshal(b, &res)
 	resB, _ := jsoniter.Marshal(&res)
-	return w.ResponseWriter.Write(resB)
+	return resB
 }
 
 func Log() gin.HandlerFunc {
