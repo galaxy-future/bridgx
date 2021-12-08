@@ -27,9 +27,11 @@ func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int
 			ChargeType:    cluster.GetChargeType(),
 			Provider:      cluster.Provider,
 			Account:       cluster.AccountKey,
+			Usage:         usage,
 			CreateAt:      cluster.CreateAt.String(),
 			CreateBy:      cluster.CreateBy,
-			Usage:         usage,
+			UpdateAt:      cluster.UpdateAt.String(),
+			UpdateBy:      cluster.UpdateBy,
 		}
 		res = append(res, c)
 	}
