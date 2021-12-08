@@ -41,9 +41,6 @@ type ExpandTaskInfo struct {
 }
 
 func (e *ExpandTaskInfo) GetBeforeAndExpectInstanceCount() (beforeCount int, expectCount int) {
-	if e == nil {
-		return 0, 0
-	}
 	return e.BeforeCount, e.BeforeCount + e.Count
 }
 
@@ -62,9 +59,6 @@ type ShrinkTaskInfo struct {
 }
 
 func (e *ShrinkTaskInfo) GetBeforeAndExpectInstanceCount() (beforeCount int, expectCount int) {
-	if e == nil {
-		return 0, 0
-	}
 	return e.BeforeCount, e.BeforeCount - e.Count
 }
 
