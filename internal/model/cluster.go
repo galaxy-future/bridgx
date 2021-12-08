@@ -3,11 +3,11 @@ package model
 import (
 	"context"
 	"fmt"
-	"github.com/galaxy-future/BridgX/internal/errs"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/errs"
 	"github.com/galaxy-future/BridgX/internal/types"
 	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
