@@ -38,7 +38,7 @@ func (a *Account) AfterFind(tx *gorm.DB) (err error) {
 		res, err := encrypt.AESDecrypt(a.AccountKey+encrypt.AesKeySalt, a.AccountSecret)
 		if err != nil {
 			logs.Logger.Errorf("decrypt sk failed.err: %s", err.Error())
-			return nil
+			return err
 		}
 		a.AccountSecret = res
 	}
