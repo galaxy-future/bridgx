@@ -3,12 +3,16 @@ package model
 import (
 	"context"
 	"fmt"
-
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/pkg/encrypt"
+	"regexp"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"gorm.io/gorm"
+)
+
+const (
+	textEncryptTmpl = `^%s[a-zA-Z0-9]+%s$`
 )
 
 // Account cloud provider account info
@@ -145,4 +149,37 @@ func GetAccountsByAk(ctx context.Context, ak string) (a Account, err error) {
 		return Account{}, err
 	}
 	return a, nil
+}
+
+func EncryptAccount(pepper, key, text string) (string, error) {
+	salt := generateSalt()
+	encrypted, err := encrypt.AESEncrypt(key, wrapText(pepper, text, salt))
+	if err != nil {
+		return "", err
+	}
+	return encrypted, nil
+}
+
+func wrapText(pepper, text, salt string) string {
+	return pepper + text + salt
+}
+
+func unWrapText(pepper, decryptedText, salt string) (string, error) {
+	re, err := regexp.Compile(fmt.Sprintf(textEncryptTmpl, pepper, salt))
+	if err != nil {
+		return "", err
+	}
+	return re.FindString(decryptedText), nil
+}
+
+func DecryptAccount(pepper, salt, key, encrypted string) (string, error) {
+	decrypted, err := encrypt.AESDecrypt(key, encrypted)
+	if err != nil {
+		return "", err
+	}
+	return unWrapText(pepper, decrypted, salt)
+}
+
+func generateSalt() string {
+	return ""
 }
