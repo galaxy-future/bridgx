@@ -327,6 +327,61 @@ create table `order_202101`
     index              idx_update_at(`update_at`)
 )engine=innodb default charset=utf8mb4 collate=utf8mb4_bin;
 
+
+-- gf_cloud tables
+drop table if exists kubernetes_infos;
+create table kubernetes_infos (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL ,
+  `region` varchar(255) NOT NULL ,
+  `cloud_type` varchar(255) NOT NULL,
+  `status` varchar(255) NOT NULL,
+  `config` TEXT,
+  `install_step` varchar(255) ,
+  `message` varchar (255) ,
+  `bridgx_cluster_name` varchar(255) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `created_user` varchar(255),
+  `created_time` int(11),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_cluster_name` (`name`)
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_bin;
+
+drop table if exists instance_groups;
+CREATE TABLE `instance_groups` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kubernetes_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `image` varchar(255) NOT NULL,
+  `cpu` varchar(255) NOT NULL,
+  `memory` varchar(255) NOT NULL,
+  `disk` varchar(255) NOT NULL,
+  `instance_count` int(11) NOT NULL DEFAULT '0',
+  `created_user` varchar(255) NOT NULL,
+  `created_user_id` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uniq_kubernetes_id_name` (`kubernetes_id`,`name`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4;
+
+drop table if exists instance_forms;
+CREATE TABLE `instance_forms` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `execute_status` varchar(100) NOT NULL,
+  `cluster_name` varchar(255) DEFAULT NULL,
+  `instance_group` varchar(255) NOT NULL,
+  `cpu` varchar(255) NOT NULL,
+  `memory` varchar(255) NOT NULL,
+  `disk` varchar(255) NOT NULL,
+  `updated_instance_count` int(11) NOT NULL DEFAULT '0',
+  `host_time` int(11) NOT NULL,
+  `opt_type` varchar(50) DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL DEFAULT '0',
+  `created_user_name` varchar(255) NOT NULL,
+  `created_time` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4;
+
+
 -- init super admin info
 INSERT INTO `user`
 VALUES (1, 'root', '87d9bb400c0634691f0e3baaf1e2fd0d', 1, 'enable', 1, '2021-11-09 12:29:44', '',

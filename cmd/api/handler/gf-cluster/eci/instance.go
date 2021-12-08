@@ -1,0 +1,196 @@
+package eci
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/galaxy-future/BridgX/cmd/api/helper"
+	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
+	"github.com/galaxy-future/BridgX/internal/gf-cluster/instance"
+	"github.com/galaxy-future/BridgX/internal/model"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	"github.com/gin-gonic/gin"
+	"github.com/wxnacy/wgo/arrays"
+	"io/ioutil"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+)
+
+//HandleRestartInstance  c重启实例
+func HandleRestartInstance(c *gin.Context) {
+
+	data, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求体"))
+		return
+	}
+	var request gf_cluster.InstanceRestartRequest
+	err = json.Unmarshal(data, &request)
+	if err != nil {
+		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体, err : %s", err.Error())))
+		return
+	}
+	//重启节点
+	// TODO 加入操作日志
+	err = instance.RestartInstanceGroup(request.InstanceGroupId, request.InstanceName)
+	if err != nil {
+		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+	c.JSON(200, gf_cluster.NewSuccessResponse())
+}
+
+//HandleDeleteInstance 删除节点
+func HandleDeleteInstance(c *gin.Context) {
+	begin := time.Now()
+
+	//h获取用户信息
+	claims := helper.GetUserClaims(c)
+	if claims == nil {
+		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		return
+	}
+	createdUserId := claims.UserId
+	createdUserName := claims.Name
+
+	//读取请求体
+	data, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求体"))
+		return
+	}
+	var request gf_cluster.InstanceDeleteRequest
+	err = json.Unmarshal(data, &request)
+	if err != nil {
+		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体, err : %s", err.Error())))
+		return
+	}
+
+	instanceGroup, err := instance.GetInstanceGroup(request.InstanceGroupId)
+	if err != nil {
+		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+	err = instance.DeleteInstance(instanceGroup, request.InstanceName)
+	if err != nil {
+		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+
+	//增加操作日志
+	cost := time.Now().Sub(begin).Milliseconds()
+	err = instance.AddInstanceForm(instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeShrink, 1, err)
+	if err != nil {
+		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+	if err == nil {
+		c.JSON(200, gf_cluster.NewSuccessResponse())
+	}
+
+}
+
+//HandleListInstance 列出所欲实例
+func HandleListInstance(c *gin.Context) {
+	clusterId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
+	if err != nil {
+		c.JSON(400, gf_cluster.NewFailedResponse("未指定实例组id"))
+		return
+	}
+	items, err := instance.ListCustomInstances(clusterId)
+	if err != nil {
+		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+	}
+	c.JSON(200, gf_cluster.NewInstanceListResponse(items))
+}
+
+//HandleListMyInstance 列出我的实例
+func HandleListMyInstance(c *gin.Context) {
+	nodeIp := c.Query("node_ip")
+	podIp := c.Query("pod_ip")
+	claims := helper.GetUserClaims(c)
+	if claims == nil {
+		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		return
+	}
+	curUserId := fmt.Sprintf("%v", claims.UserId)
+	groups, err := model.ListInstanceGroupByUser(curUserId)
+	if err != nil {
+		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+
+	pageNumber, pageSize := helper.GetPagerParamFromQuery(c)
+	var result gf_cluster.ClusterPodsSummaryArray
+	//TODO 使用Map
+	kubeIds := make([]int64, len(groups))
+	groupNames := make([]string, len(groups))
+	for i, group := range groups {
+		groupNames[i] = group.Name
+	}
+	//TODO 这里应该按照组筛选，不应该从集群拿取所有数据做判断
+	for _, group := range groups {
+		// Avoid multiple calls
+		if arrays.ContainsInt(kubeIds, group.KubernetesId) != -1 {
+			continue
+		}
+		kubeIds = append(kubeIds, group.KubernetesId)
+
+		pods, err := cluster.ListClusterPodsSummary(group.KubernetesId)
+		if err != nil {
+			//TODO 应该按照组查询结果返回，比如group1 查询失败，无法获取ip等，不能直接continue
+			c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+			return
+		}
+		for _, pod := range pods {
+			if nodeIp != "" && strings.Index(pod.NodeIp, nodeIp) != 0 {
+				continue
+			}
+			if podIp != "" && strings.Index(pod.PodIP, podIp) != 0 {
+				continue
+			}
+			if arrays.ContainsString(groupNames, pod.GroupName) == -1 {
+				continue
+			}
+			result = append(result, pod)
+		}
+	}
+	sort.Sort(result)
+
+	start := pageNumber * pageSize
+	if start >= len(result) {
+		c.JSON(200, gf_cluster.NewListClusterPodsDetailResponse(result, gf_cluster.Pager{
+			PageNumber: pageNumber,
+			PageSize:   pageSize,
+			Total:      len(result),
+		}))
+		return
+	}
+
+	end := pageNumber + 1*pageSize
+	if end >= len(result) {
+		end = len(result)
+	}
+	c.JSON(200, gf_cluster.NewListClusterPodsDetailResponse(result[start:end], gf_cluster.Pager{
+		PageNumber: pageNumber,
+		PageSize:   pageSize,
+		Total:      len(result),
+	}))
+}
+
+//HandleListInstanceForm 列出所有集群
+func HandleListInstanceForm(c *gin.Context) {
+	id, _ := c.GetQuery("id")
+	pagerNumber, pageSize := helper.GetPagerParamFromQuery(c)
+	forms, total, err := model.ListInstanceFormFromDB(id, pagerNumber, pageSize)
+	if err != nil {
+		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+	c.JSON(200, gf_cluster.NewInstanceFormListResponse(forms, gf_cluster.Pager{
+		PageNumber: pagerNumber,
+		PageSize:   pageSize,
+		Total:      int(total),
+	}))
+}

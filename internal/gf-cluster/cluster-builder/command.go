@@ -1,0 +1,109 @@
+package cluster_builder
+
+import (
+	"bytes"
+	"fmt"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	"golang.org/x/crypto/ssh"
+)
+
+func CreateCluster(params gf_cluster.ClusterBuilderParams) {
+	machineList := params.MachineList
+	master, machineList := Pop(machineList)
+
+	updateStatus(params.KubernetesId, gf_cluster.KubernetesStatusInitializing)
+	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInitializeCluster)
+
+	initOutput, err := initCluster(master, params.PodCidr, params.SvcCidr)
+	if err != nil {
+		failed(params.KubernetesId, err.Error())
+		return
+	}
+
+	taintMaster(master)
+	masterCmd, nodeCmd := parseInitResult(initOutput)
+
+	//获取kube config
+	config, err := initKubeConfig(master)
+	if err != nil {
+		failed(params.KubernetesId, err.Error())
+		return
+	}
+
+	if err = recordConfig(params.KubernetesId, config); err != nil {
+		failed(params.KubernetesId, "record config err:"+err.Error())
+		return
+	}
+
+	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallFlannel)
+	//安装flannel
+	if err = initFlannel(master, FlannelData{
+		AccessKey:    params.AccessKey,
+		AccessSecret: params.AccessSecret,
+		PodCidr:      params.PodCidr,
+	}); err != nil {
+		failed(params.KubernetesId, "flannel init err:"+err.Error())
+		return
+	}
+
+	//安装master节点
+	if params.Mode == gf_cluster.ClusterMode {
+		for i := 0; i < 2; i++ {
+			var masterNode gf_cluster.ClusterBuildMachine
+			masterNode, machineList = Pop(machineList)
+			updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallMaster+masterNode.Hostname)
+			resetMachine(masterNode)
+			if _, err = Run(masterNode, masterCmd); err != nil {
+				failed(params.KubernetesId, "add master err:"+err.Error())
+				return
+			}
+			taintMaster(masterNode)
+		}
+	}
+
+	//安装node节点
+	length := len(machineList)
+	for i := 0; i < length; i++ {
+		var node gf_cluster.ClusterBuildMachine
+		node, machineList = Pop(machineList)
+		updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallNode+node.Hostname)
+		resetMachine(node)
+		if _, err = Run(node, nodeCmd); err != nil {
+			failed(params.KubernetesId, "add node err:"+err.Error())
+			return
+		}
+	}
+
+	//给节点打标签
+	labelCluster(master, params.MachineList)
+
+	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepDone)
+	updateStatus(params.KubernetesId, gf_cluster.KubernetesStatusRunning)
+}
+
+func Run(machine gf_cluster.ClusterBuildMachine, cmd string) (string, error) {
+	fmt.Println(cmd)
+	client, err := ssh.Dial("tcp", machine.IP+":22", &ssh.ClientConfig{
+		User:            machine.Username,
+		Auth:            []ssh.AuthMethod{ssh.Password(machine.Password)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	})
+	if err != nil {
+		return "", err
+	}
+	defer client.Close()
+
+	session, err := client.NewSession()
+	if err != nil {
+		return "", err
+	}
+	defer session.Close()
+
+	var b bytes.Buffer
+	session.Stdout = &b
+	if err = session.Run(cmd); err != nil {
+		return "", err
+	}
+
+	return b.String(), nil
+}
