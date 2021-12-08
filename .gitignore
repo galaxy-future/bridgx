@@ -5,4 +5,3 @@ standalone-logs
 /cmd/scheduler/scheduler
 /cmd/api/api
 /cmd/scheduler/conf/*.yml
-.DS_Store
