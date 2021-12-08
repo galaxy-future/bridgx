@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"github.com/galaxy-future/BridgX/internal/constants"
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
@@ -9,10 +10,15 @@ import (
 	"github.com/spf13/cast"
 )
 
-func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int64) []response.ClusterThumb {
+func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int64, tagMap map[string]map[string]string) []response.ClusterThumb {
 	res := make([]response.ClusterThumb, 0)
 	for _, cluster := range clusters {
 		instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
+		tags := tagMap[cluster.ClusterName]
+		var usage string
+		if len(tags) > 0 {
+			usage = tags[constants.DefaultClusterUsageKey]
+		}
 		c := response.ClusterThumb{
 			ClusterId:     cast.ToString(cluster.Id),
 			ClusterName:   cluster.ClusterName,
@@ -23,6 +29,7 @@ func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int
 			Account:       cluster.AccountKey,
 			CreateAt:      cluster.CreateAt.String(),
 			CreateBy:      cluster.CreateBy,
+			Usage:         usage,
 		}
 		res = append(res, c)
 	}

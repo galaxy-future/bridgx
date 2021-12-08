@@ -38,6 +38,7 @@ type ClusterThumb struct {
 	Account       string `json:"account"`
 	CreateAt      string `json:"create_at"`
 	CreateBy      string `json:"create_by"`
+	Usage         string `json:"usage"`
 }
 
 type TaskDetailResponse struct {

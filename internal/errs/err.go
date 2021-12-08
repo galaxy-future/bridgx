@@ -12,4 +12,5 @@ var (
 	ErrGetRegionsFailed          = errors.New("获取地域信息失败")
 	ErrGetZonesFailed            = errors.New("获取可用区信息失败")
 	ErrVpcPending                = errors.New("pending")
+	ErrNilPointer                = errors.New("nil pointer")
 )

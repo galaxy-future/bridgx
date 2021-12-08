@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"fmt"
+	"github.com/galaxy-future/BridgX/internal/errs"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
@@ -51,7 +52,7 @@ func (c *Cluster) GetChargeType() string {
 
 func (c *Cluster) UnmarshalChargeConfig() (*types.ChargeConfig, error) {
 	if c == nil {
-		return nil, nil
+		return nil, errs.ErrNilPointer
 	}
 	chargeConfig := types.ChargeConfig{}
 	err := jsoniter.UnmarshalFromString(c.ChargeConfig, &chargeConfig)
