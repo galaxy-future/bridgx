@@ -7,7 +7,6 @@ import (
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
-	"github.com/galaxy-future/BridgX/internal/errs"
 	"github.com/galaxy-future/BridgX/internal/types"
 	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
@@ -40,9 +39,6 @@ type Cluster struct {
 }
 
 func (c *Cluster) GetChargeType() string {
-	if c == nil {
-		return ""
-	}
 	conf, err := c.UnmarshalChargeConfig()
 	if err != nil {
 		return ""
@@ -51,9 +47,6 @@ func (c *Cluster) GetChargeType() string {
 }
 
 func (c *Cluster) UnmarshalChargeConfig() (*types.ChargeConfig, error) {
-	if c == nil {
-		return nil, errs.ErrNilPointer
-	}
 	chargeConfig := types.ChargeConfig{}
 	err := jsoniter.UnmarshalFromString(c.ChargeConfig, &chargeConfig)
 	if err != nil {
