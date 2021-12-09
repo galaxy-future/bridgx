@@ -382,6 +382,16 @@ CREATE TABLE `instance_forms` (
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+drop table if exists kubernetes_install_steps;
+CREATE TABLE `kubernetes_install_steps` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kubernetes_id` int(11) NOT NULL,
+  `host_ip` varchar(255) DEFAULT NULL,
+  `operation` varchar(255) NOT NULL,
+  `message` varchar(255) NOT NULL,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4;
+
 
 -- init super admin info
 INSERT INTO `user`
