@@ -57,10 +57,10 @@ type InstanceGroupGetResponse struct {
 	InstanceGroup *InstanceGroup `json:"instance_group"`
 }
 
-func NewGetInstanceGroupResponse(cluster *InstanceGroup) InstanceGroupGetResponse {
+func NewGetInstanceGroupResponse(instanceGroup *InstanceGroup) InstanceGroupGetResponse {
 	return InstanceGroupGetResponse{
 		ResponseBase:  NewSuccessResponse(),
-		InstanceGroup: cluster,
+		InstanceGroup: instanceGroup,
 	}
 }
 
