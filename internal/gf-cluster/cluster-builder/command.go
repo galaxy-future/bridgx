@@ -21,7 +21,7 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 		return
 	}
 
-	taintMaster(master)
+	taintMaster(master, master.Hostname)
 	masterCmd, nodeCmd := parseInitResult(initOutput)
 
 	//获取kube config
@@ -62,7 +62,7 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 				failed(params.KubernetesId, "add master err:"+err.Error())
 				return
 			}
-			taintMaster(masterNode)
+			taintMaster(master, masterNode.Hostname)
 		}
 	}
 
@@ -113,5 +113,6 @@ func Run(machine gf_cluster.ClusterBuildMachine, cmd string) (string, error) {
 		return "", err
 	}
 
+	fmt.Println(b.String())
 	return b.String(), nil
 }
