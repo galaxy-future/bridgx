@@ -44,7 +44,7 @@ func ExpandCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 			Name: pod.Name,
 			Ip:   pod.Status.PodIP,
 		})
-		logs.Logger.Info("expand instance success", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", name))
+		logs.Logger.Infow("expand instance success", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", name))
 	}
 	err = model.UpdateInstanceGroupInstanceCountFromDB(count, instanceGroup.Id)
 	if err != nil {
@@ -77,7 +77,7 @@ func ShrinkCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 				logs.Logger.Error("failed to shrink instance.", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", instance.Name), zap.Error(err))
 				return
 			}
-			logs.Logger.Info("shrink instance success", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", instance.Name))
+			logs.Logger.Infow("shrink instance success", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", instance.Name))
 		}(instance)
 	}
 	wg.Wait()

@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func Init() error {
-	ticker := time.NewTicker(time.Minute * 60)
+func Init() {
+	ticker := time.NewTicker(time.Minute * 10)
 	go func() {
 		for {
 			<-ticker.C
@@ -23,7 +23,6 @@ func Init() error {
 		}
 	}()
 	logs.Logger.Info("bridgx-kubernetes calibrator start success.")
-	return nil
 }
 
 func calibrate() error {
@@ -34,7 +33,7 @@ func calibrate() error {
 	for _, instanceGroup := range instanceGroups {
 		instances, err := instance.ListCustomInstances(instanceGroup.Id)
 		if err != nil {
-			logs.Logger.Error("failed to list instances from kubernetes.", zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Errorw("Trigger calibration check: failed to list instances from kubernetes.", zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name), zap.Error(err))
 			continue
 		}
 		onlineCount := len(instances)
@@ -42,36 +41,24 @@ func calibrate() error {
 			continue
 		}
 		if onlineCount < instanceGroup.InstanceCount {
-			begin := time.Now()
-			err := instance.ExpandCustomInstanceGroup(instanceGroup, instanceGroup.InstanceCount)
+			destCount := instanceGroup.InstanceCount
+			instanceGroup.InstanceCount = onlineCount
+			err := instance.ExpandCustomInstanceGroup(instanceGroup, destCount)
 			if err != nil {
-				logs.Logger.Error("failed to expand instance", zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name), zap.Error(err))
-			}
-			cost := time.Now().Sub(begin).Milliseconds()
-			err = instance.AddInstanceForm(instanceGroup, cost, gf_cluster.ExpandAndShrinkDefaultUserId, gf_cluster.ExpandAndShrinkDefaultUser, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount-onlineCount, err)
-			if err != nil {
-				logs.Logger.Error("failed to add instance form while calibrate",
-					zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name),
-					zap.String("opt_type", gf_cluster.OptTypeExpand), zap.Error(err))
+				logs.Logger.Errorw("Trigger calibration check: failed to expand instance", zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name), zap.Error(err))
 				continue
 			}
+			logs.Logger.Infow("Trigger calibration check: success.", zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name), zap.String("opt_type", gf_cluster.OptTypeExpand), zap.Int("updatedInstanceCount", destCount-instanceGroup.InstanceCount))
 		}
 		if onlineCount > instanceGroup.InstanceCount {
-			begin := time.Now()
-			// replace shrink count
+			destCount := instanceGroup.InstanceCount
 			instanceGroup.InstanceCount = onlineCount
-			err := instance.ShrinkCustomInstanceGroup(instanceGroup, instanceGroup.InstanceCount)
+			err := instance.ShrinkCustomInstanceGroup(instanceGroup, destCount)
 			if err != nil {
-				logs.Logger.Error("failed to shrink instance", zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name), zap.Error(err))
-			}
-			cost := time.Now().Sub(begin).Milliseconds()
-			err = instance.AddInstanceForm(instanceGroup, cost, gf_cluster.ExpandAndShrinkDefaultUserId, gf_cluster.ExpandAndShrinkDefaultUser, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount-onlineCount, err)
-			if err != nil {
-				logs.Logger.Error("failed to add instance form while calibrate", zap.Int64("instance_group_id", instanceGroup.Id),
-					zap.String("instance_group_name", instanceGroup.Name),
-					zap.String("opt_type", gf_cluster.OptTypeShrink), zap.Error(err))
+				logs.Logger.Errorw("Trigger calibration check: failed to shrink instance", zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name), zap.Error(err))
 				continue
 			}
+			logs.Logger.Infow("Trigger calibration check: success.", zap.Int64("instance_group_id", instanceGroup.Id), zap.String("instance_group_name", instanceGroup.Name), zap.String("opt_type", gf_cluster.OptTypeShrink), zap.Int("updatedInstanceCount", instanceGroup.InstanceCount-destCount))
 		}
 	}
 	return err

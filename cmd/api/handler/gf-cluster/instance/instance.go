@@ -42,7 +42,7 @@ func HandleRestartInstance(c *gin.Context) {
 	//重启节点
 	err = instance.RestartInstance(request.InstanceGroupId, request.InstanceName)
 	if err != nil {
-		logs.Logger.Error("failed to restart instance.", zap.Int64("instance_group_id", request.InstanceGroupId), zap.String("instance_name", request.InstanceName), zap.String("operator", claims.Name), zap.Error(err))
+		logs.Logger.Errorw("failed to restart instance.", zap.Int64("instance_group_id", request.InstanceGroupId), zap.String("instance_name", request.InstanceName), zap.String("operator", claims.Name), zap.Error(err))
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
@@ -138,7 +138,7 @@ func HandleListMyInstance(c *gin.Context) {
 	for kubernetesId, groupNames := range kubernetesMap {
 		pods, err := cluster.ListClusterPodsSummary(kubernetesId)
 		if err != nil {
-			logs.Logger.Error("failed to list pods from kubernetes cluster.", zap.Int64("kubernetes_id", kubernetesId), zap.Error(err))
+			logs.Logger.Errorw("failed to list pods from kubernetes cluster.", zap.Int64("kubernetes_id", kubernetesId), zap.Error(err))
 			continue
 		}
 		for _, pod := range pods {
