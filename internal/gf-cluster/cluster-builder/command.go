@@ -12,9 +12,10 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 	master, machineList := Pop(machineList)
 
 	updateStatus(params.KubernetesId, gf_cluster.KubernetesStatusInitializing)
-	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInitializeCluster)
 
 	initOutput, err := initCluster(master, params.PodCidr, params.SvcCidr)
+	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInitializeCluster)
+	recordStep(params.KubernetesId, master.IP, gf_cluster.KubernetesStepInitializeCluster, err)
 	if err != nil {
 		failed(params.KubernetesId, err.Error())
 		return
@@ -35,13 +36,15 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 		return
 	}
 
-	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallFlannel)
 	//安装flannel
-	if err = initFlannel(master, FlannelData{
+	err = initFlannel(master, FlannelData{
 		AccessKey:    params.AccessKey,
 		AccessSecret: params.AccessSecret,
 		PodCidr:      params.PodCidr,
-	}); err != nil {
+	})
+	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallFlannel)
+	recordStep(params.KubernetesId, master.IP, gf_cluster.KubernetesStepInstallFlannel, err)
+	if err != nil {
 		failed(params.KubernetesId, "flannel init err:"+err.Error())
 		return
 	}
@@ -51,9 +54,11 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 		for i := 0; i < 2; i++ {
 			var masterNode gf_cluster.ClusterBuildMachine
 			masterNode, machineList = Pop(machineList)
-			updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallMaster+masterNode.Hostname)
 			resetMachine(masterNode)
-			if _, err = Run(masterNode, masterCmd); err != nil {
+			_, err = Run(masterNode, masterCmd)
+			updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallMaster+masterNode.Hostname)
+			recordStep(params.KubernetesId, masterNode.IP, gf_cluster.KubernetesStepInstallMaster+masterNode.Hostname, err)
+			if err != nil {
 				failed(params.KubernetesId, "add master err:"+err.Error())
 				return
 			}
@@ -66,9 +71,11 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 	for i := 0; i < length; i++ {
 		var node gf_cluster.ClusterBuildMachine
 		node, machineList = Pop(machineList)
-		updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallNode+node.Hostname)
 		resetMachine(node)
-		if _, err = Run(node, nodeCmd); err != nil {
+		_, err = Run(node, nodeCmd)
+		updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInstallNode+node.Hostname)
+		recordStep(params.KubernetesId, node.IP, gf_cluster.KubernetesStepInstallNode+node.Hostname, err)
+		if err != nil {
 			failed(params.KubernetesId, "add node err:"+err.Error())
 			return
 		}
@@ -78,6 +85,7 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 	labelCluster(master, params.MachineList)
 
 	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepDone)
+	recordStep(params.KubernetesId, "", gf_cluster.KubernetesStepDone, nil)
 	updateStatus(params.KubernetesId, gf_cluster.KubernetesStatusRunning)
 }
 
