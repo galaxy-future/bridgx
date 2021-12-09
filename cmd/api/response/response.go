@@ -62,6 +62,7 @@ type TaskDetailResponse struct {
 	AfterInstanceCount  int    `json:"after_instance_count"`
 	ExpectInstanceCount int    `json:"expect_instance_count"`
 	CreateAt            string `json:"create_at"`
+	CreateBy            string `json:"create_by"`
 }
 
 type TaskDetailListResponse struct {

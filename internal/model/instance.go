@@ -165,7 +165,6 @@ func GetUsageInstancesBySpecifyDay(ctx context.Context, clusterName []string, cr
 func CountActiveInstancesByClusterName(ctx context.Context, clusterNames []string) (int64, error) {
 	if len(clusterNames) == 0 {
 		return 0, nil
-
 	}
 	var ret int64
 	if err := clients.ReadDBCli.WithContext(ctx).Model(&Instance{}).Where("cluster_name IN (?) AND status != ? ", clusterNames, constants.Deleted).Count(&ret).Error; err != nil {

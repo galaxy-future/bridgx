@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/id_generator"
@@ -39,6 +40,7 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 		BeforeCount:    int(currentCount),
 	}
 	s, _ := jsoniter.MarshalToString(info)
+	logs.Logger.Infof("cluster:%v expand task info:%v", clusterName, s)
 	taskId := id_generator.GetNextId()
 	task := &model.Task{
 		TaskName:      taskName,
@@ -85,6 +87,7 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 		BeforeCount:    int(currentCount),
 	}
 	s, _ := jsoniter.MarshalToString(info)
+	logs.Logger.Infof("cluster:%v shrink task info:%v", clusterName, s)
 	taskId := id_generator.GetNextId()
 	task := &model.Task{
 		TaskName:      taskName,

@@ -37,3 +37,12 @@ func UpdateUserStatus(ctx context.Context, model interface{}, usernames []string
 	}
 	return nil
 }
+
+func GetUserById(ctx context.Context, uid int64) (*User, error) {
+	user := User{}
+	err := Get(uid, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
