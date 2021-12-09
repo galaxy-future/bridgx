@@ -27,24 +27,34 @@ func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int
 	if err != nil {
 		return nil, 0, err
 	}
-	_ = decryptAccounts(res)
+	DecryptAccounts(res)
 	return res, count, nil
 }
 
 // decryptAccounts will decrypt account's `EncryptedAccountSecret` field.
 // If strict param's value is true error will return.
-func decryptAccounts(accounts []*model.Account, strict ...bool) error {
+func decryptAccounts(accounts []*model.Account, strict bool) error {
 	if accounts == nil || len(accounts) == 0 {
 		return nil
 	}
 	for _, account := range accounts {
 		decrypted, err := DecryptAccount(encrypt.AesKeyPepper, account.Salt, account.AccountKey, account.EncryptedAccountSecret)
-		if err != nil && len(strict) > 0 && strict[0] == true {
+		if err != nil && strict == true {
 			return err
 		}
 		account.AccountSecret = decrypted
 	}
 	return nil
+}
+
+// MustDecryptAccounts same as decryptAccounts(accounts, true).
+func MustDecryptAccounts(accounts []*model.Account) error {
+	return decryptAccounts(accounts, true)
+}
+
+// DecryptAccounts same as decryptAccounts(accounts, false).
+func DecryptAccounts(accounts []*model.Account) {
+	_ = decryptAccounts(accounts, false)
 }
 
 //GetAccount query account info by provider and accountKey
@@ -65,7 +75,7 @@ func GetAccountsByOrgId(orgId int64) (*types.OrgKeys, error) {
 	account := types.OrgKeys{
 		OrgId: orgId,
 	}
-	err = decryptAccounts(a)
+	err = MustDecryptAccounts(a)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +97,7 @@ func GetDefaultAccount(provider string) (*types.OrgKeys, error) {
 	account := types.OrgKeys{
 		OrgId: a.OrgId,
 	}
-	err = decryptAccounts([]*model.Account{a})
+	err = MustDecryptAccounts([]*model.Account{a})
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +213,7 @@ func GetOrgKeysByAk(ctx context.Context, ak string) (*types.OrgKeys, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = decryptAccounts([]*model.Account{&a})
+	err = MustDecryptAccounts([]*model.Account{&a})
 	if err != nil {
 		return nil, err
 	}
