@@ -23,7 +23,6 @@ func RegisterHandler(route *gin.RouterGroup) {
 		kubeRoute.GET("/:cluster", kubernetes.HandleGetKubernetes)
 	}
 
-
 	instanceGroupRoute := route.Group("/instance_group")
 	{
 		instanceGroupRoute.POST("", instance.HandleCreateInstanceGroup)
@@ -52,7 +51,6 @@ func RegisterHandler(route *gin.RouterGroup) {
 		instanceRoute.GET("/form", instance.HandleListInstanceForm)
 	}
 
-
 	clusterRoute := route.Group("/cluster")
 	{
 		clusterRoute.GET("/bridgx/available_clusters", cluster.HandleListUnusedBridgxCluster)
@@ -65,6 +63,5 @@ func RegisterHandler(route *gin.RouterGroup) {
 		clusterRoute.GET("/nodes/:clusterId", cluster.HandleListNodesSummary)
 		clusterRoute.GET("/pods/:clusterId", cluster.HandleListClusterPodsSummary)
 	}
-
 
 }

@@ -2,10 +2,11 @@ package helper
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/galaxy-future/BridgX/internal/constants"
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 func GetPagerParamFromQuery(c *gin.Context) (pageNumber int, pageSize int) {

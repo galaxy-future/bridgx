@@ -1,8 +1,9 @@
 package cluster_builder
 
 import (
-	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"strings"
+
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 )
 
 //

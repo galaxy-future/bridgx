@@ -3,7 +3,7 @@ package instance
 import (
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
 	"github.com/galaxy-future/BridgX/internal/model"
-	"github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 )
 
 func CreateInstanceGroup(instanceGroup *gf_cluster.InstanceGroup) error {
