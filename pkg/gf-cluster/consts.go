@@ -6,11 +6,11 @@ const (
 
 //Kubernetes step
 const (
-	KubernetesStepInitializeCluster = "Initialize the cluster"
-	KubernetesStepInstallMaster     = "Install master: "
-	KubernetesStepInstallFlannel    = "Install flannel"
-	KubernetesStepInstallNode       = "Install Node: "
-	KubernetesStepDone              = "Done"
+	KubernetesStepInitializeCluster = "集群初始化"
+	KubernetesStepInstallMaster     = "master安装"
+	KubernetesStepInstallFlannel    = "flannel安装"
+	KubernetesStepInstallNode       = "node安装"
+	KubernetesStepDone              = "运行中"
 )
 
 //KubernetesStatus
