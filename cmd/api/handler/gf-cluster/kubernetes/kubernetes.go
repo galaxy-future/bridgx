@@ -9,6 +9,7 @@ import (
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"github.com/gin-gonic/gin"
 )
+
 //HandleRegisterKubernetes 注册集群，用于支持已有k8s集群注册
 //后期用于其他集群直接录入
 func HandleRegisterKubernetes(c *gin.Context) {
@@ -32,6 +33,7 @@ func HandleRegisterKubernetes(c *gin.Context) {
 
 	c.JSON(200, gf_cluster.NewSuccessResponse())
 }
+
 //HandleListKubernetes 列出所有集群
 func HandleListKubernetes(c *gin.Context) {
 	kubernetes, err := model.ListRunningKubernetesClusters()
