@@ -3,19 +3,20 @@ package instance
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
-	"github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"go.uber.org/zap"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"strconv"
-	"sync"
-	"time"
 )
 
 func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.InstanceGroup, instanceName string) (*v1.Pod, error) {
@@ -165,6 +166,10 @@ func AddInstanceForm(instanceGroup *gf_cluster.InstanceGroup, cost int64, create
 	if err != nil {
 		executeStatus = gf_cluster.InstanceError
 	}
+	kubernetes, err := model.GetKubernetesCluster(instanceGroup.KubernetesId)
+	if err != nil {
+		return err
+	}
 	instanceForms := gf_cluster.InstanceForm{
 		Id:                   0,
 		ExecuteStatus:        executeStatus,
@@ -178,6 +183,7 @@ func AddInstanceForm(instanceGroup *gf_cluster.InstanceGroup, cost int64, create
 		CreatedUserId:        createdUserId,
 		CreatedUserName:      createdUserName,
 		CreatedTime:          time.Now().Unix(),
+		ClusterName:          kubernetes.Name,
 	}
 
 	err = model.CreateInstanceFormFromDB(&instanceForms)

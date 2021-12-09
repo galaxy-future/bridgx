@@ -3,6 +3,10 @@ package instance
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"strconv"
+	"time"
+
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/instance"
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -10,9 +14,6 @@ import (
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"strconv"
-	"time"
 )
 
 //HandleCreateInstanceGroup  创建实例组
@@ -100,6 +101,7 @@ func HandleBatchCreateInstanceGroup(c *gin.Context) {
 	}
 	createdUserId := claims.UserId
 	createdUserName := claims.Name
+	failInstanceGroups := make(map[string]string)
 	//同步创建集群
 	for _, cluster := range instanceGroups {
 		begin := time.Now()
@@ -117,19 +119,27 @@ func HandleBatchCreateInstanceGroup(c *gin.Context) {
 		err = instance.CreateInstanceGroup(&instanceGroup)
 		if err != nil {
 			logs.Logger.Error("创建实例组失败", zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			failInstanceGroups[instanceGroup.Name] = err.Error()
 			continue
 		}
 		err = instance.ExpandCustomInstanceGroup(&instanceGroup, cluster.InstanceCount)
 		if err != nil {
 			logs.Logger.Error("扩容实例组失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Int("count", instanceGroup.InstanceCount), zap.Error(err))
+			failInstanceGroups[instanceGroup.Name] = err.Error()
 			continue
 		}
 		cost := time.Now().Sub(begin).Milliseconds()
 		err = instance.AddInstanceForm(&instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err)
 		if err != nil {
 			logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			failInstanceGroups[instanceGroup.Name] = err.Error()
 			continue
 		}
+	}
+	if len(failInstanceGroups) != 0 {
+		failMessage, _ := json.Marshal(failInstanceGroups)
+		c.JSON(500, gf_cluster.NewFailedResponse(string(failMessage)))
+		return
 	}
 	c.JSON(200, gf_cluster.NewSuccessResponse())
 }
@@ -211,23 +221,33 @@ func HandleBatchDeleteInstanceGroup(c *gin.Context) {
 	}
 	createdUserId := claims.UserId
 	createdUserName := claims.Name
+	failInstanceGroups := make(map[string]string)
 	for _, clusterId := range request.Ids {
 		begin := time.Now()
 		instanceGroup, err := instance.GetInstanceGroup(clusterId)
 		if err != nil {
 			logs.Logger.Error("获取实例组失败", zap.Int64("groupId", clusterId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			failInstanceGroups[instanceGroup.Name] = err.Error()
 			continue
 		}
 		err = instance.DeleteInstanceGroup(instanceGroup)
 		if err != nil {
 			logs.Logger.Error("删除实例组失败", zap.Int64("groupId", clusterId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			failInstanceGroups[instanceGroup.Name] = err.Error()
 			continue
 		}
 		cost := time.Now().Sub(begin).Milliseconds()
 		err = instance.AddInstanceForm(instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err)
 		if err != nil {
 			logs.Logger.Error("记录操作日志失败", zap.Int64("groupId", clusterId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			failInstanceGroups[instanceGroup.Name] = err.Error()
+			continue
 		}
+	}
+	if len(failInstanceGroups) != 0 {
+		failMessage, _ := json.Marshal(failInstanceGroups)
+		c.JSON(500, gf_cluster.NewFailedResponse(string(failMessage)))
+		return
 	}
 	c.JSON(200, gf_cluster.NewSuccessResponse())
 }

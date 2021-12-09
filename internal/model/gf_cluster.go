@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/galaxy-future/BridgX/internal/clients"
-	"github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"gorm.io/gorm"
 )
 
@@ -49,13 +49,26 @@ func GetKubernetesCluster(kubernetesId int64) (*gf_cluster.KubernetesInfo, error
 }
 
 //ListKubernetesClusters 列出所有集群
-func ListKubernetesClusters() ([]*gf_cluster.KubernetesInfo, error) {
-	var clusters []*gf_cluster.KubernetesInfo
-	if err := clients.ReadDBCli.Find(&clusters).Error; err != nil {
-		logErr("GetClusterById from read db", err)
-		return nil, err
+func ListKubernetesClusters(id string, name string, pageNumber int, pageSize int) ([]*gf_cluster.KubernetesInfo, int, error) {
+	clients := clients.ReadDBCli.Model(gf_cluster.KubernetesInfo{})
+	if id != "" {
+		clients.Where("id = ?", id)
 	}
-	return clusters, nil
+	if name != "" {
+		clients.Where("name like ?", "%"+name+"%")
+	}
+	var clusters []*gf_cluster.KubernetesInfo
+	if err := clients.Order("id desc").Offset((pageNumber - 1) * pageSize).Limit(pageSize).Find(&clusters).Error; err != nil {
+		logErr("ListKubernetesClusters from read db", err)
+		return nil, 0, err
+	}
+	var total int64
+	if err := clients.Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+		logErr("CountKubernetesClusters from read db", err)
+		return nil, 0, err
+	}
+	return clusters, int(total), nil
+
 }
 
 //ListRunningKubernetesClusters 列出所有正在运行的集群
