@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/galaxy-future/BridgX/pkg/encrypt"
+
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/instance"
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -26,8 +28,8 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求格式"))
 		return
 	}
-	var cluster gf_cluster.InstanceGroupCreateRequest
-	err = json.Unmarshal(data, &cluster)
+	var group gf_cluster.InstanceGroupCreateRequest
+	err = json.Unmarshal(data, &group)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err : %s", err.Error())))
 		return
@@ -43,16 +45,22 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 	createdUserName := claims.Name
 	instanceGroup := gf_cluster.InstanceGroup{
 		Id:            0,
-		KubernetesId:  cluster.KubernetesId,
-		Name:          cluster.Name,
-		Image:         cluster.Image,
-		Cpu:           cluster.Cpu,
-		Memory:        cluster.Memory,
-		Disk:          cluster.Disk,
-		InstanceCount: cluster.InstanceCount,
+		KubernetesId:  group.KubernetesId,
+		Name:          group.Name,
+		Image:         group.Image,
+		Cpu:           group.Cpu,
+		Memory:        group.Memory,
+		Disk:          group.Disk,
+		InstanceCount: group.InstanceCount,
 		CreatedUser:   createdUserName,
 		CreatedUserId: createdUserId,
 	}
+	pwd, err := encrypt.AESEncrypt(encrypt.AesKeySalt, group.SshPwd)
+	if err != nil {
+		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+	instanceGroup.SshPwd = pwd
 	err = instance.CreateInstanceGroup(&instanceGroup)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
@@ -72,7 +80,7 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 	}()
 
 	//4. 扩容集群
-	err = instance.ExpandCustomInstanceGroup(&instanceGroup, cluster.InstanceCount)
+	err = instance.ExpandCustomInstanceGroup(&instanceGroup, group.InstanceCount)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
 		return
@@ -104,33 +112,48 @@ func HandleBatchCreateInstanceGroup(c *gin.Context) {
 	createdUserName := claims.Name
 	failInstanceGroups := make(map[string]string)
 	//同步创建集群
-	for _, cluster := range instanceGroups {
+	for _, group := range instanceGroups {
 		begin := time.Now()
 		instanceGroup := gf_cluster.InstanceGroup{
-			KubernetesId:  cluster.KubernetesId,
-			Name:          cluster.Name,
-			Image:         cluster.Image,
-			Cpu:           cluster.Cpu,
-			Memory:        cluster.Memory,
-			Disk:          cluster.Disk,
-			InstanceCount: cluster.InstanceCount,
+			KubernetesId:  group.KubernetesId,
+			Name:          group.Name,
+			Image:         group.Image,
+			Cpu:           group.Cpu,
+			Memory:        group.Memory,
+			Disk:          group.Disk,
+			InstanceCount: group.InstanceCount,
 			CreatedUser:   createdUserName,
 			CreatedUserId: createdUserId,
 		}
+		pwd, err := encrypt.AESEncrypt(encrypt.AesKeySalt, group.SshPwd)
+		if err != nil {
+			logs.Logger.Error("SSH密码加密失败", zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			failInstanceGroups[instanceGroup.Name] = err.Error()
+			if instance.AddInstanceForm(&instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err) != nil {
+				logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			}
+			continue
+		}
+		instanceGroup.SshPwd = pwd
 		err = instance.CreateInstanceGroup(&instanceGroup)
 		if err != nil {
 			logs.Logger.Error("创建实例组失败", zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
+			if instance.AddInstanceForm(&instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err) != nil {
+				logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			}
 			continue
 		}
-		err = instance.ExpandCustomInstanceGroup(&instanceGroup, cluster.InstanceCount)
+		err = instance.ExpandCustomInstanceGroup(&instanceGroup, group.InstanceCount)
 		if err != nil {
 			logs.Logger.Error("扩容实例组失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Int("count", instanceGroup.InstanceCount), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
+			if instance.AddInstanceForm(&instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err) != nil {
+				logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			}
 			continue
 		}
-		cost := time.Now().Sub(begin).Milliseconds()
-		err = instance.AddInstanceForm(&instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err)
+		err = instance.AddInstanceForm(&instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err)
 		if err != nil {
 			logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
@@ -164,12 +187,12 @@ func HandleListInstanceGroup(c *gin.Context) {
 
 func HandleDeleteInstanceGroup(c *gin.Context) {
 	begin := time.Now()
-	clusterId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
+	instanceGroupId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse("未指定实例组id"))
 		return
 	}
-	instanceGroup, err := instance.GetInstanceGroup(clusterId)
+	instanceGroup, err := instance.GetInstanceGroup(instanceGroupId)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
 		return
@@ -223,24 +246,28 @@ func HandleBatchDeleteInstanceGroup(c *gin.Context) {
 	createdUserId := claims.UserId
 	createdUserName := claims.Name
 	failInstanceGroups := make(map[string]string)
-	for _, clusterId := range request.Ids {
+	for _, instanceGroupId := range request.Ids {
 		begin := time.Now()
-		instanceGroup, err := instance.GetInstanceGroup(clusterId)
+		instanceGroup, err := instance.GetInstanceGroup(instanceGroupId)
 		if err != nil {
-			logs.Logger.Error("获取实例组失败", zap.Int64("groupId", clusterId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Error("获取实例组失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
+			if instance.AddInstanceForm(instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err) != nil {
+				logs.Logger.Error("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			}
 			continue
 		}
 		err = instance.DeleteInstanceGroup(instanceGroup)
 		if err != nil {
-			logs.Logger.Error("删除实例组失败", zap.Int64("groupId", clusterId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Error("删除实例组失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
+			if instance.AddInstanceForm(instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err) != nil {
+				logs.Logger.Error("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			}
 			continue
 		}
-		cost := time.Now().Sub(begin).Milliseconds()
-		err = instance.AddInstanceForm(instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err)
-		if err != nil {
-			logs.Logger.Error("记录操作日志失败", zap.Int64("groupId", clusterId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+		if instance.AddInstanceForm(instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err) != nil {
+			logs.Logger.Error("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
 			continue
 		}
@@ -255,18 +282,18 @@ func HandleBatchDeleteInstanceGroup(c *gin.Context) {
 
 //HandleGetInstanceGroup 获取实例组信息
 func HandleGetInstanceGroup(c *gin.Context) {
-	clusterId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
+	instanceGroupId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse("未指定实例组id"))
 		return
 	}
-	cluster, err := instance.GetInstanceGroup(clusterId)
+	group, err := instance.GetInstanceGroup(instanceGroupId)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 
-	c.JSON(200, gf_cluster.NewGetInstanceGroupResponse(cluster))
+	c.JSON(200, gf_cluster.NewGetInstanceGroupResponse(group))
 }
 
 //HandleUpdateInstanceGroup 更新实例组信息
@@ -276,22 +303,22 @@ func HandleUpdateInstanceGroup(c *gin.Context) {
 		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求格式"))
 		return
 	}
-	var cluster gf_cluster.InstanceGroupUpdateRequest
-	err = json.Unmarshal(data, &cluster)
+	var group gf_cluster.InstanceGroupUpdateRequest
+	err = json.Unmarshal(data, &group)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err: %s", err.Error())))
 		return
 	}
 
 	instanceGroup := gf_cluster.InstanceGroup{
-		Id:            cluster.Id,
-		KubernetesId:  cluster.KubernetesId,
-		Name:          cluster.Name,
-		Image:         cluster.Image,
-		Cpu:           cluster.Cpu,
-		Memory:        cluster.Memory,
-		Disk:          cluster.Disk,
-		InstanceCount: cluster.InstanceCount,
+		Id:            group.Id,
+		KubernetesId:  group.KubernetesId,
+		Name:          group.Name,
+		Image:         group.Image,
+		Cpu:           group.Cpu,
+		Memory:        group.Memory,
+		Disk:          group.Disk,
+		InstanceCount: group.InstanceCount,
 	}
 	err = model.UpdateInstanceGroupFromDB(&instanceGroup)
 	if err != nil {

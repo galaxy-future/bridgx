@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/galaxy-future/BridgX/pkg/encrypt"
+
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
@@ -39,6 +41,10 @@ func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.I
 	defaultImage := "galaxyfuture/centos-sshd:7"
 	TerminationGracePeriodSeconds := int64(2)
 
+	pwd, err := encrypt.AESDecrypt(encrypt.AesKeySalt, request.SshPwd)
+	if err != nil {
+		return nil, err
+	}
 	req := &v1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -75,7 +81,7 @@ func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.I
 						//},
 						{
 							Name:  "PASSWORD",
-							Value: "123456",
+							Value: pwd,
 						},
 					},
 					Resources: v1.ResourceRequirements{
