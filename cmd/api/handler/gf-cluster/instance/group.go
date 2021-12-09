@@ -20,7 +20,7 @@ import (
 func HandleCreateInstanceGroup(c *gin.Context) {
 	begin := time.Now()
 
-	//解析请求
+	//1. 解析请求
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求格式"))
@@ -38,6 +38,7 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
+	//2. 创建实例组
 	createdUserId := claims.UserId
 	createdUserName := claims.Name
 	instanceGroup := gf_cluster.InstanceGroup{
@@ -57,7 +58,7 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
-	//统计请求时间
+	//3. 统计请求时间
 	defer func() {
 		cost := time.Now().Sub(begin).Milliseconds()
 		err := instance.AddInstanceForm(&instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err)
@@ -70,7 +71,7 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 		}
 	}()
 
-	//扩容集群
+	//4. 扩容集群
 	err = instance.ExpandCustomInstanceGroup(&instanceGroup, cluster.InstanceCount)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
