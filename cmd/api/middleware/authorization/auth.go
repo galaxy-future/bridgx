@@ -1,9 +1,10 @@
 package authorization
 
 import (
-	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"net/http"
 	"strings"
+
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/config"

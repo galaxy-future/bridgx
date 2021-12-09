@@ -3,6 +3,9 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
@@ -11,8 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"strconv"
-	"time"
 )
 
 //ListClusterPodsSummary 获得集群下所有Pod详情
@@ -38,7 +39,8 @@ func getClusterPodInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.PodSummar
 	if err != nil {
 		return nil, err
 	}
-	ctxPodQuery, cancelPodQuery := context.WithTimeout(context.Background(), time.Second*10)
+	//TODO remove hadrd code
+	ctxPodQuery, cancelPodQuery := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancelPodQuery()
 	selector := metav1.LabelSelector{MatchLabels: createInstanceLabels()}
 	pods, err := client.ClientSet.CoreV1().Pods("default").List(ctxPodQuery, metav1.ListOptions{

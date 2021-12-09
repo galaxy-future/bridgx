@@ -358,9 +358,10 @@ CREATE TABLE `instance_groups` (
   `instance_count` int(11) NOT NULL DEFAULT '0',
   `created_user` varchar(255) NOT NULL,
   `created_user_id` int(11) NOT NULL DEFAULT '0',
+  `ssh_pwd` VARCHAR(500) NOT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uniq_kubernetes_id_name` (`kubernetes_id`,`name`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 drop table if exists instance_forms;
 CREATE TABLE `instance_forms` (
@@ -378,7 +379,7 @@ CREATE TABLE `instance_forms` (
   `created_user_name` varchar(255) NOT NULL,
   `created_time` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 
 -- init super admin info

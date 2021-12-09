@@ -13,6 +13,7 @@ type InstanceForm struct {
 	CreatedUserId        int64  `json:"created_user_id"`
 	CreatedUserName      string `json:"created_user_name"`
 	CreatedTime          int64  `json:"created_time"`
+	ClusterName          string `json:"cluster_name"`
 }
 
 type InstanceFormListResponse struct {

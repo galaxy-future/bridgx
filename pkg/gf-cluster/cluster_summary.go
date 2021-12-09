@@ -39,7 +39,8 @@ type ClusterSummary struct {
 	//Status 集群状态
 	Status string `json:"status"`
 	//Message 其他信息，当集群异常时，相关的额错误信息
-	Message string `json:"message"`
+	Message     string `json:"message"`
+	InstallStep string `json:"install_step"`
 }
 
 //ListClusterSummaryResponse get api/v1/kubernetes/summary get response

@@ -3,6 +3,12 @@ package cluster
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
@@ -14,11 +20,6 @@ import (
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
 )
 
 //HandleCreateCluster 创建集群
@@ -170,30 +171,18 @@ func HandleCreateCluster(c *gin.Context) {
 
 //HandleListClusterSummary 列出所有集群
 func HandleListClusterSummary(c *gin.Context) {
-	clusters, err := cluster.ListClustersSummary()
+	id, _ := c.GetQuery("id")
+	name, _ := c.GetQuery("name")
+	pageNumber, pageSize := helper.GetPagerParamFromQuery(c)
+	clusters, total, err := cluster.ListClustersSummary(id, name, pageNumber, pageSize)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
-
-	pageNumber, pageSize := helper.GetPagerParamFromQuery(c)
-	start := (pageNumber - 1) * pageSize
-	if start >= len(clusters) {
-		c.JSON(200, gf_cluster.NewListClusterSummaryResponse(nil, gf_cluster.Pager{
-			PageNumber: pageNumber,
-			PageSize:   pageSize,
-			Total:      len(clusters),
-		}))
-		return
-	}
-	end := pageNumber * pageSize
-	if end > len(clusters) {
-		end = len(clusters)
-	}
-	c.JSON(200, gf_cluster.NewListClusterSummaryResponse(clusters[start:end], gf_cluster.Pager{
+	c.JSON(200, gf_cluster.NewListClusterSummaryResponse(clusters, gf_cluster.Pager{
 		PageNumber: pageNumber,
 		PageSize:   pageSize,
-		Total:      len(clusters),
+		Total:      total,
 	}))
 }
 
@@ -220,13 +209,20 @@ func HandleDeleteKubernetes(c *gin.Context) {
 		c.JSON(400, gf_cluster.NewFailedResponse("未指定集群Id"))
 		return
 	}
-
-	err = model.DeleteKubernetesCluster(clusterId)
+	//获得用户token，与bridgx交互
+	token, err := helper.GetUserToken(c)
+	if err != nil {
+		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+	//获取当前集群信息
+	theCluster, err := model.GetKubernetesCluster(clusterId)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 
+	// 删除group
 	groups, err := model.ListInstanceGroupInKubernetes(clusterId)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
@@ -239,17 +235,7 @@ func HandleDeleteKubernetes(c *gin.Context) {
 		}
 	}
 
-	token, err := helper.GetUserToken(c)
-	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
-		return
-	}
-	theCluster, err := model.GetKubernetesCluster(clusterId)
-	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
-		return
-	}
-
+	//释放Bridgx集群
 	useResponse, err := clients.GetClient().UpdateBridgxClusterUsingTag(token, theCluster.BridgxClusterName, false)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(fmt.Sprintf("释放集群时出错，失败信息: %s", err.Error())))
@@ -257,6 +243,13 @@ func HandleDeleteKubernetes(c *gin.Context) {
 	}
 	if useResponse.Code != 200 {
 		c.JSON(500, gf_cluster.NewFailedResponse(fmt.Sprintf("释放集群时出错，失败信息: %s", useResponse.Msg)))
+		return
+	}
+
+	//删除集群
+	err = model.DeleteKubernetesCluster(clusterId)
+	if err != nil {
+		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	c.JSON(200, gf_cluster.NewSuccessResponse())

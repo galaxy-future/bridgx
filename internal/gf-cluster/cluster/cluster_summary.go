@@ -2,19 +2,20 @@ package cluster
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
-	"github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"time"
 )
 
 //ListClustersSummary 列出所有集群summary
-func ListClustersSummary() ([]*gf_cluster.ClusterSummary, error) {
-	clusters, err := model.ListKubernetesClusters()
+func ListClustersSummary(id string, name string, pageNumber int, pageSize int) ([]*gf_cluster.ClusterSummary, int, error) {
+	clusters, total, err := model.ListKubernetesClusters(id, name, pageNumber, pageSize)
 	if err != nil {
-		return nil, fmt.Errorf("查询集群信息失败，错误信息: %v", err.Error())
+		return nil, 0, fmt.Errorf("查询集群信息失败，错误信息: %v", err.Error())
 	}
 
 	var summaries []*gf_cluster.ClusterSummary
@@ -30,7 +31,7 @@ func ListClustersSummary() ([]*gf_cluster.ClusterSummary, error) {
 
 	}
 
-	return summaries, nil
+	return summaries, total, nil
 
 }
 
@@ -71,6 +72,7 @@ func queryClusterInfo(cluster *gf_cluster.KubernetesInfo) (*gf_cluster.ClusterSu
 		CreatedUser:                 cluster.CreatedUser,
 		CreatedTime:                 time.Unix(cluster.CreatedTime, 0).Format("2006-01-02 15:04:05"),
 		Status:                      cluster.Status,
+		InstallStep:                 cluster.InstallStep,
 	}
 
 	nodes, err := getClusterNodeInfo(cluster)

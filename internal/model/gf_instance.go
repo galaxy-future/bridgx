@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/galaxy-future/BridgX/internal/clients"
-	"github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 )
 
 func CreateInstanceGroupFromDB(instanceGroup *gf_cluster.InstanceGroup) error {
@@ -43,17 +43,18 @@ func GetInstanceGroupFromDB(instanceGroupId int64) (*gf_cluster.InstanceGroup, e
 }
 
 func ListInstanceGroupFromDB(name string, pageNumber int, pageSize int) ([]*gf_cluster.InstanceGroup, int64, error) {
+	clients := clients.ReadDBCli.Model(gf_cluster.InstanceGroup{})
 	if name != "" {
-		clients.ReadDBCli.Model(gf_cluster.InstanceGroup{}).Where("name like ?", "%"+name+"%")
+		clients.Where("name like ?", "%"+name+"%")
 	}
 
 	var clusters []*gf_cluster.InstanceGroup
-	if err := clients.ReadDBCli.Model(gf_cluster.InstanceGroup{}).Order("id desc").Offset((pageNumber - 1) * pageSize).Limit(pageSize).Find(&clusters).Error; err != nil {
+	if err := clients.Order("id desc").Offset((pageNumber - 1) * pageSize).Limit(pageSize).Find(&clusters).Error; err != nil {
 		logErr("ListInstanceGroupFromDB from read db", err)
 		return nil, 0, err
 	}
 	var total int64
-	if err := clients.ReadDBCli.Model(gf_cluster.InstanceGroup{}).Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+	if err := clients.Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		logErr("ListInstanceGroupFromDB from read db", err)
 		return nil, 0, err
 	}
@@ -106,18 +107,18 @@ func CreateInstanceFormFromDB(instanceForm *gf_cluster.InstanceForm) error {
 }
 
 func ListInstanceFormFromDB(id string, pageNumber int, pageSize int) ([]*gf_cluster.InstanceForm, int64, error) {
-
+	clients := clients.ReadDBCli.Model(gf_cluster.InstanceForm{})
 	if id != "" {
-		clients.ReadDBCli.Model(gf_cluster.InstanceForm{}).Where("id = ?", id)
+		clients.Where("id = ?", id)
 	}
 
 	var forms []*gf_cluster.InstanceForm
-	if err := clients.ReadDBCli.Model(gf_cluster.InstanceForm{}).Order("id desc").Offset((pageNumber - 1) * pageSize).Limit(pageSize).Find(&forms).Error; err != nil {
+	if err := clients.Order("id desc").Offset((pageNumber - 1) * pageSize).Limit(pageSize).Find(&forms).Error; err != nil {
 		logErr("ListInstanceFormFromDB from read db", err)
 		return nil, 0, err
 	}
 	var total int64
-	if err := clients.ReadDBCli.Model(gf_cluster.InstanceForm{}).Offset(-1).Limit(-1).Count(&total).Error; err != nil {
+	if err := clients.Offset(-1).Limit(-1).Count(&total).Error; err != nil {
 		logErr("ListInstanceFormFromDB from read db", err)
 		return nil, 0, err
 	}
