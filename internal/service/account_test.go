@@ -1,6 +1,10 @@
 package service
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/galaxy-future/BridgX/pkg/encrypt"
+)
 
 func TestEncryptDecryptAccount(t *testing.T) {
 	pepper := "test_pepper"
@@ -11,16 +15,20 @@ func TestEncryptDecryptAccount(t *testing.T) {
 		t.Errorf("generateSalt failed.err :[%s]", err.Error())
 		return
 	}
+	encrypt.ObfuscateText(pepper, text, salt)
+
 	dec, err := EncryptAccount(pepper, salt, key, text)
 	if err != nil {
 		t.Errorf("EncryptAccount failed.err :[%s]", err.Error())
 		return
 	}
+
 	gotText, err := DecryptAccount(pepper, salt, key, dec)
 	if err != nil {
 		t.Errorf("DecryptAccount failed.err :[%s]", err.Error())
 		return
 	}
+
 	if gotText != text {
 		t.Errorf("Encrypt Decrypt failed")
 		return

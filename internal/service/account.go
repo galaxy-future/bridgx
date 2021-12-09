@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
@@ -16,10 +14,6 @@ import (
 	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 	"github.com/galaxy-future/BridgX/pkg/encrypt"
 )
-
-const textEncryptTmpl = `^%s([a-zA-Z0-9-_]+)%s$`
-
-var unwrapReCache = map[string]*regexp.Regexp{}
 
 // GetAccounts search accounts by condition.
 func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int) ([]*model.Account, int64, error) {
@@ -236,35 +230,11 @@ func EncryptAccount(pepper, salt, key, text string) (string, error) {
 }
 
 func wrapText(pepper, text, salt string) string {
-	return pepper + text + salt
+	return encrypt.ObfuscateText(pepper, text, salt)
 }
 
 func unWrapText(pepper, decryptedText, salt string) (string, error) {
-	re, err := getUnwrapRe(pepper, decryptedText, salt)
-	if err != nil {
-		return "", err
-	}
-	result := re.FindStringSubmatch(decryptedText)
-	if len(result) != 2 {
-		return "", errs.ErrBadEncryptedText
-	}
-	return result[len(result)-1], nil
-}
-
-func getUnwrapRe(pepper, decryptedText, salt string) (re *regexp.Regexp, err error) {
-	pepper = regexp.QuoteMeta(pepper)
-	salt = regexp.QuoteMeta(salt)
-	cacheKey := pepper + decryptedText + salt
-	re, ok := unwrapReCache[cacheKey]
-	if !ok {
-		re, err = regexp.Compile(fmt.Sprintf(textEncryptTmpl, pepper, salt))
-		if err != nil {
-			return nil, err
-		}
-		unwrapReCache[cacheKey] = re
-		return re, nil
-	}
-	return re, nil
+	return encrypt.RestoreText(pepper, decryptedText, salt)
 }
 
 func DecryptAccount(pepper, salt, key, encrypted string) (string, error) {
