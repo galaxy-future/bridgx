@@ -68,7 +68,7 @@ func HandleCreateCluster(c *gin.Context) {
 		return
 	}
 
-	//4. 获取Bridgx集群信息
+	//4. 获取Bridgx集群实例信息
 	instanceResponse, err := clients.GetClient().GetBridgxClusterAllInstances(token, buildRequest.BridgxClusterName)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("获取集群实例时失败,错误信息： %s", err.Error())))
@@ -91,7 +91,7 @@ func HandleCreateCluster(c *gin.Context) {
 		return
 	}
 
-	//6. 获取AKSK信息
+	//6. 集群搭建策略
 	if buildRequest.ClusterType == gf_cluster.KubernetesHA {
 		if len(instanceResponse) < gf_cluster.KubernetesHAMinMachineCount {
 			c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("高可用集群要求最少%d台物理机", gf_cluster.KubernetesHAMinMachineCount)))
@@ -168,6 +168,7 @@ func HandleCreateCluster(c *gin.Context) {
 
 }
 
+//HandleListClusterSummary 列出所有集群
 func HandleListClusterSummary(c *gin.Context) {
 	clusters, err := cluster.ListClustersSummary()
 	if err != nil {
@@ -196,6 +197,7 @@ func HandleListClusterSummary(c *gin.Context) {
 	}))
 }
 
+//HandleGetClusterSummary 获得集群概述信息
 func HandleGetClusterSummary(c *gin.Context) {
 	clusterId, err := strconv.ParseInt(c.Param("clusterId"), 10, 64)
 	if err != nil {
@@ -211,6 +213,7 @@ func HandleGetClusterSummary(c *gin.Context) {
 	c.JSON(200, gf_cluster.NewGetClusterSummaryResponse(theCluster))
 }
 
+//HandleDeleteKubernetes 删除集群
 func HandleDeleteKubernetes(c *gin.Context) {
 	clusterId, err := strconv.ParseInt(c.Param("clusterId"), 10, 64)
 	if err != nil {
@@ -259,6 +262,7 @@ func HandleDeleteKubernetes(c *gin.Context) {
 	c.JSON(200, gf_cluster.NewSuccessResponse())
 }
 
+//HandleListNodesSummary 获取集群节点概要信息
 func HandleListNodesSummary(c *gin.Context) {
 	nodeIp := c.Query("node_ip")
 	clusterName := c.Query("cluster_name")
@@ -315,6 +319,7 @@ func HandleListNodesSummary(c *gin.Context) {
 
 }
 
+//HandleListClusterPodsSummary 获取集群pod概述信息
 func HandleListClusterPodsSummary(c *gin.Context) {
 	nodeIp := c.Query("node_ip")
 	podIp := c.Query("pod_ip")
@@ -366,29 +371,3 @@ func HandleListClusterPodsSummary(c *gin.Context) {
 	}))
 
 }
-
-//
-//func getPagerParam(c *gin.Context) (pageNumber int, pageSize int) {
-//	pageNumberContent := c.Query("page_number")
-//	PageSizeContent := c.Query("page_size")
-//
-//	if pageNumberContent != "" {
-//		value, err := strconv.ParseInt(pageNumberContent, 10, 60)
-//		if err == nil {
-//			pageNumber = int(value)
-//		}
-//	}
-//	if PageSizeContent != "" {
-//		value, err := strconv.ParseInt(PageSizeContent, 10, 60)
-//		if err == nil {
-//			pageSize = int(value)
-//		}
-//	}
-//	if pageSize == 0 {
-//		pageSize = gf_cluster.DefaultPageSize
-//	}
-//	if pageNumber < 1 {
-//		pageNumber = 1
-//	}
-//	return
-//}
