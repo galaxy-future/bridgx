@@ -27,10 +27,6 @@ type InstanceGroupCreateRequest struct {
 	SshPwd        string `json:"ssh_pwd"`
 }
 
-type InstanceGroupBatchCreateRequest struct {
-	InstanceGroups []*InstanceGroupCreateRequest
-}
-
 type InstanceGroupBatchDeleteRequest struct {
 	Ids []int64 `json:"ids"`
 }
@@ -80,12 +76,12 @@ func NewListInstanceGroupResponse(instanceGroups []*InstanceGroup, pager Pager) 
 
 // instances
 type InstanceGroupExpandRequest struct {
-	InstanceGroupId int64 `json:"Instance_group_id"`
+	InstanceGroupId int64 `json:"instance_group_id"`
 	Count           int   `json:"count"`
 }
 
 type InstanceListRequest struct {
-	InstanceGroupId string `json:"Instance_group_id"`
+	InstanceGroupId string `json:"instance_group_id"`
 	Name            string `json:"name"`
 }
 
@@ -102,32 +98,23 @@ func NewInstanceListResponse(instances []*Instance) *InstanceListResponse {
 }
 
 type InstanceGroupExpandOrShrinkRequest struct {
-	InstanceGroupId int64 `json:"Instance_group_id"`
+	InstanceGroupId int64 `json:"instance_group_id"`
 	Count           int   `json:"count"`
 }
 
 type InstanceRestartRequest struct {
-	InstanceGroupId int64  `json:"Instance_group_id"`
+	InstanceGroupId int64  `json:"instance_group_id"`
 	InstanceName    string `json:"instance_name"`
 }
 
 type InstanceDeleteRequest struct {
-	InstanceGroupId int64  `json:"Instance_group_id"`
+	InstanceGroupId int64  `json:"instance_group_id"`
 	InstanceName    string `json:"instance_name"`
 }
 
 type InstanceGroupShrinkRequest struct {
-	InstanceGroupId int64 `json:"Instance_group_id"`
+	InstanceGroupId int64 `json:"instance_group_id"`
 	Count           int   `json:"count"`
-}
-
-type InstanceGroupShrinkResponse struct {
-	InstanceGroupId  int64    `json:"Instance_group_id"`
-	InstanceNameList []string `json:"instance_name_list"`
-}
-
-type InstanceRemoveRequest struct {
-	ClusterName string `json:"cluster_name"`
 }
 
 type Instance struct {
