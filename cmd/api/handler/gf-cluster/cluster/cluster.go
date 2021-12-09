@@ -221,12 +221,6 @@ func HandleDeleteKubernetes(c *gin.Context) {
 		return
 	}
 
-	err = model.DeleteKubernetesCluster(clusterId)
-	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
-		return
-	}
-
 	groups, err := model.ListInstanceGroupInKubernetes(clusterId)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
@@ -238,6 +232,13 @@ func HandleDeleteKubernetes(c *gin.Context) {
 			logs.Logger.Error("failed to delete theCluster", zap.Error(err))
 		}
 	}
+
+	err = model.DeleteKubernetesCluster(clusterId)
+	if err != nil {
+		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+
 
 	token, err := helper.GetUserToken(c)
 	if err != nil {
