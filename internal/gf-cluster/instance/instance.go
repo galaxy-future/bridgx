@@ -103,7 +103,6 @@ func ClearCustomECIClusterInstances(instanceGroupId int64) error {
 }
 
 //ListCustomInstances 列出所有eci
-//TODO fe分页
 func ListCustomInstances(instanceGroupId int64) ([]*gf_cluster.Instance, error) {
 	instanceGroup, err := GetInstanceGroup(instanceGroupId)
 	if err != nil {
