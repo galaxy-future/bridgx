@@ -7,19 +7,19 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/errs"
 	"github.com/galaxy-future/BridgX/internal/logs"
-	"github.com/galaxy-future/BridgX/pkg"
-
-	"github.com/galaxy-future/BridgX/pkg/encrypt"
-
-	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/types"
+	"github.com/galaxy-future/BridgX/pkg"
 	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
+	"github.com/galaxy-future/BridgX/pkg/encrypt"
 )
 
 const textEncryptTmpl = `^%s([a-zA-Z0-9-_]+)%s$`
+
+var unwrapReCache = map[string]*regexp.Regexp{}
 
 // GetAccounts search accounts by condition.
 func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int) ([]*model.Account, int64, error) {
@@ -28,7 +28,7 @@ func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int
 		return nil, 0, err
 	}
 	_ = decryptAccounts(res)
-	return res, count, err
+	return res, count, nil
 }
 
 // decryptAccounts will decrypt account's `EncryptedAccountSecret` field.
@@ -230,9 +230,7 @@ func wrapText(pepper, text, salt string) string {
 }
 
 func unWrapText(pepper, decryptedText, salt string) (string, error) {
-	pepper = regexp.QuoteMeta(pepper)
-	salt = regexp.QuoteMeta(salt)
-	re, err := regexp.Compile(fmt.Sprintf(textEncryptTmpl, pepper, salt))
+	re, err := getUnwrapRe(pepper, decryptedText, salt)
 	if err != nil {
 		return "", err
 	}
@@ -241,6 +239,22 @@ func unWrapText(pepper, decryptedText, salt string) (string, error) {
 		return "", errs.ErrBadEncryptedText
 	}
 	return result[len(result)-1], nil
+}
+
+func getUnwrapRe(pepper, decryptedText, salt string) (re *regexp.Regexp, err error) {
+	pepper = regexp.QuoteMeta(pepper)
+	salt = regexp.QuoteMeta(salt)
+	cacheKey := pepper + decryptedText + salt
+	re, ok := unwrapReCache[cacheKey]
+	if !ok {
+		re, err = regexp.Compile(fmt.Sprintf(textEncryptTmpl, pepper, salt))
+		if err != nil {
+			return nil, err
+		}
+		unwrapReCache[cacheKey] = re
+		return re, nil
+	}
+	return re, nil
 }
 
 func DecryptAccount(pepper, salt, key, encrypted string) (string, error) {
