@@ -1,4 +1,4 @@
-package eci
+package instance
 
 import (
 	"encoding/json"

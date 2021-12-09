@@ -1,8 +1,8 @@
 package v1
 
 import (
-	"github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster/eci"
-	"github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster/gf_cloud"
+	"github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster/cluster"
+	"github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster/instance"
 	"github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster/kubernetes"
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/authorization"
 	"github.com/gin-gonic/gin"
@@ -26,44 +26,44 @@ func RegisterHandler(route *gin.RouterGroup) {
 
 	instanceGroupRoute := route.Group("/instance_group")
 	{
-		instanceGroupRoute.POST("", eci.HandleCreateInstanceGroup)
-		instanceGroupRoute.POST("/batch/create", eci.HandleBatchCreateInstanceGroup)
+		instanceGroupRoute.POST("", instance.HandleCreateInstanceGroup)
+		instanceGroupRoute.POST("/batch/create", instance.HandleBatchCreateInstanceGroup)
 
-		instanceGroupRoute.GET("/delete/:instanceGroup", eci.HandleDeleteInstanceGroup)
-		instanceGroupRoute.DELETE("/delete/:instanceGroup", eci.HandleDeleteInstanceGroup)
-		instanceGroupRoute.POST("/delete/:instanceGroup", eci.HandleDeleteInstanceGroup)
-		instanceGroupRoute.POST("/batch/delete", eci.HandleBatchDeleteInstanceGroup)
+		instanceGroupRoute.GET("/delete/:instanceGroup", instance.HandleDeleteInstanceGroup)
+		instanceGroupRoute.DELETE("/delete/:instanceGroup", instance.HandleDeleteInstanceGroup)
+		instanceGroupRoute.POST("/delete/:instanceGroup", instance.HandleDeleteInstanceGroup)
+		instanceGroupRoute.POST("/batch/delete", instance.HandleBatchDeleteInstanceGroup)
 
-		instanceGroupRoute.POST("/update", eci.HandleUpdateInstanceGroup)
-		instanceGroupRoute.PATCH("/update", eci.HandleUpdateInstanceGroup)
+		instanceGroupRoute.POST("/update", instance.HandleUpdateInstanceGroup)
+		instanceGroupRoute.PATCH("/update", instance.HandleUpdateInstanceGroup)
 
-		instanceGroupRoute.GET("", eci.HandleListInstanceGroup)
-		instanceGroupRoute.GET("/:instanceGroup", eci.HandleGetInstanceGroup)
+		instanceGroupRoute.GET("", instance.HandleListInstanceGroup)
+		instanceGroupRoute.GET("/:instanceGroup", instance.HandleGetInstanceGroup)
 
-		instanceGroupRoute.POST("/expand", eci.HandleExpandInstanceGroup)
-		instanceGroupRoute.POST("/shrink", eci.HandleShrinkInstanceGroup)
-		instanceGroupRoute.POST("/expand_shrink", eci.HandleExpandOrShrinkInstanceGroup)
+		instanceGroupRoute.POST("/expand", instance.HandleExpandInstanceGroup)
+		instanceGroupRoute.POST("/shrink", instance.HandleShrinkInstanceGroup)
+		instanceGroupRoute.POST("/expand_shrink", instance.HandleExpandOrShrinkInstanceGroup)
 
-		instance := route.Group("/instance")
-		instance.POST("/restart", eci.HandleRestartInstance)
-		instance.GET("/:instanceGroup", eci.HandleListInstance)
-		instance.GET("/self", eci.HandleListMyInstance)
-		instance.POST("/delete", eci.HandleDeleteInstance)
-		instance.GET("/form", eci.HandleListInstanceForm)
+		instanceRoute := route.Group("/instance")
+		instanceRoute.POST("/restart", instance.HandleRestartInstance)
+		instanceRoute.GET("/:instanceGroup", instance.HandleListInstance)
+		instanceRoute.GET("/self", instance.HandleListMyInstance)
+		instanceRoute.POST("/delete", instance.HandleDeleteInstance)
+		instanceRoute.GET("/form", instance.HandleListInstanceForm)
 	}
 
 
 	clusterRoute := route.Group("/cluster")
 	{
-		clusterRoute.GET("/bridgx/available_clusters", gf_cloud.HandleListUnusedBridgxCluster)
+		clusterRoute.GET("/bridgx/available_clusters", cluster.HandleListUnusedBridgxCluster)
 
-		clusterRoute.DELETE("/:clusterId", gf_cloud.HandleDeleteKubernetes)
-		clusterRoute.POST("", gf_cloud.HandleCreateCluster)
+		clusterRoute.DELETE("/:clusterId", cluster.HandleDeleteKubernetes)
+		clusterRoute.POST("", cluster.HandleCreateCluster)
 
-		clusterRoute.GET("/summary", gf_cloud.HandleListClusterSummary)
-		clusterRoute.GET("/summary/:clusterId", gf_cloud.HandleGetClusterSummary)
-		clusterRoute.GET("/nodes/:clusterId", gf_cloud.HandleListNodesSummary)
-		clusterRoute.GET("/pods/:clusterId", gf_cloud.HandleListClusterPodsSummary)
+		clusterRoute.GET("/summary", cluster.HandleListClusterSummary)
+		clusterRoute.GET("/summary/:clusterId", cluster.HandleGetClusterSummary)
+		clusterRoute.GET("/nodes/:clusterId", cluster.HandleListNodesSummary)
+		clusterRoute.GET("/pods/:clusterId", cluster.HandleListClusterPodsSummary)
 	}
 
 

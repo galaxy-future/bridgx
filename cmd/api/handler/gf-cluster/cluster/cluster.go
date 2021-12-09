@@ -1,4 +1,4 @@
-package gf_cloud
+package cluster
 
 import (
 	"encoding/json"
