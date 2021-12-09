@@ -257,6 +257,63 @@ kubeadm init \
         --upload-certs
 `
 
+var initConfig = `__EOF__
+#!/usr/bin/env bash
+sudo modprobe br_netfilter
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+EOF
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+
+yum install -y yum-utils device-mapper-persistent-data lvm2
+yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+
+yum -y makecache
+
+yum -y install docker-ce
+
+mkdir /etc/docker
+touch /etc/docker/daemon.json
+cat > /etc/docker/daemon.json <<EOF
+{
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "log-driver": "json-file",
+    "log-opts": {
+    "max-size": "100m"
+    },
+    "storage-driver": "overlay2",
+    "registry-mirrors":[
+        "https://kfwkfulq.mirror.aliyuncs.com",
+        "https://2lqq34jg.mirror.aliyuncs.com",
+        "https://pee6w651.mirror.aliyuncs.com",
+        "http://hub-mirror.c.163.com",
+        "https://docker.mirrors.ustc.edu.cn",
+        "https://registry.docker-cn.com"
+    ]
+}
+EOF
+
+systemctl enable docker
+systemctl enable  --now docker
+
+yum install -y kubelet kubeadm kubectl
+systemctl enable kubelet
+__EOF__
+`
+
 //just for test string
 var testResult = `
 You should now deploy a pod network to the cluster.

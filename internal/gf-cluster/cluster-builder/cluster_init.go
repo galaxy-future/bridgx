@@ -113,15 +113,30 @@ func labelCluster(master gf_cluster.ClusterBuildMachine, list []gf_cluster.Clust
 }
 
 func resetMachine(machine gf_cluster.ClusterBuildMachine) {
+	initMachine(machine)
 	_, _ = Run(machine, "echo y | kubeadm reset")
 	_, _ = Run(machine, "rm -rf .kube & rm flannel.yaml")
 	resetFlannel(machine)
 }
 
-func taintMaster(master gf_cluster.ClusterBuildMachine) {
+func taintMaster(master gf_cluster.ClusterBuildMachine, node string) {
 	cmd := fmt.Sprintf("kubectl taint nodes %s node-role.kubernetes.io/master:NoSchedule-",
-		convertHostName(master.Hostname))
+		convertHostName(node))
 	_, _ = Run(master, cmd)
+}
+
+func initMachine(machine gf_cluster.ClusterBuildMachine) {
+	result, err := Run(machine, "ls -lah")
+	if err != nil {
+		return
+	}
+
+	if strings.Contains(result, "init.sh") {
+		return
+	}
+
+	_, _ = Run(machine, "tee init.sh <<"+initConfig)
+	_, _ = Run(machine, "sh init.sh")
 }
 
 func resetFlannel(machine gf_cluster.ClusterBuildMachine) {
