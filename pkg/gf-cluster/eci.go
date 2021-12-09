@@ -1,7 +1,5 @@
 package gf_cluster
 
-//cluster
-
 type InstanceGroup struct {
 	Id            int64  `json:"id"`
 	KubernetesId  int64  `json:"kubernetes_id"`
@@ -13,6 +11,7 @@ type InstanceGroup struct {
 	InstanceCount int    `json:"instance_count"`
 	CreatedUser   string `json:"created_user"`
 	CreatedUserId int64  `json:"created_user_id"`
+	SshPwd        string `json:"ssh_pwd"`
 }
 
 type InstanceGroupCreateRequest struct {
@@ -25,6 +24,7 @@ type InstanceGroupCreateRequest struct {
 	InstanceCount int    `json:"instance_count"`
 	CreatedUser   string `json:"created_user"`
 	CreatedUserId int64  `json:"created_user_id"`
+	SshPwd        string `json:"ssh_pwd"`
 }
 
 type InstanceGroupBatchCreateRequest struct {
