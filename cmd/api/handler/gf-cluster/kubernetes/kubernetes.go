@@ -8,7 +8,8 @@ import (
 	"io/ioutil"
 	"strconv"
 )
-
+//HandleRegisterKubernetes 注册集群，用于支持已有k8s集群注册
+//后期用于其他集群直接录入
 func HandleRegisterKubernetes(c *gin.Context) {
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
@@ -30,6 +31,7 @@ func HandleRegisterKubernetes(c *gin.Context) {
 
 	c.JSON(200, gf_cluster.NewSuccessResponse())
 }
+//HandleListKubernetes 列出所有集群
 func HandleListKubernetes(c *gin.Context) {
 	kubernetes, err := model.ListRunningKubernetesClusters()
 	if err != nil {
@@ -39,6 +41,7 @@ func HandleListKubernetes(c *gin.Context) {
 	c.JSON(200, gf_cluster.NewKubernetesInfoListResponse(kubernetes))
 }
 
+//HandleGetKubernetes 获取指定集群详细信息
 func HandleGetKubernetes(c *gin.Context) {
 	clusterId, err := strconv.ParseInt(c.Param("cluster"), 10, 64)
 	if err != nil {
@@ -57,6 +60,7 @@ func HandleGetKubernetes(c *gin.Context) {
 	c.JSON(200, gf_cluster.NewKubernetesInfoGetResponse(kubernetes))
 }
 
+//HandleUpdateKubernetes 更新集群信息
 func HandleUpdateKubernetes(c *gin.Context) {
 
 	data, err := ioutil.ReadAll(c.Request.Body)
