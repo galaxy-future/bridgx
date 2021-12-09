@@ -22,7 +22,6 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 		return
 	}
 
-	taintMaster(master, master.Hostname)
 	masterCmd, nodeCmd := parseInitResult(initOutput)
 
 	//获取kube config
@@ -50,6 +49,7 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 		return
 	}
 
+	taintMaster(master, master.Hostname)
 	//安装master节点
 	if params.Mode == gf_cluster.ClusterMode {
 		for i := 0; i < 2; i++ {
