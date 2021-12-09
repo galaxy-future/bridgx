@@ -44,6 +44,7 @@ func getClusterNodeInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.ClusterN
 		return nil, err
 	}
 
+	//TODO remove hadrd code
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 	nodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})

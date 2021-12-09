@@ -3,8 +3,6 @@ module github.com/galaxy-future/BridgX
 go 1.17
 
 require (
-	code.galaxy-future.com/cudgx/bridgx-kubernetes v0.0.0-20211208091239-054ab74ff5ba
-	code.galaxy-future.com/cudgx/common v0.0.0-20211103101023-ded4cff86b78
 	github.com/alibabacloud-go/darabonba-openapi v0.1.7
 	github.com/alibabacloud-go/ecs-20140526/v2 v2.1.0
 	github.com/alibabacloud-go/tea v1.1.15
@@ -44,9 +42,6 @@ require (
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/imdario/mergo v0.3.5 // indirect
-	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible // indirect
-	github.com/lestrrat-go/strftime v1.0.5 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.1 // indirect
@@ -59,6 +54,7 @@ require (
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
 	google.golang.org/grpc v1.38.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	k8s.io/klog/v2 v2.30.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
