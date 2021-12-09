@@ -12,11 +12,11 @@ import (
 var (
 	clients map[int64]*KubernetesClient
 )
-
+//KubernetesClient 是k8s访问的client
 type KubernetesClient struct {
 	ClientSet *kubernetes.Clientset
 }
-
+//CreateKubernetesClusterClient 通过k8s 配置信息创建client
 func CreateKubernetesClusterClient(data []byte) (*KubernetesClient, error) {
 	config, err := clientcmd.NewClientConfigFromBytes(data)
 	if err != nil {
@@ -34,7 +34,7 @@ func CreateKubernetesClusterClient(data []byte) (*KubernetesClient, error) {
 
 	return &KubernetesClient{ClientSet: clientSet}, nil
 }
-
+//GetKubeClient 获取指定集群的client
 func GetKubeClient(kubernetesClusterId int64) (*KubernetesClient, error) {
 	client := clients[kubernetesClusterId]
 	if client == nil {

@@ -29,7 +29,8 @@ func ListClusterPodsSummary(clusterId int64) (gf_cluster.ClusterPodsSummaryArray
 	return pods, nil
 
 }
-
+//getClusterPodInfo 获取集群pod信息，当前使用clientset直接查询kubernetes集群，有性能压力
+//TODO 使用client-to watcher/informer机制，缓存对象，防止频繁获取信息对与k8s集群的压力
 func getClusterPodInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.PodSummary, error) {
 
 	if info.Status != gf_cluster.KubernetesStatusRunning {
@@ -122,5 +123,4 @@ func formatHumanReadableDuration(duration time.Duration) string {
 		return fmt.Sprintf("%02d小时%02d分", h, m)
 	}
 	return fmt.Sprintf("%02d分", m)
-
 }
