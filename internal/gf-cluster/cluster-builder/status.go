@@ -44,7 +44,7 @@ func recordStep(kubernetesId int64, ip, step string, err error) {
 		return
 	}
 
-	connection.Create(installStep)
+	connection.Create(&installStep)
 }
 
 func recordConfig(id int64, config string) error {
