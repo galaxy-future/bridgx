@@ -151,7 +151,7 @@ func ListClustersByCond(ctx context.Context, accountKeys []string, clusterName, 
 	if clusterName != "" {
 		sql.Where("cluster_name LIKE ?", fmt.Sprintf("%%%v%%", clusterName))
 	}
-	err := sql.Offset((pageNum - 1) * pageSize).Limit(pageSize).Find(&res).Error
+	err := sql.Order("id DESC").Offset((pageNum - 1) * pageSize).Limit(pageSize).Find(&res).Error
 	if err != nil {
 		return res, 0, err
 	}
