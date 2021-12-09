@@ -231,7 +231,7 @@ func HandleDeleteKubernetes(c *gin.Context) {
 	for _, group := range groups {
 		err := instance.DeleteInstanceGroup(group)
 		if err != nil {
-			logs.Logger.Error("failed to delete theCluster", zap.Error(err))
+			logs.Logger.Errorw("failed to delete theCluster", zap.Error(err))
 		}
 	}
 

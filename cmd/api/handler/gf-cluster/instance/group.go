@@ -127,35 +127,35 @@ func HandleBatchCreateInstanceGroup(c *gin.Context) {
 		}
 		pwd, err := encrypt.AESEncrypt(encrypt.AesKeySalt, group.SshPwd)
 		if err != nil {
-			logs.Logger.Error("SSH密码加密失败", zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Errorw("SSH密码加密失败", zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
 			if instance.AddInstanceForm(&instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err) != nil {
-				logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+				logs.Logger.Errorw("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			}
 			continue
 		}
 		instanceGroup.SshPwd = pwd
 		err = instance.CreateInstanceGroup(&instanceGroup)
 		if err != nil {
-			logs.Logger.Error("创建实例组失败", zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Errorw("创建实例组失败", zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
 			if instance.AddInstanceForm(&instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err) != nil {
-				logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+				logs.Logger.Errorw("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			}
 			continue
 		}
 		err = instance.ExpandCustomInstanceGroup(&instanceGroup, group.InstanceCount)
 		if err != nil {
-			logs.Logger.Error("扩容实例组失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Int("count", instanceGroup.InstanceCount), zap.Error(err))
+			logs.Logger.Errorw("扩容实例组失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Int("count", instanceGroup.InstanceCount), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
 			if instance.AddInstanceForm(&instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err) != nil {
-				logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+				logs.Logger.Errorw("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			}
 			continue
 		}
 		err = instance.AddInstanceForm(&instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err)
 		if err != nil {
-			logs.Logger.Error("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Errorw("记录日志失败", zap.Int64("groupId", instanceGroup.Id), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
 			continue
 		}
@@ -250,24 +250,24 @@ func HandleBatchDeleteInstanceGroup(c *gin.Context) {
 		begin := time.Now()
 		instanceGroup, err := instance.GetInstanceGroup(instanceGroupId)
 		if err != nil {
-			logs.Logger.Error("获取实例组失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Errorw("获取实例组失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
 			if instance.AddInstanceForm(instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err) != nil {
-				logs.Logger.Error("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+				logs.Logger.Errorw("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			}
 			continue
 		}
 		err = instance.DeleteInstanceGroup(instanceGroup)
 		if err != nil {
-			logs.Logger.Error("删除实例组失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Errorw("删除实例组失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
 			if instance.AddInstanceForm(instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err) != nil {
-				logs.Logger.Error("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+				logs.Logger.Errorw("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			}
 			continue
 		}
 		if instance.AddInstanceForm(instanceGroup, time.Now().Sub(begin).Milliseconds(), createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err) != nil {
-			logs.Logger.Error("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
+			logs.Logger.Errorw("记录操作日志失败", zap.Int64("groupId", instanceGroupId), zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
 			continue
 		}
