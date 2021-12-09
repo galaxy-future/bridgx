@@ -2,14 +2,15 @@ package instance
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sync"
-	"time"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func ExpandCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count int) error {
@@ -116,7 +117,7 @@ func ListCustomInstances(instanceGroupId int64) ([]*gf_cluster.Instance, error) 
 	return listElasticInstance(client, instanceGroup.Name, instanceGroupId)
 }
 
-func RestartInstanceGroup(instanceGroupId int64, name string) error {
+func RestartInstance(instanceGroupId int64, name string) error {
 	instanceGroup, err := GetInstanceGroup(instanceGroupId)
 	if err != nil {
 		return err

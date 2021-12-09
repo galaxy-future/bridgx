@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/galaxy-future/BridgX/internal/logs"
-	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/galaxy-future/BridgX/internal/logs"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	"go.uber.org/zap"
 )
 
 var bridgxClient *Client

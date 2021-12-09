@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"html/template"
 	"regexp"
 	"strings"
+
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 )
 
 type InitClusterData struct {

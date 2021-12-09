@@ -3,18 +3,21 @@ package instance
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/galaxy-future/BridgX/cmd/api/helper"
-	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
-	"github.com/galaxy-future/BridgX/internal/gf-cluster/instance"
-	"github.com/galaxy-future/BridgX/internal/model"
-	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
-	"github.com/gin-gonic/gin"
-	"github.com/wxnacy/wgo/arrays"
 	"io/ioutil"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/galaxy-future/BridgX/cmd/api/helper"
+	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
+	"github.com/galaxy-future/BridgX/internal/gf-cluster/instance"
+	"github.com/galaxy-future/BridgX/internal/logs"
+	"github.com/galaxy-future/BridgX/internal/model"
+	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
+	"github.com/gin-gonic/gin"
+	"github.com/wxnacy/wgo/arrays"
+	"go.uber.org/zap"
 )
 
 //HandleRestartInstance  c重启实例
@@ -31,10 +34,15 @@ func HandleRestartInstance(c *gin.Context) {
 		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体, err : %s", err.Error())))
 		return
 	}
+	claims := helper.GetUserClaims(c)
+	if claims == nil {
+		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		return
+	}
 	//重启节点
-	// TODO 加入操作日志
-	err = instance.RestartInstanceGroup(request.InstanceGroupId, request.InstanceName)
+	err = instance.RestartInstance(request.InstanceGroupId, request.InstanceName)
 	if err != nil {
+		logs.Logger.Error("failed to restart instance.", zap.Int64("instance_group_id", request.InstanceGroupId), zap.String("instance_name", request.InstanceName), zap.String("operator", claims.Name), zap.Error(err))
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
@@ -45,7 +53,7 @@ func HandleRestartInstance(c *gin.Context) {
 func HandleDeleteInstance(c *gin.Context) {
 	begin := time.Now()
 
-	//h获取用户信息
+	//获取用户信息
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
 		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
@@ -123,25 +131,15 @@ func HandleListMyInstance(c *gin.Context) {
 
 	pageNumber, pageSize := helper.GetPagerParamFromQuery(c)
 	var result gf_cluster.ClusterPodsSummaryArray
-	//TODO 使用Map
-	kubeIds := make([]int64, len(groups))
-	groupNames := make([]string, len(groups))
-	for i, group := range groups {
-		groupNames[i] = group.Name
-	}
-	//TODO 这里应该按照组筛选，不应该从集群拿取所有数据做判断
+	kubernetesMap := make(map[int64][]string)
 	for _, group := range groups {
-		// Avoid multiple calls
-		if arrays.ContainsInt(kubeIds, group.KubernetesId) != -1 {
-			continue
-		}
-		kubeIds = append(kubeIds, group.KubernetesId)
-
-		pods, err := cluster.ListClusterPodsSummary(group.KubernetesId)
+		kubernetesMap[group.KubernetesId] = append(kubernetesMap[group.KubernetesId], group.Name)
+	}
+	for kubernetesId, groupNames := range kubernetesMap {
+		pods, err := cluster.ListClusterPodsSummary(kubernetesId)
 		if err != nil {
-			//TODO 应该按照组查询结果返回，比如group1 查询失败，无法获取ip等，不能直接continue
-			c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
-			return
+			logs.Logger.Error("failed to list pods from kubernetes cluster.", zap.Int64("kubernetes_id", kubernetesId), zap.Error(err))
+			continue
 		}
 		for _, pod := range pods {
 			if nodeIp != "" && strings.Index(pod.NodeIp, nodeIp) != 0 {

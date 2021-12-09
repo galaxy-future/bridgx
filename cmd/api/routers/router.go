@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/galaxy-future/BridgX/cmd/api/handler"
-	"github.com/galaxy-future/BridgX/cmd/api/middleware/authorization"
 	gf_cluster "github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster"
+	"github.com/galaxy-future/BridgX/cmd/api/middleware/authorization"
 	"github.com/galaxy-future/BridgX/config"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
