@@ -50,11 +50,6 @@ func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int
 	return res, count, nil
 }
 
-type SkWithSalt struct {
-	EncryptedAccountSecret string `json:"encrypted_account_secret"`
-	Salt                   string `json:"salt"`
-}
-
 //GetAccountsByOrgId get accounts belongs to specify orgId
 func GetAccountsByOrgId(orgId int64) (accounts []*Account, err error) {
 	if err := clients.ReadDBCli.Where("org_id = ?", orgId).Find(&accounts).Error; err != nil {
