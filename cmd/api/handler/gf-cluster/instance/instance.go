@@ -101,12 +101,12 @@ func HandleDeleteInstance(c *gin.Context) {
 
 //HandleListInstance 列出所欲实例
 func HandleListInstance(c *gin.Context) {
-	clusterId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
+	instanceGroupId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse("未指定实例组id"))
 		return
 	}
-	items, err := instance.ListCustomInstances(clusterId)
+	items, err := instance.ListCustomInstances(instanceGroupId)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
 	}
