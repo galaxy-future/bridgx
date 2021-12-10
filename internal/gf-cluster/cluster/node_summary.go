@@ -3,6 +3,8 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -64,9 +66,22 @@ func getClusterNodeInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.ClusterN
 			}
 		}
 
-		cpuSize := cpuQuantity2Float(*node.Status.Capacity.Cpu())
-		memorySize := storageQuantity2Float(*node.Status.Capacity.Memory())
-		storageSize := storageQuantity2Float(*node.Status.Capacity.StorageEphemeral())
+		nodeCpu := *node.Status.Capacity.Cpu()
+		nodeMemory := *node.Status.Capacity.Memory()
+		nodeStorage := *node.Status.Capacity.StorageEphemeral()
+
+		//
+		//kubeUsed ,exist := systemUsed[ipAddress]
+		//if exist {
+		//	nodeCpu.Sub(*kubeUsed.Cpu)
+		//	nodeMemory.Sub(*kubeUsed.Memory)
+		//	nodeStorage.Sub(*kubeUsed.Storage)
+		//}
+
+		cpuSize := cpuQuantity2Float(nodeCpu)
+		memorySize := storageQuantity2Float(nodeMemory)
+		storageSize := storageQuantity2Float(nodeStorage)
+
 
 		role, exists := node.Labels[gf_cluster.KubernetesRoleKey]
 		if !exists {
@@ -127,4 +142,48 @@ func calcNodePodCounts(nodesSummary []*gf_cluster.ClusterNodeSummary, info *gf_c
 		}
 		nodeSummary.PodCount++
 	}
+}
+
+type PodResources struct {
+	Cpu * resource.Quantity `json:"cpu"`
+	Memory * resource.Quantity `json:"memory"`
+	Storage * resource.Quantity `json:"storage"`
+}
+
+//ListKubeSystemInstance 列出kuber-system所占用资源
+func ListKubeSystemInstance(info *gf_cluster.KubernetesInfo ) (map[string]*PodResources, error) {
+	if info.Status != gf_cluster.KubernetesStatusRunning {
+		return nil, nil
+	}
+	client, err := GetKubeClient(info.Id)
+	if err != nil {
+		return nil, err
+	}
+	pods, err := client.ClientSet.CoreV1().Pods("kube-system").List(context.Background(), metav1.ListOptions{
+	})
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, err
+	}
+
+	allocatedResource := make(map[string]*PodResources)
+	for _, pod := range pods.Items {
+		if pod.Status.Phase == v1.PodRunning {
+			item, exist  :=  allocatedResource[pod.Status.HostIP]
+			if !exist {
+				item = &PodResources{
+					Cpu:     resource.NewScaledQuantity(0,resource.Milli),
+					Memory:  resource.NewScaledQuantity(0,resource.Mega),
+					Storage: resource.NewScaledQuantity(0, resource.Giga),
+				}
+				allocatedResource[pod.Status.HostIP] = item
+			}
+			for _, container := range pod.Spec.Containers {
+				item.Cpu.Add(*container.Resources.Limits.Cpu())
+				item.Memory.Add(*container.Resources.Limits.Memory())
+				item.Storage.Add(*container.Resources.Limits.StorageEphemeral())
+			}
+		}
+	}
+
+	return allocatedResource, nil
 }
