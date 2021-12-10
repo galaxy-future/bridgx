@@ -20,9 +20,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
-
+//createInstance 创建实例
 func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.InstanceGroup, instanceName string) (*v1.Pod, error) {
 
+	//获取资源
 	cpu, err := strconv.ParseFloat(request.Cpu, 64)
 	if err != nil {
 		return nil, err
@@ -60,10 +61,6 @@ func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.I
 				{
 					Name:  "instance",
 					Image: defaultImage,
-					//TTY:   true,
-					//SecurityContext: &v1.SecurityContext{
-					//	Privileged:  &privileged,
-					//},
 					Ports: []v1.ContainerPort{
 						{
 							Name:          "ssh",
@@ -71,14 +68,6 @@ func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.I
 						},
 					},
 					Env: []v1.EnvVar{
-						//{
-						//	Name:  "SSH_PASSWORD_AUTHENTICATION",
-						//	Value: "true",
-						//},
-						//{
-						//	Name:  "SSH_USER",
-						//	Value: "gf",
-						//},
 						{
 							Name:  "PASSWORD",
 							Value: pwd,
@@ -108,6 +97,7 @@ func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.I
 	return pod, nil
 }
 
+//listElasticInstance 列出所有实例
 func listElasticInstance(client *cluster.KubernetesClient, clusterName string, id int64) ([]*gf_cluster.Instance, error) {
 	selector := metav1.LabelSelector{MatchLabels: createInstanceLabels(clusterName, strconv.FormatInt(id, 10))}
 	pods, err := client.ClientSet.CoreV1().Pods("default").List(context.Background(), metav1.ListOptions{
@@ -163,7 +153,6 @@ func createInstanceLabels(name string, id string) map[string]string {
 		gf_cluster.ClusterInstanceGroupIdKey: id,
 	}
 }
-
 func AddInstanceForm(instanceGroup *gf_cluster.InstanceGroup, cost int64, createdUserId int64, createdUserName string, opt string, updatedInstanceCount int, err error) error {
 	executeStatus := gf_cluster.InstanceInit
 	if err == nil {
