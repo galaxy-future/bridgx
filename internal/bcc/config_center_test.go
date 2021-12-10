@@ -14,15 +14,12 @@ func TestGetConfig(t *testing.T) {
 			DailTimeout: time.Second * 5,
 		},
 	}
-	err := Init(&conf)
-	if err != nil {
-		t.Error("failed to init sync locker with nil config")
-	}
+	MustInit(&conf)
 	testGroup := "group1"
 	testDataId := "data1"
 	testContent := "content1"
 
-	err = PublishConfig(testGroup, testDataId, testContent)
+	err := PublishConfig(testGroup, testDataId, testContent)
 	if err != nil {
 		t.Errorf("failed to run PublishConfig with empty etcd config, err : %v", err)
 	}

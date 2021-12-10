@@ -7,7 +7,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/logs"
 )
 
-func Init() {
+func MustInit() {
 	InitDBClients()
 	InitializeClient(fmt.Sprintf("http://localhost:%v", config.GlobalConfig.ServerPort))
 	if config.GlobalConfig.EtcdConfig != nil {

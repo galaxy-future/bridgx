@@ -10,18 +10,19 @@ import (
 	"github.com/galaxy-future/BridgX/cmd/scheduler/crond"
 	"github.com/galaxy-future/BridgX/config"
 	"github.com/galaxy-future/BridgX/internal/bcc"
+	"github.com/galaxy-future/BridgX/internal/cache"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/logs"
 )
 
 func main() {
-	config.Init()
+	config.MustInit()
 	logs.Init()
-	clients.Init()
+	clients.MustInit()
 	crond.Init()
-	if err := bcc.Init(config.GlobalConfig); err != nil {
-		panic(err)
-	}
+	bcc.MustInit(config.GlobalConfig)
+	cache.MustInit()
+
 	err := Init()
 	if err != nil {
 		return

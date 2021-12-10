@@ -156,7 +156,8 @@ CREATE TABLE `cluster`
     `deleted_at`      timestamp NULL DEFAULT NULL,
     `delete_uniq_key` bigint(20) DEFAULT '0',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `cluster_cluster_name_uindex` (`cluster_name`, `delete_uniq_key`)
+    UNIQUE KEY `cluster_cluster_name_uindex` (`cluster_name`, `delete_uniq_key`),
+    KEY `cluster_account_key_index` (`account_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

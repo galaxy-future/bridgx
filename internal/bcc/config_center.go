@@ -12,13 +12,12 @@ type ConfigCenter interface {
 	PublishConfig(group, dataId, content string) error
 }
 
-func Init(config *config.Config) error {
+func MustInit(config *config.Config) {
 	clt, err := clients.NewEtcdClient(config.EtcdConfig)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	configCenter = clt
-	return nil
 }
 
 func GetConfig(group, dataId string) (string, error) {

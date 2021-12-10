@@ -16,9 +16,17 @@ type Base struct {
 	UpdateAt *time.Time `json:"-"`
 }
 
+type Cacheable interface {
+	GetId() int64
+}
+
 const (
 	BATCH_SIZE = 5
 )
+
+func (b *Base) GetId() int64 {
+	return b.Id
+}
 
 // Create insert the value into database
 func Create(model interface{}) error {

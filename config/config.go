@@ -12,7 +12,7 @@ import (
 
 var GlobalConfig *Config
 
-func Init() {
+func MustInit() {
 	GlobalConfig = loadConfig()
 }
 

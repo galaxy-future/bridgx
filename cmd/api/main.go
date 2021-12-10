@@ -12,6 +12,7 @@ import (
 	"github.com/galaxy-future/BridgX/cmd/api/routers"
 	"github.com/galaxy-future/BridgX/config"
 	"github.com/galaxy-future/BridgX/internal/bcc"
+	"github.com/galaxy-future/BridgX/internal/cache"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/service"
@@ -21,12 +22,11 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	config.Init()
+	config.MustInit()
 	logs.Init()
-	clients.Init()
-	if err := bcc.Init(config.GlobalConfig); err != nil {
-		panic(err)
-	}
+	clients.MustInit()
+	bcc.MustInit(config.GlobalConfig)
+	cache.MustInit()
 	service.Init(100)
 	middleware.Init()
 	router := routers.Init()
