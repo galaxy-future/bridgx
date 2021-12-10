@@ -38,7 +38,7 @@ func GetPagerParamFromQuery(c *gin.Context) (pageNumber int, pageSize int) {
 func GetUserToken(c *gin.Context) (string, error) {
 	value := c.Value(gf_cluster.HeaderTokenName)
 	if value == nil {
-		return "", fmt.Errorf("获取登陆信息失败")
+		return "", fmt.Errorf("获取登录信息失败")
 	}
 
 	return value.(string), nil

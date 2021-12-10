@@ -40,7 +40,7 @@ func ListClusterNodeSummary(clusterId int64) (gf_cluster.ClusterNodeSummaryArray
 func getClusterNodeInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.ClusterNodeSummary, error) {
 
 	if info.Status != gf_cluster.KubernetesStatusRunning {
-		return nil, nil
+		return make([]*gf_cluster.ClusterNodeSummary, 0), nil
 	}
 	client, err := GetKubeClient(info.Id)
 	if err != nil {

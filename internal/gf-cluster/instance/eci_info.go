@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"strconv"
 	"sync"
 
@@ -103,20 +104,20 @@ func listElasticInstance(client *cluster.KubernetesClient, clusterName string, i
 		LabelSelector: labels.Set(selector.MatchLabels).String(),
 	})
 
-	if err != nil && !errors.IsNotFound(err) {
+	if err == nil && errors.IsNotFound(err) {
+		return make([]*gf_cluster.Instance, 0), nil
+	}
+	if err != nil {
 		return nil, err
 	}
-
 	var instances []*gf_cluster.Instance
 	for _, pod := range pods.Items {
-
 		instances = append(instances, &gf_cluster.Instance{
 			Name:   pod.Name,
 			Ip:     pod.Status.PodIP,
 			HostIp: pod.Status.HostIP,
 		})
 	}
-
 	return instances, nil
 }
 
@@ -130,6 +131,12 @@ func clearElasticInstance(client *cluster.KubernetesClient, instanceGroupName st
 		wg.Add(1)
 		go func(instance *gf_cluster.Instance) {
 			defer wg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					logs.Logger.Errorf("clearElasticInstance :%v ", r)
+					logs.Logger.Errorf("clearElasticInstance panic", zap.String("stack", string(debug.Stack())))
+				}
+			}()
 			err := client.ClientSet.CoreV1().Pods("default").Delete(context.Background(), instance.Name, metav1.DeleteOptions{})
 			if err != nil {
 				logs.Logger.Errorw("failed to delete pod.", zap.String("instance_group_name", instanceGroupName), zap.String("instance_name", instance.Name), zap.Error(err))

@@ -35,7 +35,7 @@ func ListClusterPodsSummary(clusterId int64) (gf_cluster.ClusterPodsSummaryArray
 func getClusterPodInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.PodSummary, error) {
 
 	if info.Status != gf_cluster.KubernetesStatusRunning {
-		return nil, nil
+		return make([]*gf_cluster.PodSummary, 0), nil
 	}
 	client, err := GetKubeClient(info.Id)
 	if err != nil {

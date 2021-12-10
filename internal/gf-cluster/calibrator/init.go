@@ -1,6 +1,7 @@
 package calibrator
 
 import (
+	"runtime/debug"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/instance"
@@ -13,6 +14,12 @@ import (
 func Init() {
 	ticker := time.NewTicker(time.Minute * 10)
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logs.Logger.Errorf("calibrate err:%v ", r)
+				logs.Logger.Errorf("calibrate panic", zap.String("stack", string(debug.Stack())))
+			}
+		}()
 		for {
 			<-ticker.C
 			err := calibrate()

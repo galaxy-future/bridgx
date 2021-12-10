@@ -31,7 +31,7 @@ func CreateKubernetesClusterClient(data []byte) (*KubernetesClient, error) {
 
 	clientSet, err := kubernetes.NewForConfig(clientConfig)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	return &KubernetesClient{ClientSet: clientSet}, nil

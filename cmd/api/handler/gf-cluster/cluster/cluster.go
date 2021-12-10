@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -163,6 +164,12 @@ func HandleCreateCluster(c *gin.Context) {
 	}
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logs.Logger.Errorf("HandleCreateCluster err:%v ", r)
+				logs.Logger.Errorf("HandleCreateCluster panic", zap.String("stack", string(debug.Stack())))
+			}
+		}()
 		cluster_builder.CreateCluster(buildParams)
 	}()
 

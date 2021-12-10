@@ -143,7 +143,6 @@ func (client *Client) GetBridgxClusterInstances(token string, clusterName string
 }
 
 func (client *Client) GetBridgxClusterAllInstances(token string, clusterName string) ([]*gf_cluster.BridgxInstance, error) {
-
 	response, err := client.GetBridgxClusterInstances(token, clusterName, 0, 50)
 	if err != nil {
 		return nil, err
@@ -158,7 +157,7 @@ func (client *Client) GetBridgxClusterAllInstances(token string, clusterName str
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			response, err = client.GetBridgxClusterInstances(token, clusterName, 0, 50)
+			response, err = client.GetBridgxClusterInstances(token, clusterName, pager, 50)
 			if err != nil {
 				return nil, err
 			}
