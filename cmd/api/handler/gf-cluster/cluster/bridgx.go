@@ -5,6 +5,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/clients"
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 //HandleListUnusedBridgxCluster lie列出没有被使用的集群
@@ -12,12 +13,12 @@ import (
 func HandleListUnusedBridgxCluster(c *gin.Context) {
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 	token, err := helper.GetUserToken(c)
 	if token == "" {
-		c.JSON(401, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusUnauthorized, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	pageNumber, pageSize := helper.GetPagerParamFromQuery(c)
@@ -26,10 +27,10 @@ func HandleListUnusedBridgxCluster(c *gin.Context) {
 	//TODO 使用原生接口
 	response, err := clients.GetClient().GetUnusedCluster(token, pageNumber, pageSize)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
-	if response.Code != 200 {
+	if response.Code != http.StatusOK {
 		c.JSON(response.Code, gf_cluster.NewFailedResponse(response.Msg))
 		return
 	}
@@ -46,10 +47,10 @@ func HandleListUnusedBridgxCluster(c *gin.Context) {
 		//TODO 使用原生接口
 		instanceResponse, err := clients.GetClient().GetBridgxClusterInstances(token, cluster.ClusterName, pageNumber, pageSize)
 		if err != nil {
-			c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+			c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(err.Error()))
 			return
 		}
-		if instanceResponse.Code != 200 {
+		if instanceResponse.Code != http.StatusOK {
 			c.JSON(instanceResponse.Code, gf_cluster.NewFailedResponse(instanceResponse.Msg))
 			return
 		}
@@ -61,7 +62,7 @@ func HandleListUnusedBridgxCluster(c *gin.Context) {
 		clustersList = append(clustersList, targetCluster)
 	}
 
-	c.JSON(200, gf_cluster.NewListUnusedBridgxClusterResponse(clustersList, gf_cluster.Pager{
+	c.JSON(http.StatusOK, gf_cluster.NewListUnusedBridgxClusterResponse(clustersList, gf_cluster.Pager{
 		PageNumber: pageNumber,
 		PageSize:   pageSize,
 		Total:      len(response.Data.ClusterList),

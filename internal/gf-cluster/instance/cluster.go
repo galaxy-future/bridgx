@@ -5,6 +5,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/model"
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 )
+
 //CreateInstanceGroup 新建实例组
 func CreateInstanceGroup(instanceGroup *gf_cluster.InstanceGroup) error {
 	return model.CreateInstanceGroupFromDB(instanceGroup)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -25,19 +26,19 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 	//1. 解析请求
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求格式"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求格式"))
 		return
 	}
 	var group gf_cluster.InstanceGroupCreateRequest
 	err = json.Unmarshal(data, &group)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err : %s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err : %s", err.Error())))
 		return
 	}
 
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 	//2. 创建实例组
@@ -57,13 +58,13 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 	}
 	pwd, err := encrypt.AESEncrypt(encrypt.AesKeySalt, group.SshPwd)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	instanceGroup.SshPwd = pwd
 	err = instance.CreateInstanceGroup(&instanceGroup)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	//3. 统计请求时间
@@ -71,18 +72,18 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 		cost := time.Now().Sub(begin).Milliseconds()
 		err := instance.AddInstanceForm(&instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err)
 		if err != nil {
-			c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+			c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 			return
 		}
 		if err == nil {
-			c.JSON(200, gf_cluster.NewSuccessResponse())
+			c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 		}
 	}()
 
 	//4. 扩容集群
 	err = instance.ExpandCustomInstanceGroup(&instanceGroup, group.InstanceCount)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 }
@@ -93,19 +94,19 @@ func HandleBatchCreateInstanceGroup(c *gin.Context) {
 	//解析请求
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求格式"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求格式"))
 		return
 	}
 	var instanceGroups []gf_cluster.InstanceGroupCreateRequest
 	err = json.Unmarshal(data, &instanceGroups)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err : %s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err : %s", err.Error())))
 		return
 	}
 
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 	createdUserId := claims.UserId
@@ -162,10 +163,10 @@ func HandleBatchCreateInstanceGroup(c *gin.Context) {
 	}
 	if len(failInstanceGroups) != 0 {
 		failMessage, _ := json.Marshal(failInstanceGroups)
-		c.JSON(500, gf_cluster.NewFailedResponse(string(failMessage)))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(string(failMessage)))
 		return
 	}
-	c.JSON(200, gf_cluster.NewSuccessResponse())
+	c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 }
 
 func HandleListInstanceGroup(c *gin.Context) {
@@ -173,7 +174,7 @@ func HandleListInstanceGroup(c *gin.Context) {
 	pagerNumber, pageSize := helper.GetPagerParamFromQuery(c)
 	instanceGroups, total, err := model.ListInstanceGroupFromDB(name, pagerNumber, pageSize)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	pager := gf_cluster.Pager{
@@ -182,30 +183,30 @@ func HandleListInstanceGroup(c *gin.Context) {
 		Total:      int(total),
 	}
 
-	c.JSON(200, gf_cluster.NewListInstanceGroupResponse(instanceGroups, pager))
+	c.JSON(http.StatusOK, gf_cluster.NewListInstanceGroupResponse(instanceGroups, pager))
 }
 
 func HandleDeleteInstanceGroup(c *gin.Context) {
 	begin := time.Now()
 	instanceGroupId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("未指定实例组id"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("未指定实例组id"))
 		return
 	}
 	instanceGroup, err := instance.GetInstanceGroup(instanceGroupId)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	err = instance.DeleteInstanceGroup(instanceGroup)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 	createdUserId := claims.UserId
@@ -214,11 +215,11 @@ func HandleDeleteInstanceGroup(c *gin.Context) {
 		cost := time.Now().Sub(begin).Milliseconds()
 		err = instance.AddInstanceForm(instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err)
 		if err != nil {
-			c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+			c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 			return
 		}
 		if err == nil {
-			c.JSON(200, gf_cluster.NewSuccessResponse())
+			c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 		}
 	}()
 }
@@ -228,19 +229,19 @@ func HandleBatchDeleteInstanceGroup(c *gin.Context) {
 	//解析请求体
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求格式"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求格式"))
 		return
 	}
 	var request gf_cluster.InstanceGroupBatchDeleteRequest
 	err = json.Unmarshal(data, &request)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err : %s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err : %s", err.Error())))
 		return
 	}
 
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 	createdUserId := claims.UserId
@@ -274,39 +275,39 @@ func HandleBatchDeleteInstanceGroup(c *gin.Context) {
 	}
 	if len(failInstanceGroups) != 0 {
 		failMessage, _ := json.Marshal(failInstanceGroups)
-		c.JSON(500, gf_cluster.NewFailedResponse(string(failMessage)))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(string(failMessage)))
 		return
 	}
-	c.JSON(200, gf_cluster.NewSuccessResponse())
+	c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 }
 
 //HandleGetInstanceGroup 获取实例组信息
 func HandleGetInstanceGroup(c *gin.Context) {
 	instanceGroupId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("未指定实例组id"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("未指定实例组id"))
 		return
 	}
 	group, err := instance.GetInstanceGroup(instanceGroupId)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 
-	c.JSON(200, gf_cluster.NewGetInstanceGroupResponse(group))
+	c.JSON(http.StatusOK, gf_cluster.NewGetInstanceGroupResponse(group))
 }
 
 //HandleUpdateInstanceGroup 更新实例组信息
 func HandleUpdateInstanceGroup(c *gin.Context) {
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求格式"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求格式"))
 		return
 	}
 	var group gf_cluster.InstanceGroupUpdateRequest
 	err = json.Unmarshal(data, &group)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err: %s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求格式, err: %s", err.Error())))
 		return
 	}
 
@@ -322,10 +323,10 @@ func HandleUpdateInstanceGroup(c *gin.Context) {
 	}
 	err = model.UpdateInstanceGroupFromDB(&instanceGroup)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
-	c.JSON(200, gf_cluster.NewSuccessResponse())
+	c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 
 }
 
@@ -334,72 +335,72 @@ func HandleExpandInstanceGroup(c *gin.Context) {
 	//读取请求体
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求体"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求体"))
 		return
 	}
 	var request gf_cluster.InstanceGroupExpandRequest
 	err = json.Unmarshal(data, &request)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体,err:%s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体,err:%s", err.Error())))
 		return
 	}
 
 	//获取实例组
 	instanceGroup, err := instance.GetInstanceGroup(request.InstanceGroupId)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	if request.Count <= 0 {
-		c.JSON(400, gf_cluster.NewFailedResponse("实实例数量应该大于等于1"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("实实例数量应该大于等于1"))
 		return
 	}
 	if request.Count <= instanceGroup.InstanceCount {
-		c.JSON(400, gf_cluster.NewFailedResponse("目标实例数应该大于当前实例数"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("目标实例数应该大于当前实例数"))
 		return
 	}
 	err = instance.ExpandCustomInstanceGroup(instanceGroup, request.Count)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 
-	c.JSON(200, gf_cluster.NewSuccessResponse())
+	c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 }
 
 //HandleShrinkInstanceGroup 缩容实例组
 func HandleShrinkInstanceGroup(c *gin.Context) {
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求体"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求体"))
 		return
 	}
 	var request gf_cluster.InstanceGroupShrinkRequest
 	err = json.Unmarshal(data, &request)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体,err:%s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体,err:%s", err.Error())))
 		return
 	}
 	instanceGroup, err := instance.GetInstanceGroup(request.InstanceGroupId)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	if request.Count <= 0 {
-		c.JSON(400, gf_cluster.NewFailedResponse("实例数量应该大于等于1"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("实例数量应该大于等于1"))
 		return
 	}
 	if request.Count >= instanceGroup.InstanceCount {
-		c.JSON(400, gf_cluster.NewFailedResponse("目标实例数应该小于当前实例数"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("目标实例数应该小于当前实例数"))
 		return
 	}
 
 	err = instance.ShrinkCustomInstanceGroup(instanceGroup, request.Count)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
-	c.JSON(200, gf_cluster.NewSuccessResponse())
+	c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 }
 
 //HandleExpandOrShrinkInstanceGroup 扩缩容接口
@@ -408,28 +409,28 @@ func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 	// 1 解析请求体
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求体"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求体"))
 		return
 	}
 	var request gf_cluster.InstanceGroupExpandOrShrinkRequest
 	err = json.Unmarshal(data, &request)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体,err:%s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体,err:%s", err.Error())))
 		return
 	}
 	// 2 获取实例组
 	instanceGroup, err := instance.GetInstanceGroup(request.InstanceGroupId)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	// 3 参数校验
 	if request.Count < 0 {
-		c.JSON(400, gf_cluster.NewFailedResponse("实例数量应该大于等于0"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("实例数量应该大于等于0"))
 		return
 	}
 	if request.Count == instanceGroup.InstanceCount {
-		c.JSON(400, gf_cluster.NewFailedResponse("目标实例数不应该等于当前实例数"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("目标实例数不应该等于当前实例数"))
 		return
 	}
 	var optType string
@@ -439,7 +440,7 @@ func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 		optType = gf_cluster.OptTypeExpand
 		err = instance.ExpandCustomInstanceGroup(instanceGroup, request.Count)
 		if err != nil {
-			c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+			c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(err.Error()))
 			return
 		}
 		updatedInstanceCount = request.Count - instanceGroup.InstanceCount
@@ -449,14 +450,14 @@ func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 		optType = gf_cluster.OptTypeShrink
 		err = instance.ShrinkCustomInstanceGroup(instanceGroup, request.Count)
 		if err != nil {
-			c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+			c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(err.Error()))
 			return
 		}
 		updatedInstanceCount = instanceGroup.InstanceCount - request.Count
 	}
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 
@@ -467,11 +468,11 @@ func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 		cost := time.Now().Sub(begin).Milliseconds()
 		err = instance.AddInstanceForm(instanceGroup, cost, createdUserId, createdUserName, optType, updatedInstanceCount, err)
 		if err != nil {
-			c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+			c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 			return
 		}
 		if err == nil {
-			c.JSON(200, gf_cluster.NewSuccessResponse())
+			c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 		}
 	}()
 }

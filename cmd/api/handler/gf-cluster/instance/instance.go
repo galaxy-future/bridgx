@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,28 +26,28 @@ func HandleRestartInstance(c *gin.Context) {
 
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求体"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求体"))
 		return
 	}
 	var request gf_cluster.InstanceRestartRequest
 	err = json.Unmarshal(data, &request)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体, err : %s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体, err : %s", err.Error())))
 		return
 	}
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 	//重启节点
 	err = instance.RestartInstance(request.InstanceGroupId, request.InstanceName)
 	if err != nil {
 		logs.Logger.Errorw("failed to restart instance.", zap.Int64("instance_group_id", request.InstanceGroupId), zap.String("instance_name", request.InstanceName), zap.String("operator", claims.Name), zap.Error(err))
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
-	c.JSON(200, gf_cluster.NewSuccessResponse())
+	c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 }
 
 //HandleDeleteInstance 删除节点
@@ -56,7 +57,7 @@ func HandleDeleteInstance(c *gin.Context) {
 	//获取用户信息
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 	createdUserId := claims.UserId
@@ -65,24 +66,24 @@ func HandleDeleteInstance(c *gin.Context) {
 	//读取请求体
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求体"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("无效的请求体"))
 		return
 	}
 	var request gf_cluster.InstanceDeleteRequest
 	err = json.Unmarshal(data, &request)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体, err : %s", err.Error())))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体, err : %s", err.Error())))
 		return
 	}
 
 	instanceGroup, err := instance.GetInstanceGroup(request.InstanceGroupId)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	err = instance.DeleteInstance(instanceGroup, request.InstanceName)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 
@@ -90,11 +91,11 @@ func HandleDeleteInstance(c *gin.Context) {
 	cost := time.Now().Sub(begin).Milliseconds()
 	err = instance.AddInstanceForm(instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeShrink, 1, err)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 	if err == nil {
-		c.JSON(200, gf_cluster.NewSuccessResponse())
+		c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 	}
 
 }
@@ -103,14 +104,14 @@ func HandleDeleteInstance(c *gin.Context) {
 func HandleListInstance(c *gin.Context) {
 	instanceGroupId, err := strconv.ParseInt(c.Param("instanceGroup"), 10, 64)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("未指定实例组id"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("未指定实例组id"))
 		return
 	}
 	items, err := instance.ListCustomInstances(instanceGroupId)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(err.Error()))
 	}
-	c.JSON(200, gf_cluster.NewInstanceListResponse(items))
+	c.JSON(http.StatusOK, gf_cluster.NewInstanceListResponse(items))
 }
 
 //HandleListMyInstance 列出我的实例
@@ -119,13 +120,13 @@ func HandleListMyInstance(c *gin.Context) {
 	podIp := c.Query("pod_ip")
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
-		c.JSON(400, gf_cluster.NewFailedResponse("校验身份出错"))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
 		return
 	}
 	curUserId := fmt.Sprintf("%v", claims.UserId)
 	groups, err := model.ListInstanceGroupByUser(curUserId)
 	if err != nil {
-		c.JSON(400, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
 
@@ -158,7 +159,7 @@ func HandleListMyInstance(c *gin.Context) {
 
 	start := (pageNumber - 1) * pageSize
 	if start >= len(result) {
-		c.JSON(200, gf_cluster.NewListClusterPodsDetailResponse(nil, gf_cluster.Pager{
+		c.JSON(http.StatusOK, gf_cluster.NewListClusterPodsDetailResponse(nil, gf_cluster.Pager{
 			PageNumber: pageNumber,
 			PageSize:   pageSize,
 			Total:      len(result),
@@ -170,7 +171,7 @@ func HandleListMyInstance(c *gin.Context) {
 	if end >= len(result) {
 		end = len(result)
 	}
-	c.JSON(200, gf_cluster.NewListClusterPodsDetailResponse(result[start:end], gf_cluster.Pager{
+	c.JSON(http.StatusOK, gf_cluster.NewListClusterPodsDetailResponse(result[start:end], gf_cluster.Pager{
 		PageNumber: pageNumber,
 		PageSize:   pageSize,
 		Total:      len(result),
@@ -184,10 +185,10 @@ func HandleListInstanceForm(c *gin.Context) {
 	pagerNumber, pageSize := helper.GetPagerParamFromQuery(c)
 	forms, total, err := model.ListInstanceFormFromDB(id, pagerNumber, pageSize)
 	if err != nil {
-		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
-	c.JSON(200, gf_cluster.NewInstanceFormListResponse(forms, gf_cluster.Pager{
+	c.JSON(http.StatusOK, gf_cluster.NewInstanceFormListResponse(forms, gf_cluster.Pager{
 		PageNumber: pagerNumber,
 		PageSize:   pageSize,
 		Total:      int(total),

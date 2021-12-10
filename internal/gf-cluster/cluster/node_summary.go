@@ -3,9 +3,10 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"time"
 
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
@@ -82,7 +83,6 @@ func getClusterNodeInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.ClusterN
 		memorySize := storageQuantity2Float(nodeMemory)
 		storageSize := storageQuantity2Float(nodeStorage)
 
-
 		role, exists := node.Labels[gf_cluster.KubernetesRoleKey]
 		if !exists {
 			role = gf_cluster.KubernetesRoleWorker
@@ -145,13 +145,13 @@ func calcNodePodCounts(nodesSummary []*gf_cluster.ClusterNodeSummary, info *gf_c
 }
 
 type PodResources struct {
-	Cpu * resource.Quantity `json:"cpu"`
-	Memory * resource.Quantity `json:"memory"`
-	Storage * resource.Quantity `json:"storage"`
+	Cpu     *resource.Quantity `json:"cpu"`
+	Memory  *resource.Quantity `json:"memory"`
+	Storage *resource.Quantity `json:"storage"`
 }
 
 //ListKubeSystemInstance 列出kuber-system所占用资源
-func ListKubeSystemInstance(info *gf_cluster.KubernetesInfo ) (map[string]*PodResources, error) {
+func ListKubeSystemInstance(info *gf_cluster.KubernetesInfo) (map[string]*PodResources, error) {
 	if info.Status != gf_cluster.KubernetesStatusRunning {
 		return nil, nil
 	}
@@ -159,8 +159,7 @@ func ListKubeSystemInstance(info *gf_cluster.KubernetesInfo ) (map[string]*PodRe
 	if err != nil {
 		return nil, err
 	}
-	pods, err := client.ClientSet.CoreV1().Pods("kube-system").List(context.Background(), metav1.ListOptions{
-	})
+	pods, err := client.ClientSet.CoreV1().Pods("kube-system").List(context.Background(), metav1.ListOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, err
 	}
@@ -168,11 +167,11 @@ func ListKubeSystemInstance(info *gf_cluster.KubernetesInfo ) (map[string]*PodRe
 	allocatedResource := make(map[string]*PodResources)
 	for _, pod := range pods.Items {
 		if pod.Status.Phase == v1.PodRunning {
-			item, exist  :=  allocatedResource[pod.Status.HostIP]
+			item, exist := allocatedResource[pod.Status.HostIP]
 			if !exist {
 				item = &PodResources{
-					Cpu:     resource.NewScaledQuantity(0,resource.Milli),
-					Memory:  resource.NewScaledQuantity(0,resource.Mega),
+					Cpu:     resource.NewScaledQuantity(0, resource.Milli),
+					Memory:  resource.NewScaledQuantity(0, resource.Mega),
 					Storage: resource.NewScaledQuantity(0, resource.Giga),
 				}
 				allocatedResource[pod.Status.HostIP] = item
