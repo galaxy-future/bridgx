@@ -9,9 +9,7 @@ import (
 	"errors"
 )
 
-const (
-	AesKeyPepper = "bridgx"
-)
+const AesKeyPepper = "bridgx"
 
 var (
 	ErrEncryptFailed = errors.New("encrypt failed")
@@ -25,7 +23,6 @@ func AESEncrypt(key, plaintext string) (text string, err error) {
 			return
 		}
 	}()
-	// 注意,这里的 key必须是 16, 24, or 32 bytes
 	keyB := ensureKeyLength(key)
 	block, err := aes.NewCipher(keyB)
 	if err != nil {

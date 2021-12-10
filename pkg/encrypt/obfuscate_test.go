@@ -95,8 +95,7 @@ func TestObfuscateText(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			args: args{
-			},
+			args: args{},
 			want: "",
 		},
 		{
