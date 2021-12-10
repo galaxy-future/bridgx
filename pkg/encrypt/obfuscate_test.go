@@ -41,3 +41,88 @@ func TestObfuscateRestoreText(t *testing.T) {
 		})
 	}
 }
+
+func Test_swapOddEven(t *testing.T) {
+	type args struct {
+		t string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "empty",
+			args: args{
+				t: "",
+			},
+			want: "",
+		},
+		{
+			name: "even",
+			args: args{
+				t: "abcd",
+			},
+			want: "badc",
+		},
+		{
+			name: "odd",
+			args: args{
+				t: "abcde",
+			},
+			want: "badce",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := swapOddEven(tt.args.t); got != tt.want {
+				t.Errorf("swapOddEven() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestObfuscateText(t *testing.T) {
+	type args struct {
+		pepper string
+		text   string
+		salt   string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "empty",
+			args: args{
+			},
+			want: "",
+		},
+		{
+			name: "empty pepper",
+			args: args{
+				pepper: "",
+				text:   "1",
+				salt:   "1",
+			},
+			want: "1133",
+		},
+		{
+			name: "empty text",
+			args: args{
+				pepper: "1",
+				text:   "",
+				salt:   "1",
+			},
+			want: "1133",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ObfuscateText(tt.args.pepper, tt.args.text, tt.args.salt); got != tt.want {
+				t.Errorf("ObfuscateText() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

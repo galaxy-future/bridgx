@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
@@ -245,8 +246,13 @@ func DecryptAccount(pepper, salt, key, encrypted string) (string, error) {
 	return unWrapText(pepper, decrypted, salt)
 }
 
-func generateSalt() (string, error) {
-	uid, err := pkg.NewUUID()
+func generateSalt() (uid string, err error) {
+	defer func() {
+		if uid != "" {
+			uid = strings.ReplaceAll(uid, "-", "")
+		}
+	}()
+	uid, err = pkg.NewUUID()
 	if err == nil && uid != "" {
 		return uid, nil
 	}

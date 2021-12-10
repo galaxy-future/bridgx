@@ -1,7 +1,7 @@
 package encrypt
 
 import (
-	"encoding/hex"
+	"encoding/base64"
 	"errors"
 )
 
@@ -67,15 +67,15 @@ func extractHead(t string, hl int) (rest, head string, err error) {
 }
 
 func messUpOrder(t string) (string, string) {
-	hexed := hex.EncodeToString([]byte(t))
-	messed := swapOddEven(hexed)
+	b64 := base64.StdEncoding.EncodeToString([]byte(t))
+	messed := swapOddEven(b64)
 	half := len(messed) / 2
 	return messed[:half], messed[half:]
 }
 
 func restoreText(t string) (string, error) {
 	r := swapOddEven(t)
-	dr, err := hex.DecodeString(r)
+	dr, err := base64.StdEncoding.DecodeString(r)
 	if err != nil {
 		return "", err
 	}

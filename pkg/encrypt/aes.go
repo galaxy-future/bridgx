@@ -5,7 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
-	"encoding/hex"
+	"encoding/base64"
 	"errors"
 )
 
@@ -38,7 +38,7 @@ func AESEncrypt(key, plaintext string) (text string, err error) {
 	blockMode := cipher.NewCBCEncrypter(block, iv)
 	cryptText := make([]byte, len(origData))
 	blockMode.CryptBlocks(cryptText, origData)
-	return hex.EncodeToString(cryptText), nil
+	return base64.StdEncoding.EncodeToString(cryptText), nil
 }
 
 func AESDecrypt(key string, ct16 string) (text string, err error) {
@@ -48,7 +48,7 @@ func AESDecrypt(key string, ct16 string) (text string, err error) {
 			return
 		}
 	}()
-	ciphertext, err := hex.DecodeString(ct16)
+	ciphertext, err := base64.StdEncoding.DecodeString(ct16)
 	if err != nil {
 		return "", err
 	}
