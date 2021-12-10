@@ -66,6 +66,6 @@ func HandleListUnusedBridgxCluster(c *gin.Context) {
 	c.JSON(http.StatusOK, gf_cluster.NewListUnusedBridgxClusterResponse(clustersList, gf_cluster.Pager{
 		PageNumber: pageNumber,
 		PageSize:   pageSize,
-		Total:      len(response.Data.ClusterList),
+		Total:      response.Data.Pager.Total,
 	}))
 }
