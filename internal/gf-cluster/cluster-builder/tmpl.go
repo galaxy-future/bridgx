@@ -316,26 +316,3 @@ yum install -y kubelet kubeadm kubectl
 systemctl enable kubelet
 __EOF__
 `
-
-//just for test string
-var testResult = `
-You should now deploy a pod network to the cluster.
-Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
-  https://kubernetes.io/docs/concepts/cluster-administration/addons/
-
-You can now join any number of the control-plane node running the following command on each as root:
-
-  kubeadm join 172.16.16.223:6443 --token 0iupee.q99fwt8b621sztrh \
-        --discovery-token-ca-cert-hash sha256:d290866566f087993e32cfdf795aea416efeb4f57a6c2cc47265f968f55b387b \
-        --control-plane --certificate-key cde730776c134ddba850bd721f11821a70e6e7ae1e93d3e7915e1fe15e4da670
-
-Please note that the certificate-key gives access to cluster sensitive data, keep it secret!
-As a safeguard, uploaded-certs will be deleted in two hours; If necessary, you can use
-"kubeadm init phase upload-certs --upload-certs" to reload certs afterward.
-
-Then you can join any number of worker nodes by running the following on each as root:
-
-kubeadm join 172.16.16.223:6443 --token 0iupee.q99fwt8b621sztrh \
-        --discovery-token-ca-cert-hash sha256:d290866566f087993e32cfdf795aea416efeb4f57a6c2cc47265f968f55b387b 
-
-`
