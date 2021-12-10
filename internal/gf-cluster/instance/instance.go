@@ -40,7 +40,7 @@ func ExpandCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 		// 2 创建k8s实例
 		pod, err := createInstance(client, instanceGroup, name)
 		if err != nil {
-			logs.Logger.Error("failed to expand instance", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", name), zap.Error(err))
+			logs.Logger.Errorw("failed to expand instance", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", name), zap.Error(err))
 			continue
 		}
 		existInstances = append(existInstances, &gf_cluster.Instance{
@@ -82,7 +82,7 @@ func ShrinkCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 			defer wg.Done()
 			err := client.ClientSet.CoreV1().Pods("default").Delete(context.Background(), instance.Name, v1.DeleteOptions{})
 			if err != nil {
-				logs.Logger.Error("failed to shrink instance.", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", instance.Name), zap.Error(err))
+				logs.Logger.Errorw("failed to shrink instance.", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", instance.Name), zap.Error(err))
 				return
 			}
 			logs.Logger.Infow("shrink instance success", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", instance.Name))
@@ -129,7 +129,7 @@ func RestartInstance(instanceGroupId int64, name string) error {
 		time.Sleep(time.Duration(2) * time.Second)
 		_, err = createInstance(client, instanceGroup, name)
 		if err != nil {
-			logs.Logger.Error("server run failed ", zap.Error(err))
+			logs.Logger.Errorw("server run failed ", zap.Error(err))
 		}
 	}()
 	return nil

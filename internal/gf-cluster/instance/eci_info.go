@@ -18,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
+
 //createInstance 创建实例
 func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.InstanceGroup, instanceName string) (*v1.Pod, error) {
 
@@ -132,7 +133,7 @@ func clearElasticInstance(client *cluster.KubernetesClient, instanceGroupName st
 			defer wg.Done()
 			err := client.ClientSet.CoreV1().Pods("default").Delete(context.Background(), instance.Name, metav1.DeleteOptions{})
 			if err != nil {
-				logs.Logger.Error("failed to delete pod.", zap.String("instance_group_name", instanceGroupName), zap.String("instance_name", instance.Name), zap.Error(err))
+				logs.Logger.Errorw("failed to delete pod.", zap.String("instance_group_name", instanceGroupName), zap.String("instance_name", instance.Name), zap.Error(err))
 			}
 		}(instance)
 	}
