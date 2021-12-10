@@ -72,11 +72,8 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 		cost := time.Now().Sub(begin).Milliseconds()
 		err := instance.AddInstanceForm(&instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeExpand, instanceGroup.InstanceCount, err)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
+			logs.Logger.Errorf("增加实例记录失败", zap.Error(err))
 			return
-		}
-		if err == nil {
-			c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 		}
 	}()
 
@@ -86,6 +83,7 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
+	c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 }
 
 //HandleBatchCreateInstanceGroup 批量新建实例组
@@ -215,13 +213,11 @@ func HandleDeleteInstanceGroup(c *gin.Context) {
 		cost := time.Now().Sub(begin).Milliseconds()
 		err = instance.AddInstanceForm(instanceGroup, cost, createdUserId, createdUserName, gf_cluster.OptTypeShrink, instanceGroup.InstanceCount, err)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
-			return
-		}
-		if err == nil {
-			c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
+			logs.Logger.Errorf("增加实例记录失败", zap.Error(err))
 		}
 	}()
+
+	c.JSON(http.StatusOK, gf_cluster.NewSuccessResponse())
 }
 
 //HandleBatchDeleteInstanceGroup 批量删除集群
