@@ -38,7 +38,7 @@ func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.I
 	cpuLimit := resource.NewScaledQuantity(int64(cpu*1000), resource.Milli)
 	memLimit := resource.NewScaledQuantity(int64(memory*1024), resource.Mega)
 	diskLimit := resource.NewScaledQuantity(int64(disk*1024), resource.Mega)
-	defaultImage := "galaxyfuture/centos-sshd:7"
+	defaultImage := "galaxyfuture/centos-sshd:7.1"
 	TerminationGracePeriodSeconds := int64(2)
 
 	pwd, err := encrypt.AESDecrypt(encrypt.AesKeySalt, request.SshPwd)
