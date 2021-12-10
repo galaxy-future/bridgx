@@ -156,9 +156,9 @@ func HandleListMyInstance(c *gin.Context) {
 	}
 	sort.Sort(result)
 
-	start := pageNumber * pageSize
+	start := (pageNumber - 1) * pageSize
 	if start >= len(result) {
-		c.JSON(200, gf_cluster.NewListClusterPodsDetailResponse(result, gf_cluster.Pager{
+		c.JSON(200, gf_cluster.NewListClusterPodsDetailResponse(nil, gf_cluster.Pager{
 			PageNumber: pageNumber,
 			PageSize:   pageSize,
 			Total:      len(result),
@@ -166,7 +166,7 @@ func HandleListMyInstance(c *gin.Context) {
 		return
 	}
 
-	end := pageNumber + 1*pageSize
+	end := pageNumber * pageSize
 	if end >= len(result) {
 		end = len(result)
 	}
@@ -175,6 +175,7 @@ func HandleListMyInstance(c *gin.Context) {
 		PageSize:   pageSize,
 		Total:      len(result),
 	}))
+
 }
 
 //HandleListInstanceForm 列出所有集群

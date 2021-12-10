@@ -40,8 +40,6 @@ func RegisterHandler(route *gin.RouterGroup) {
 		instanceGroupRoute.GET("", instance.HandleListInstanceGroup)
 		instanceGroupRoute.GET("/:instanceGroup", instance.HandleGetInstanceGroup)
 
-		instanceGroupRoute.POST("/expand", instance.HandleExpandInstanceGroup)
-		instanceGroupRoute.POST("/shrink", instance.HandleShrinkInstanceGroup)
 		instanceGroupRoute.POST("/expand_shrink", instance.HandleExpandOrShrinkInstanceGroup)
 
 		instanceRoute := route.Group("/instance")
