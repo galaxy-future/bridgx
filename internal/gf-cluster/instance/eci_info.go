@@ -101,7 +101,6 @@ func listElasticInstance(client *cluster.KubernetesClient, clusterName string, i
 	selector := metav1.LabelSelector{MatchLabels: createInstanceLabels(clusterName, strconv.FormatInt(id, 10))}
 	pods, err := client.ClientSet.CoreV1().Pods("default").List(context.Background(), metav1.ListOptions{
 		LabelSelector: labels.Set(selector.MatchLabels).String(),
-		Limit:         100,
 	})
 
 	if err != nil && !errors.IsNotFound(err) {
