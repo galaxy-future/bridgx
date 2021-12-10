@@ -13,7 +13,9 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// ExpandCustomInstanceGroup 扩容实例组
 func ExpandCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count int) error {
+	// 1 获取k8s实例列表
 	client, err := cluster.GetKubeClient(instanceGroup.KubernetesId)
 	if err != nil {
 		return err
@@ -35,6 +37,7 @@ func ExpandCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 		if _, exist := existsMap[name]; exist {
 			continue
 		}
+		// 2 创建k8s实例
 		pod, err := createInstance(client, instanceGroup, name)
 		if err != nil {
 			logs.Logger.Error("failed to expand instance", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", name), zap.Error(err))
@@ -46,6 +49,7 @@ func ExpandCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 		})
 		logs.Logger.Infow("expand instance success", zap.String("instance_group_name", instanceGroup.Name), zap.String("instance_name", name))
 	}
+	// 3 更新实例组实例数
 	err = model.UpdateInstanceGroupInstanceCountFromDB(count, instanceGroup.Id)
 	if err != nil {
 		return err
@@ -53,8 +57,11 @@ func ExpandCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 	return nil
 }
 
+// ShrinkCustomInstanceGroup 缩容实例组
 func ShrinkCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count int) error {
+	// 1 缩容数量
 	shrinkCount := instanceGroup.InstanceCount - count
+	// 2 获取k8s实例列表
 	client, err := cluster.GetKubeClient(instanceGroup.KubernetesId)
 	if err != nil {
 		return err
@@ -69,6 +76,7 @@ func ShrinkCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 			break
 		}
 		shrinkCount--
+		// 3 执行缩容
 		wg.Add(1)
 		go func(instance *gf_cluster.Instance) {
 			defer wg.Done()
@@ -81,26 +89,12 @@ func ShrinkCustomInstanceGroup(instanceGroup *gf_cluster.InstanceGroup, count in
 		}(instance)
 	}
 	wg.Wait()
+	// 4 更新实例组实例数
 	err = model.UpdateInstanceGroupInstanceCountFromDB(count, instanceGroup.Id)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func ClearCustomECIClusterInstances(instanceGroupId int64) error {
-
-	instanceGroup, err := GetInstanceGroup(instanceGroupId)
-	if err != nil {
-		return err
-	}
-
-	client, err := cluster.GetKubeClient(instanceGroup.KubernetesId)
-	if err != nil {
-		return err
-	}
-
-	return clearElasticInstance(client, instanceGroup.Name, instanceGroupId)
 }
 
 //ListCustomInstances 列出所有eci
@@ -117,6 +111,7 @@ func ListCustomInstances(instanceGroupId int64) ([]*gf_cluster.Instance, error) 
 	return listElasticInstance(client, instanceGroup.Name, instanceGroupId)
 }
 
+//RestartInstance 重启实例
 func RestartInstance(instanceGroupId int64, name string) error {
 	instanceGroup, err := GetInstanceGroup(instanceGroupId)
 	if err != nil {
@@ -140,6 +135,7 @@ func RestartInstance(instanceGroupId int64, name string) error {
 	return nil
 }
 
+//DeleteInstance 删除实例
 func DeleteInstance(instanceGroup *gf_cluster.InstanceGroup, name string) error {
 	client, err := cluster.GetKubeClient(instanceGroup.KubernetesId)
 	if err != nil {

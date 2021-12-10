@@ -405,6 +405,7 @@ func HandleShrinkInstanceGroup(c *gin.Context) {
 //HandleExpandOrShrinkInstanceGroup 扩缩容接口
 func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 	begin := time.Now()
+	// 1 解析请求体
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(400, gf_cluster.NewFailedResponse("无效的请求体"))
@@ -416,11 +417,13 @@ func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 		c.JSON(400, gf_cluster.NewFailedResponse(fmt.Sprintf("无效的请求体,err:%s", err.Error())))
 		return
 	}
+	// 2 获取实例组
 	instanceGroup, err := instance.GetInstanceGroup(request.InstanceGroupId)
 	if err != nil {
 		c.JSON(500, gf_cluster.NewFailedResponse(err.Error()))
 		return
 	}
+	// 3 参数校验
 	if request.Count < 0 {
 		c.JSON(400, gf_cluster.NewFailedResponse("实例数量应该大于等于0"))
 		return
@@ -431,6 +434,7 @@ func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 	}
 	var optType string
 	var updatedInstanceCount int
+	// 4 扩容流程
 	if request.Count > instanceGroup.InstanceCount {
 		optType = gf_cluster.OptTypeExpand
 		err = instance.ExpandCustomInstanceGroup(instanceGroup, request.Count)
@@ -440,6 +444,7 @@ func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 		}
 		updatedInstanceCount = request.Count - instanceGroup.InstanceCount
 	}
+	// 5 缩容流程
 	if request.Count < instanceGroup.InstanceCount {
 		optType = gf_cluster.OptTypeShrink
 		err = instance.ShrinkCustomInstanceGroup(instanceGroup, request.Count)
@@ -457,7 +462,7 @@ func HandleExpandOrShrinkInstanceGroup(c *gin.Context) {
 
 	createdUserId := claims.UserId
 	createdUserName := claims.Name
-
+	// 6 操作记录
 	defer func() {
 		cost := time.Now().Sub(begin).Milliseconds()
 		err = instance.AddInstanceForm(instanceGroup, cost, createdUserId, createdUserName, optType, updatedInstanceCount, err)
