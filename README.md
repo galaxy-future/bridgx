@@ -10,21 +10,20 @@ BridgX是业界领先的基于全链路Serverless技术的云原生基础架构�
 
 1、具备10分钟扩容1000台服务器的弹性能力；
 
-2、一个平台统一管理不同云厂商的云上资源；
+2、支持K8s切割；
 
-3、简洁易用，轻松上手；
+3、提供完善的API接口；
 
 
 联系我们
 ----
+[微博](https://weibo.com/galaxyfuture) | [知乎](https://www.zhihu.com/org/xing-yi-wei-lai) | [B站](https://space.bilibili.com/2057006251)
 
 微信公众号：GalaxyFutureTech <br>
 ![image](https://user-images.githubusercontent.com/94337797/142592631-0bed59e6-7840-4c1c-870e-13dd9edd0c9b.png)
 
 企业微信交流群:<br>
 ![image](https://user-images.githubusercontent.com/94337797/144558612-e7f36bd4-4afd-45ba-aa18-8be6d39c4537.png)
-
-
 
 
 上手指南
@@ -39,20 +38,14 @@ BridgX是业界领先的基于全链路Serverless技术的云原生基础架构�
 
 
 #### 3、安装部署  
-下面是快速部署系统的步骤:
 
 * (1)源码下载
   - 后端工程：
-  > git clone https://github.com/galaxy-future/BridgX.git
-  - 前端工程：
-  > git clone https://github.com/galaxy-future/BridgX_FE.git
-
+  > git clone https://github.com/galaxy-future/bridgx.git
+ 
 * (2)macOS系统部署
   - 后端部署,在BridgX目录下运行
     > make docker-run-mac
-  - 前端部署,在BridgX_FE目录下运行
-    > make docker-run-mac
-   
   - 系统运行，在浏览器中输入 http://127.0.0.1 可以看到管理控制台界面,初始用户名root和密码为123456。
 
 * (3)Linux安装部署
@@ -60,10 +53,7 @@ BridgX是业界领先的基于全链路Serverless技术的云原生基础架构�
   - 1）针对使用者
     - 后端部署,在BridgX目录下运行,
       > make docker-run-linux
-    - 前端部署,在BridgX_FE目录下运行
-      > make docker-run-linux
-    - 系统运行，浏览器输入 http://127.0.0.1 可以看到管理控制台界面,初始用户名root和密码为123456。
-
+ 
   - 2）针对开发者
     - 由于项目会下载所需的必需基础镜像,建议将下载源码放到空间大于10G以上的目录中。
     - 后端部署
@@ -75,32 +65,17 @@ BridgX是业界领先的基于全链路Serverless技术的云原生基础架构�
              > docker-compose up -d api    //启动api服务 <br>
              > docker-compose up -d scheduler //启动调度服务 <br>
              > docker-compose down     //停止BridgX服务
+#### 4、开发者API手册
+通过[开发者API手册](https://github.com/galaxy-future/bridgx/blob/master/docs/developer_api.md)，用户可以快速查看各项开发功能的API接口和调用方法，使开发者能够将BridgX集成到第三方平台上。
 
-    - 前端部署
-      - 如果跟后端同机部署，可以直接进入下一步;如果后端单独部署，则到 `cd conf` 下修改对应的配置ip和port信息。
-      - 进入BridgX_FE目录下，然后使用以下命令
-        > docker-compose up -d //启动BridgX前端服务 <br>
-        > docker-compose down //停止BridgX前端服务  <br>
-
-      - 系统运行，浏览器输入 http://127.0.0.1 可以看到管理控制台界面,初始用户名root和密码为123456。
-
-
-    
-#### 3、快速上手  
-通过[快速上手指南](https://github.com/galaxy-future/BridgX/blob/master/docs/getting-started.md)，可以掌握基本的快速扩缩容操作流程。  
-
-
-#### 4、用户手册  
-通过[用户手册](https://github.com/galaxy-future/BridgX/blob/master/docs/user-manual.md)，用户可以掌握BridgX的功能使用全貌，方便快速查找使用感兴趣的功能。
-
-#### 5、开发者API手册
-通过[开发者API手册](https://github.com/galaxy-future/BridgX/blob/master/docs/developer_api.md)，用户可以快速查看各项开发功能的API接口和调用方法，使开发者能够将BridgX集成到第三方平台上。
+#### 5、前端界面操作
+如果需要进行前端操作，请安装[ComandX](https://github.com/galaxy-future/comandx/blob/main/README.md)
 
 行为准则
 ------
-[贡献者公约](https://github.com/galaxy-future/BridgX/blob/master/CODE_OF_CONDUCT)
+[贡献者公约](https://github.com/galaxy-future/bridgx/blob/master/CODE_OF_CONDUCT)
 
 授权
 -----
 
-BridgX使用[Apache License 2.0](https://github.com/galaxy-future/BridgX/blob/master/LICENSE)授权协议进行授权
+BridgX使用[Apache License 2.0](https://github.com/galaxy-future/bridgx/blob/master/LICENSE)授权协议进行授权

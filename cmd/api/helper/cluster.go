@@ -4,22 +4,34 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
+	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/spf13/cast"
 )
 
-func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int64) []response.ClusterThumb {
+func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int64, tagMap map[string]map[string]string) []response.ClusterThumb {
 	res := make([]response.ClusterThumb, 0)
 	for _, cluster := range clusters {
+		instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
+		tags := tagMap[cluster.ClusterName]
+		var usage string
+		if len(tags) > 0 {
+			usage = tags[constants.DefaultClusterUsageKey]
+		}
 		c := response.ClusterThumb{
 			ClusterId:     cast.ToString(cluster.Id),
 			ClusterName:   cluster.ClusterName,
 			InstanceCount: countMap[cluster.ClusterName],
+			InstanceType:  instanceType.GetDesc(),
+			ChargeType:    cluster.GetChargeType(),
 			Provider:      cluster.Provider,
 			Account:       cluster.AccountKey,
+			Usage:         usage,
 			CreateAt:      cluster.CreateAt.String(),
 			CreateBy:      cluster.CreateBy,
+			UpdateAt:      cluster.UpdateAt.String(),
+			UpdateBy:      cluster.UpdateBy,
 		}
 		res = append(res, c)
 	}

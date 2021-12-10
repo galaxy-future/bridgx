@@ -159,8 +159,13 @@ func ListClusters(ctx *gin.Context) {
 		PageSize:   ps,
 		Total:      total,
 	}
+	tags, err := service.GetClusterTagsByClusters(ctx, clusters)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
 	resp := &response.ListClustersResponse{
-		ClusterList: helper.ConvertToClusterThumbList(clusters, instanceCountMap),
+		ClusterList: helper.ConvertToClusterThumbList(clusters, instanceCountMap, tags),
 		Pager:       pager,
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, resp)

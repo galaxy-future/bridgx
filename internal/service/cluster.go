@@ -382,6 +382,10 @@ func queryAndSaveExpandIPs(c *types.ClusterInfo, err error, expandInstanceIds []
 			expandIps = append(expandIps, instance.IpInner)
 			update := func(attempt uint) error {
 				now := time.Now()
+				var expireAt *time.Time
+				if instance.CostWay == cloud.InstanceChargeTypePrePaid {
+					expireAt = instance.ExpireAt
+				}
 				return model.UpdateByInstanceId(model.Instance{
 					InstanceId:  instance.Id,
 					IpInner:     instance.IpInner,
@@ -389,6 +393,7 @@ func queryAndSaveExpandIPs(c *types.ClusterInfo, err error, expandInstanceIds []
 					ClusterName: c.Name,
 					Status:      constants.Running,
 					RunningAt:   &now,
+					ExpireAt:    expireAt,
 				})
 			}
 			err = retry.Retry(update, strategy.Limit(3), strategy.Backoff(backoff.Fibonacci(10*time.Millisecond)))

@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/types"
+	jsoniter "github.com/json-iterator/go"
+	"gorm.io/gorm"
 )
 
 type Cluster struct {
@@ -35,6 +36,23 @@ type Cluster struct {
 	UpdateBy      string
 	DeleteUniqKey int64
 	DeletedAt     gorm.DeletedAt
+}
+
+func (c *Cluster) GetChargeType() string {
+	conf, err := c.UnmarshalChargeConfig()
+	if err != nil {
+		return ""
+	}
+	return conf.ChargeType
+}
+
+func (c *Cluster) UnmarshalChargeConfig() (*types.ChargeConfig, error) {
+	chargeConfig := types.ChargeConfig{}
+	err := jsoniter.UnmarshalFromString(c.ChargeConfig, &chargeConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &chargeConfig, nil
 }
 
 type ClusterSnapshot struct {
@@ -133,7 +151,7 @@ func ListClustersByCond(ctx context.Context, accountKeys []string, clusterName, 
 	if clusterName != "" {
 		sql.Where("cluster_name LIKE ?", fmt.Sprintf("%%%v%%", clusterName))
 	}
-	err := sql.Offset((pageNum - 1) * pageSize).Limit(pageSize).Find(&res).Error
+	err := sql.Order("id DESC").Offset((pageNum - 1) * pageSize).Limit(pageSize).Find(&res).Error
 	if err != nil {
 		return res, 0, err
 	}

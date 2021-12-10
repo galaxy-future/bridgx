@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/id_generator"
 	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
@@ -19,13 +21,26 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 	if hasUnfinishedTask(clusterName) {
 		return 0, errors.New(fmt.Sprintf("Cluster:%v has unfinished task", clusterName))
 	}
+	cluster, err := model.GetByClusterName(clusterName)
+	if err != nil {
+		return 0, err
+	}
+	if cluster == nil {
+		return 0, fmt.Errorf(constants.ErrClusterNotExist, clusterName)
+	}
+	currentCount, err := model.CountActiveInstancesByClusterName(ctx, []string{clusterName})
+	if err != nil {
+		return 0, err
+	}
 	info := &model.ExpandTaskInfo{
 		ClusterName:    clusterName,
 		Count:          count,
 		TaskSubmitHost: utils.PrivateIPv4(),
 		UserId:         uid,
+		BeforeCount:    int(currentCount),
 	}
 	s, _ := jsoniter.MarshalToString(info)
+	logs.Logger.Infof("cluster:%v expand task info:%v", clusterName, s)
 	taskId := id_generator.GetNextId()
 	task := &model.Task{
 		TaskName:      taskName,
@@ -39,7 +54,7 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 	task.Id = int64(taskId)
 	task.CreateAt = &now
 	task.UpdateAt = &now
-	err := model.Create(task)
+	err = model.Create(task)
 	if err != nil {
 		return 0, err
 	}
@@ -49,14 +64,30 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 	if hasUnfinishedTask(clusterName) {
 		return 0, errors.New(fmt.Sprintf("Cluster:%v has unfinished task", clusterName))
 	}
+	cluster, err := model.GetByClusterName(clusterName)
+	if err != nil {
+		return 0, err
+	}
+	if cluster == nil {
+		return 0, fmt.Errorf(constants.ErrClusterNotExist, clusterName)
+	}
+	if chargeType := cluster.GetChargeType(); chargeType == cloud.InstanceChargeTypePrePaid {
+		return 0, errors.New(constants.ErrPrePaidShrinkNotSupported)
+	}
+	currentCount, err := model.CountActiveInstancesByClusterName(ctx, []string{clusterName})
+	if err != nil {
+		return 0, err
+	}
 	info := &model.ShrinkTaskInfo{
 		ClusterName:    clusterName,
 		Count:          count,
 		IPs:            ips,
 		TaskSubmitHost: utils.PrivateIPv4(),
 		UserId:         uid,
+		BeforeCount:    int(currentCount),
 	}
 	s, _ := jsoniter.MarshalToString(info)
+	logs.Logger.Infof("cluster:%v shrink task info:%v", clusterName, s)
 	taskId := id_generator.GetNextId()
 	task := &model.Task{
 		TaskName:      taskName,
@@ -70,7 +101,7 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 	task.Id = int64(taskId)
 	task.CreateAt = &now
 	task.UpdateAt = &now
-	err := model.Create(task)
+	err = model.Create(task)
 	if err != nil {
 		return 0, err
 	}

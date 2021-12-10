@@ -6,11 +6,23 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 )
 
 const AesKeySalt = "bridgx"
 
-func AESEncrypt(key, plaintext string) (string, error) {
+var (
+	ErrEncryptFailed = errors.New("encrypt failed")
+	ErrDecryptFailed = errors.New("decrypt failed")
+)
+
+func AESEncrypt(key, plaintext string) (text string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = ErrEncryptFailed
+			return
+		}
+	}()
 	// 注意,这里的 key必须是 16, 24, or 32 bytes
 	keyB := ensureKeyLength(key)
 	block, err := aes.NewCipher(keyB)
@@ -27,7 +39,13 @@ func AESEncrypt(key, plaintext string) (string, error) {
 	return hex.EncodeToString(cryptText), nil
 }
 
-func AESDecrypt(key string, ct16 string) (string, error) {
+func AESDecrypt(key string, ct16 string) (text string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = ErrDecryptFailed
+			return
+		}
+	}()
 	ciphertext, err := hex.DecodeString(ct16)
 	if err != nil {
 		return "", err

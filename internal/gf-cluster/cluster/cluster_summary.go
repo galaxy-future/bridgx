@@ -75,6 +75,11 @@ func queryClusterInfo(cluster *gf_cluster.KubernetesInfo) (*gf_cluster.ClusterSu
 		InstallStep:                 cluster.InstallStep,
 	}
 
+	//kubeUsed , err := ListKubeSystemInstance(cluster)
+	//if err != nil {
+	//	return summary,err
+	//}
+
 	nodes, err := getClusterNodeInfo(cluster)
 	if err != nil {
 		return summary, err

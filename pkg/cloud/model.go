@@ -10,6 +10,11 @@ const (
 	ClusterName = "ClusterName"
 )
 
+const (
+	InstanceChargeTypePrePaid  = "PrePaid"
+	InstanceChargeTypePostPaid = "PostPaid"
+)
+
 type Params struct {
 	Provider     string
 	InstanceType string
@@ -29,14 +34,15 @@ type Tag struct {
 }
 
 type Instance struct {
-	Id       string   `json:"id"`
-	CostWay  string   `json:"cost_way"`
-	Provider string   `json:"provider"`
-	IpInner  string   `json:"ip_inner"`
-	IpOuter  string   `json:"ip_outer"`
-	Network  *Network `json:"network"`
-	ImageId  string   `json:"image_id"`
-	Status   string   `json:"status"`
+	Id       string     `json:"id"`
+	CostWay  string     `json:"cost_way"`
+	Provider string     `json:"provider"`
+	IpInner  string     `json:"ip_inner"`
+	IpOuter  string     `json:"ip_outer"`
+	Network  *Network   `json:"network"`
+	ImageId  string     `json:"image_id"`
+	Status   string     `json:"status"`
+	ExpireAt *time.Time `json:"expire_at"`
 }
 
 type Network struct {

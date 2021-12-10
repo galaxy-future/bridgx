@@ -27,12 +27,41 @@ func (Task) TableName() string {
 	return "task"
 }
 
+type TaskInfo interface {
+	GetBeforeInstanceCount() (beforeCount int)
+	GetAfterInstanceCount(success int) (afterCount int)
+	GetExpectInstanceCount() (expectCount int)
+	GetCreateUsername() (username string)
+}
+
 type ExpandTaskInfo struct {
 	ClusterName    string `json:"cluster_name"`
 	Count          int    `json:"count"`
 	TaskExecHost   string `json:"task_exec_host"`
 	TaskSubmitHost string `json:"task_submit_host"`
 	UserId         int64  `json:"user_id"`
+	BeforeCount    int    `json:"before_count"`
+}
+
+func (e *ExpandTaskInfo) GetBeforeInstanceCount() (beforeCount int) {
+	return e.BeforeCount
+}
+
+func (e *ExpandTaskInfo) GetAfterInstanceCount(success int) (afterCount int) {
+	return e.BeforeCount + success
+}
+
+func (e *ExpandTaskInfo) GetExpectInstanceCount() (expectCount int) {
+	return e.BeforeCount + e.Count
+}
+
+func (e *ExpandTaskInfo) GetCreateUsername() (username string) {
+	uid := e.UserId
+	user, _ := GetUserById(context.Background(), uid)
+	if user != nil {
+		return user.Username
+	}
+	return ""
 }
 
 type ExpandTaskRes struct {
@@ -46,6 +75,34 @@ type ShrinkTaskInfo struct {
 	TaskExecHost   string `json:"task_exec_host"`
 	TaskSubmitHost string `json:"task_submit_host"`
 	UserId         int64  `json:"user_id"`
+	BeforeCount    int    `json:"before_count"`
+}
+
+func (s *ShrinkTaskInfo) GetBeforeInstanceCount() (beforeCount int) {
+	return s.BeforeCount
+}
+
+func (s *ShrinkTaskInfo) GetAfterInstanceCount(success int) (afterCount int) {
+	if s.BeforeCount-success < 0 {
+		return 0
+	}
+	return s.BeforeCount - success
+}
+
+func (s *ShrinkTaskInfo) GetExpectInstanceCount() (expectCount int) {
+	if s.BeforeCount-s.Count < 0 {
+		return 0
+	}
+	return s.BeforeCount - s.Count
+}
+
+func (s *ShrinkTaskInfo) GetCreateUsername() (username string) {
+	uid := s.UserId
+	user, _ := GetUserById(context.Background(), uid)
+	if user != nil {
+		return user.Username
+	}
+	return ""
 }
 
 func CountByTaskStatus(taskFilter string, statuses []string) (int64, error) {

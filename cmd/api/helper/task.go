@@ -58,8 +58,25 @@ func ConvertToTaskDetail(instances []model.Instance, task *model.Task) *response
 		endTime = *task.FinishTime
 	}
 	ret.ExecuteTime = int(endTime.Sub(*task.CreateAt).Seconds())
-
+	taskInfo := ExtractTaskInfo(task)
+	ret.BeforeInstanceCount = taskInfo.GetBeforeInstanceCount()
+	ret.AfterInstanceCount = taskInfo.GetAfterInstanceCount(success)
+	ret.ExpectInstanceCount = taskInfo.GetExpectInstanceCount()
+	ret.CreateBy = taskInfo.GetCreateUsername()
 	return ret
+}
+
+func ExtractTaskInfo(task *model.Task) model.TaskInfo {
+	var info model.TaskInfo
+	switch task.TaskAction {
+	case constants.TaskActionExpand:
+		info = &model.ExpandTaskInfo{}
+		_ = jsoniter.UnmarshalFromString(task.TaskInfo, info)
+	case constants.TaskActionShrink:
+		info = &model.ShrinkTaskInfo{}
+		_ = jsoniter.UnmarshalFromString(task.TaskInfo, info)
+	}
+	return info
 }
 
 func defaultTaskDetailByType(task *model.Task) *response.TaskDetailResponse {
@@ -89,28 +106,25 @@ func defaultTaskDetailByType(task *model.Task) *response.TaskDetailResponse {
 		if task.Status == constants.TaskStatusFailed {
 			resp.FailNum = taskInfo.Count
 		}
-		return resp
+		resp.CreateBy = taskInfo.GetCreateUsername()
 	}
 	if task.TaskAction == constants.TaskActionShrink {
+		taskInfo := model.ShrinkTaskInfo{}
+		_ = jsoniter.UnmarshalFromString(task.TaskInfo, &taskInfo)
+		resp.CreateBy = taskInfo.GetCreateUsername()
 		if task.Status == constants.TaskStatusSuccess {
-			taskInfo := model.ShrinkTaskInfo{}
-			_ = jsoniter.UnmarshalFromString(task.TaskInfo, &taskInfo)
 			resp.SuccessRate = "1.00"
 			resp.SuccessNum = taskInfo.Count
 			resp.TotalNum = taskInfo.Count
-			return resp
 		} else {
-			taskInfo := model.ShrinkTaskInfo{}
-			_ = jsoniter.UnmarshalFromString(task.TaskInfo, &taskInfo)
 			resp.SuccessRate = "0.00"
 			if task.Status == constants.TaskStatusFailed {
 				resp.FailNum = taskInfo.Count
 			}
 			resp.TotalNum = taskInfo.Count
-			return resp
 		}
 	}
-	return nil
+	return resp
 }
 
 func ConvertToTaskDetailList(ctx context.Context, tasks []model.Task) ([]*response.TaskDetailResponse, error) {

@@ -82,12 +82,7 @@ func CountUser(ctx context.Context, orgId int64) (int64, error) {
 }
 
 func GetUserById(ctx context.Context, uid int64) (*model.User, error) {
-	user := model.User{}
-	err := model.Get(uid, &user)
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
+	return model.GetUserById(ctx, uid)
 }
 
 func ModifyUsername(ctx context.Context, uid int64, newUsername string) error {

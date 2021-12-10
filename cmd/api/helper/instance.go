@@ -36,6 +36,7 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 			CreateAt:      instance.CreateAt.String(),
 			Status:        getStringStatus(instance.Status),
 			StartupTime:   startupTime,
+			ChargeType:    instance.ChargeType,
 		}
 		ret = append(ret, r)
 	}

@@ -202,6 +202,7 @@ CREATE TABLE `instance`
     `delete_at`      timestamp NULL DEFAULT NULL,
     `running_at`     timestamp NULL DEFAULT NULL,
     `charge_type`    varchar(32) collate utf8mb4_bin NOT NULL DEFAULT 'PostPaid',
+    `expire_at`      timestamp NULL DEFAULT NULL comment 'PrePaid instance expire time',
     PRIMARY KEY (`id`),
     KEY              `idx_ip_inner` (`ip_inner`),
     KEY              `instance_cluster_name_status_index` (`cluster_name`,`status`),

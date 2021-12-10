@@ -28,7 +28,6 @@ const (
 	DirectionOut   = "egress"
 	Instancetype   = "InstanceType"
 	AcceptLanguage = "zh-CN"
-	PrePaid        = "PrePaid"
 )
 
 type AlibabaCloud struct {
@@ -73,6 +72,11 @@ func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance
 		if len(instance.PublicIpAddress.IpAddress) > 0 {
 			ipOuter = instance.PublicIpAddress.IpAddress[0]
 		}
+		expireAt, err := time.Parse("2006-01-02T15:04Z", instance.ExpiredTime)
+		var expireAtPtr *time.Time
+		if err == nil {
+			expireAtPtr = &expireAt
+		}
 		instances = append(instances, cloud.Instance{
 			Id:       instance.InstanceId,
 			CostWay:  instance.InstanceChargeType,
@@ -80,6 +84,7 @@ func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance
 			IpInner:  strings.Join(instance.VpcAttributes.PrivateIpAddress.IpAddress, ","),
 			IpOuter:  ipOuter,
 			ImageId:  instance.ImageId,
+			ExpireAt: expireAtPtr,
 			Network: &cloud.Network{
 				VpcId:                   instance.VpcAttributes.VpcId,
 				SubnetId:                instance.VpcAttributes.VSwitchId,
@@ -129,6 +134,7 @@ func (p *AlibabaCloud) BatchCreate(m cloud.Params, num int) (instanceIds []strin
 
 	request.RegionId = m.Region
 	request.ImageId = m.ImageId
+	request.ZoneId = m.Zone
 	request.InstanceType = m.InstanceType
 	request.SecurityGroupId = m.Network.SecurityGroup
 	request.VSwitchId = m.Network.SubnetId
@@ -147,7 +153,7 @@ func (p *AlibabaCloud) BatchCreate(m cloud.Params, num int) (instanceIds []strin
 	request.DataDisk = &dataDisks
 	request.Amount = requests.NewInteger(num)
 	request.MinAmount = requests.NewInteger(num)
-	if m.Charge.ChargeType == PrePaid {
+	if m.Charge.ChargeType == cloud.InstanceChargeTypePrePaid {
 		request.InstanceChargeType = m.Charge.ChargeType
 		request.PeriodUnit = m.Charge.PeriodUnit
 		request.Period = requests.NewInteger(m.Charge.Period)

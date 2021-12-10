@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/pool"
 	"github.com/galaxy-future/BridgX/pkg/id_generator"
 	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
-
-	"github.com/galaxy-future/BridgX/internal/model"
 )
 
 func TestCountByTaskStatus(t *testing.T) {
@@ -39,4 +39,63 @@ func TestTaskExpand(t *testing.T) {
 	task.CreateAt = &now
 	task.UpdateAt = &now
 	pool.DoExpand(task)
+}
+
+func Test_getTaskInfoCountDiff(t *testing.T) {
+	success := 1
+	type args struct {
+		task *model.Task
+	}
+	tests := []struct {
+		name         string
+		args         args
+		wantBefore   int
+		wantExpect   int
+		wantAfter    int
+		wantUserName string
+	}{
+		{
+			name: "expand instance count diff",
+			args: args{
+				task: &model.Task{
+					TaskAction: constants.TaskActionExpand,
+					TaskInfo:   "{\"count\":5,\"before_count\":10,\"user_id\":1}",
+				},
+			},
+			wantBefore:   10,
+			wantExpect:   15,
+			wantAfter:    11,
+			wantUserName: "root",
+		},
+		{
+			name: "shrink instance count diff",
+			args: args{
+				task: &model.Task{
+					TaskAction: constants.TaskActionShrink,
+					TaskInfo:   "{\"count\":6,\"before_count\":10,\"user_id\":1}",
+				},
+			},
+			wantBefore:   10,
+			wantExpect:   4,
+			wantAfter:    9,
+			wantUserName: "root",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			info := helper.ExtractTaskInfo(tt.args.task)
+			if info.GetBeforeInstanceCount() != tt.wantBefore {
+				t.Errorf("extractTaskInfo() gotBefore = %v, want %v", info.GetBeforeInstanceCount(), tt.wantBefore)
+			}
+			if info.GetExpectInstanceCount() != tt.wantExpect {
+				t.Errorf("extractTaskInfo() gotExpect = %v, want %v", info.GetExpectInstanceCount(), tt.wantExpect)
+			}
+			if info.GetAfterInstanceCount(success) != tt.wantAfter {
+				t.Errorf("extractTaskInfo() gotAfter = %v, want %v", info.GetAfterInstanceCount(1), tt.wantAfter)
+			}
+			if info.GetCreateUsername() != tt.wantUserName {
+				t.Errorf("extractTaskInfo() GetCreateUsername = %v, want %v", info.GetCreateUsername(), tt.wantUserName)
+			}
+		})
+	}
 }
