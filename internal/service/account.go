@@ -3,7 +3,15 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"regexp"
 	"time"
+
+	"github.com/galaxy-future/BridgX/internal/errs"
+	"github.com/galaxy-future/BridgX/internal/logs"
+	"github.com/galaxy-future/BridgX/pkg"
+
+	"github.com/galaxy-future/BridgX/pkg/encrypt"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/model"
@@ -11,9 +19,32 @@ import (
 	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 )
 
-func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int) ([]model.Account, int64, error) {
-	res, total, err := model.GetAccounts(provider, accountName, accountKey, pageNum, pageSize)
-	return res, total, err
+const textEncryptTmpl = `^%s([a-zA-Z0-9-_]+)%s$`
+
+// GetAccounts search accounts by condition.
+func GetAccounts(provider, accountName, accountKey string, pageNum, pageSize int) ([]*model.Account, int64, error) {
+	res, count, err := model.GetAccounts(provider, accountName, accountKey, pageNum, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	_ = decryptAccounts(res)
+	return res, count, err
+}
+
+// decryptAccounts will decrypt account's `EncryptedAccountSecret` field.
+// If strict param's value is true error will return.
+func decryptAccounts(accounts []*model.Account, strict ...bool) error {
+	if accounts == nil || len(accounts) == 0 {
+		return nil
+	}
+	for _, account := range accounts {
+		decrypted, err := DecryptAccount(encrypt.AesKeyPepper, account.Salt, account.AccountKey, account.EncryptedAccountSecret)
+		if err != nil && len(strict) > 0 && strict[0] == true {
+			return err
+		}
+		account.AccountSecret = decrypted
+	}
+	return nil
 }
 
 //GetAccount query account info by provider and accountKey
@@ -34,6 +65,10 @@ func GetAccountsByOrgId(orgId int64) (*types.OrgKeys, error) {
 	account := types.OrgKeys{
 		OrgId: orgId,
 	}
+	err = decryptAccounts(a)
+	if err != nil {
+		return nil, err
+	}
 	for _, info := range a {
 		account.Info = append(account.Info, types.KeyInfo{
 			AK:       info.AccountKey,
@@ -51,6 +86,10 @@ func GetDefaultAccount(provider string) (*types.OrgKeys, error) {
 	}
 	account := types.OrgKeys{
 		OrgId: a.OrgId,
+	}
+	err = decryptAccounts([]*model.Account{a})
+	if err != nil {
+		return nil, err
 	}
 	account.Info = append(account.Info, types.KeyInfo{
 		AK:       a.AccountKey,
@@ -82,7 +121,7 @@ func CreateCloudAccount(ctx context.Context, accountName, provider, ak, sk strin
 	now := time.Now()
 	account.CreateAt = &now
 	account.UpdateAt = &now
-	err := model.Create(account)
+	err := createAccount(account)
 	if err != nil {
 		return err
 	}
@@ -160,7 +199,11 @@ func GetAksByOrgAkProvider(ctx context.Context, orgId int64, ak, provider string
 }
 
 func GetOrgKeysByAk(ctx context.Context, ak string) (*types.OrgKeys, error) {
-	a, err := model.GetAccountsByAk(ctx, ak)
+	a, err := model.GetAccountByAk(ctx, ak)
+	if err != nil {
+		return nil, err
+	}
+	err = decryptAccounts([]*model.Account{&a})
 	if err != nil {
 		return nil, err
 	}
@@ -172,4 +215,76 @@ func GetOrgKeysByAk(ctx context.Context, ak string) (*types.OrgKeys, error) {
 			Provider: a.Provider,
 		}},
 	}, nil
+}
+
+func EncryptAccount(pepper, salt, key, text string) (string, error) {
+	encrypted, err := encrypt.AESEncrypt(key, wrapText(pepper, text, salt))
+	if err != nil {
+		return "", err
+	}
+	return encrypted, nil
+}
+
+func wrapText(pepper, text, salt string) string {
+	return pepper + text + salt
+}
+
+func unWrapText(pepper, decryptedText, salt string) (string, error) {
+	pepper = regexp.QuoteMeta(pepper)
+	salt = regexp.QuoteMeta(salt)
+	re, err := regexp.Compile(fmt.Sprintf(textEncryptTmpl, pepper, salt))
+	if err != nil {
+		return "", err
+	}
+	result := re.FindStringSubmatch(decryptedText)
+	if len(result) != 2 {
+		return "", errs.ErrBadEncryptedText
+	}
+	return result[len(result)-1], nil
+}
+
+func DecryptAccount(pepper, salt, key, encrypted string) (string, error) {
+	decrypted, err := encrypt.AESDecrypt(key, encrypted)
+	if err != nil {
+		return "", err
+	}
+	return unWrapText(pepper, decrypted, salt)
+}
+
+func generateSalt() (string, error) {
+	uid, err := pkg.NewUUID()
+	if err == nil && uid != "" {
+		return uid, nil
+	}
+	return pkg.NewUUID4()
+}
+
+func createAccount(account *model.Account) error {
+	salt, err := generateSalt()
+	if err != nil {
+		logs.Logger.Errorf("save account falied.because Because the salt generation failed.err: [%s]", err.Error())
+		return errs.ErrSaveAccountFailed
+	}
+	encrypted, err := EncryptAccount(encrypt.AesKeyPepper, salt, account.AccountKey, account.AccountSecret)
+	if err != nil {
+		logs.Logger.Errorf("save account falied.because Because the account key secrect encryption failed.err: [%s]", err.Error())
+		return errs.ErrSaveAccountFailed
+	}
+
+	account.Salt = salt
+	account.EncryptedAccountSecret = encrypted
+	return model.Save(account)
+}
+
+// GetAccountSecretByAccountKey get sk(decrypt) by ak
+func GetAccountSecretByAccountKey(ctx context.Context, ak string) (string, error) {
+	account, err := model.GetAccountByAk(ctx, ak)
+	if err != nil {
+		return "", err
+	}
+	sk, err := DecryptAccount(encrypt.AesKeyPepper, account.Salt, account.AccountKey, account.EncryptedAccountSecret)
+	if err != nil {
+		return "", err
+	}
+	return sk, nil
 }

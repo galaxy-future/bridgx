@@ -9,7 +9,9 @@ import (
 	"errors"
 )
 
-const AesKeySalt = "bridgx"
+const (
+	AesKeyPepper = "bridgx"
+)
 
 var (
 	ErrEncryptFailed = errors.New("encrypt failed")

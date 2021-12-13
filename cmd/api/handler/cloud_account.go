@@ -118,11 +118,11 @@ func GetAccountInfo(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	resp, err := helper.ConvertToEncryptAccountInfo(account)
-	if err != nil {
-		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
-		return
-	}
-	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
+	response.MkResponse(ctx, http.StatusOK, response.Success, &response.EncryptCloudAccountInfo{
+		AccountName:          account.AccountName,
+		AccountKey:           account.AccountKey,
+		AccountSecretEncrypt: account.EncryptedAccountSecret,
+		Provider:             account.Provider,
+	})
 	return
 }

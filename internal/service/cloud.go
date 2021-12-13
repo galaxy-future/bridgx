@@ -224,8 +224,9 @@ func getAlibabaCloudClient(ak, region string) (cloud.Provider, error) {
 			return cast, nil
 		}
 	}
-	sk := model.GetAccountSecretByAccountKey(ak)
-	if sk == "" {
+	ctx := context.Background()
+	sk, err := GetAccountSecretByAccountKey(ctx, ak)
+	if err != nil || sk == "" {
 		return nil, errors.New("no sk found")
 	}
 	client, err := alibaba.New(ak, sk, region)
