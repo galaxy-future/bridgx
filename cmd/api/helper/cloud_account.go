@@ -7,13 +7,8 @@ import (
 )
 
 // ConvertToCloudAccountList convert to account list display format
-<<<<<<< Updated upstream
 func ConvertToCloudAccountList(accounts []*model.Account) []response.CloudAccount {
-	res := make([]response.CloudAccount, 0)
-=======
-func ConvertToCloudAccountList(accounts []model.Account) []response.CloudAccount {
 	res := make([]response.CloudAccount, 0, len(accounts))
->>>>>>> Stashed changes
 	if len(accounts) == 0 {
 		return res
 	}

@@ -42,7 +42,7 @@ func createInstance(kubeCluster *cluster.KubernetesClient, request *gf_cluster.I
 	defaultImage := "galaxyfuture/centos-sshd:7.1"
 	TerminationGracePeriodSeconds := int64(2)
 
-	pwd, err := encrypt.AESDecrypt(encrypt.AesKeySalt, request.SshPwd)
+	pwd, err := encrypt.AESDecrypt(encrypt.AesKeyPepper, request.SshPwd)
 	if err != nil {
 		return nil, err
 	}

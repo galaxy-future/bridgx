@@ -56,7 +56,7 @@ func HandleCreateInstanceGroup(c *gin.Context) {
 		CreatedUser:   createdUserName,
 		CreatedUserId: createdUserId,
 	}
-	pwd, err := encrypt.AESEncrypt(encrypt.AesKeySalt, group.SshPwd)
+	pwd, err := encrypt.AESEncrypt(encrypt.AesKeyPepper, group.SshPwd)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
 		return
@@ -124,7 +124,7 @@ func HandleBatchCreateInstanceGroup(c *gin.Context) {
 			CreatedUser:   createdUserName,
 			CreatedUserId: createdUserId,
 		}
-		pwd, err := encrypt.AESEncrypt(encrypt.AesKeySalt, group.SshPwd)
+		pwd, err := encrypt.AESEncrypt(encrypt.AesKeyPepper, group.SshPwd)
 		if err != nil {
 			logs.Logger.Errorw("SSH密码加密失败", zap.String("groupName", instanceGroup.Name), zap.Error(err))
 			failInstanceGroups[instanceGroup.Name] = err.Error()
