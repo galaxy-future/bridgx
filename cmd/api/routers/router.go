@@ -3,10 +3,10 @@ package routers
 import (
 	"net/http"
 
-	operation "github.com/galaxy-future/BridgX/cmd/api/middleware/operation_log"
 	"github.com/galaxy-future/BridgX/cmd/api/handler"
 	gf_cluster "github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster"
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/authorization"
+	operation "github.com/galaxy-future/BridgX/cmd/api/middleware/operation_log"
 	"github.com/galaxy-future/BridgX/config"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
