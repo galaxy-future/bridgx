@@ -123,6 +123,7 @@ func GetAccountInfo(ctx *gin.Context) {
 		AccountKey:           account.AccountKey,
 		AccountSecretEncrypt: account.EncryptedAccountSecret,
 		Provider:             account.Provider,
+		Salt:                 account.Salt,
 	})
 	return
 }

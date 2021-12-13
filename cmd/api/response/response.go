@@ -180,6 +180,7 @@ type EncryptCloudAccountInfo struct {
 	AccountKey           string `json:"account_key"`
 	AccountSecretEncrypt string `json:"account_secret_encrypt"`
 	Provider             string `json:"provider"`
+	Salt                 string `json:"salt"`
 }
 
 type TaskInstancesResponse struct {
