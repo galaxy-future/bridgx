@@ -86,9 +86,9 @@ func getClusterPodInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.PodSummar
 
 		status := pod.Status.Phase
 
-		startTime := ""
+		runningTime := ""
 		if pod.Status.StartTime != nil {
-			startTime = formatHumanReadableDuration(time.Now().Sub(pod.Status.StartTime.Time))
+			runningTime = formatHumanReadableDuration(time.Now().Sub(pod.Status.StartTime.Time))
 		}
 
 		podInfos = append(podInfos, &gf_cluster.PodSummary{
@@ -100,9 +100,10 @@ func getClusterPodInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.PodSummar
 			AllocatedMemoryGi: memoryUsed,
 			AllocatedDiskGi:   storageUSed,
 			GroupName:         groupName,
-			RunningTime:       startTime,
+			RunningTime:       runningTime,
 			Status:            string(status),
 			GroupId:           groupId,
+			StartTime:         pod.Status.StartTime.Time.Unix(),
 		})
 	}
 

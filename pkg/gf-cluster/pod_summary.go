@@ -18,8 +18,9 @@ type PodSummary struct {
 	//RunningTime 运行时间
 	RunningTime string `json:"running_time"`
 	//Status 状态
-	Status  string `json:"status"`
-	GroupId int64  `json:"group_id"`
+	Status    string `json:"status"`
+	GroupId   int64  `json:"group_id"`
+	StartTime int64  `json:"start_time"`
 }
 type ClusterPodsSummaryArray []*PodSummary
 
@@ -27,7 +28,7 @@ func (array ClusterPodsSummaryArray) Len() int {
 	return len(array)
 }
 func (array ClusterPodsSummaryArray) Less(i, j int) bool {
-	return array[i].GroupName < array[j].GroupName && array[i].PodName < array[i].PodName
+	return array[i].StartTime > array[j].StartTime
 }
 func (array ClusterPodsSummaryArray) Swap(i, j int) {
 	array[i], array[j] = array[j], array[i]

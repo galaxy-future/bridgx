@@ -118,6 +118,7 @@ func HandleListInstance(c *gin.Context) {
 func HandleListMyInstance(c *gin.Context) {
 	nodeIp := c.Query("node_ip")
 	podIp := c.Query("pod_ip")
+	instanceGroupName := c.Query("instance_group_name")
 	claims := helper.GetUserClaims(c)
 	if claims == nil {
 		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("校验身份出错"))
@@ -150,6 +151,9 @@ func HandleListMyInstance(c *gin.Context) {
 				continue
 			}
 			if arrays.ContainsString(groupNames, pod.GroupName) == -1 {
+				continue
+			}
+			if instanceGroupName != "" && strings.Index(pod.GroupName, instanceGroupName) != 0 {
 				continue
 			}
 			result = append(result, pod)
