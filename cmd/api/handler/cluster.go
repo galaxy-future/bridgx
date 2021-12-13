@@ -21,11 +21,15 @@ import (
 )
 
 const (
-	Chinese                       = "zh-cn"
-	EnUs                          = "en-us"
-	LocalLanguage                 = Chinese
-	ModifyAdminPwdOperation       = "修改密码"
-	ModifyAdminPwdOperationDetail = "修改了管理员密码：%s -> %s"
+	Chinese                                = "zh-cn"
+	EnUs                                   = "en-us"
+	LocalLanguage                          = Chinese
+	CreateClusterOperation                 = "新建集群"
+	CreateClusterOperationDetail           = "新建集群"
+	EditClusterOperation                   = "编辑集群"
+	EditClusterEditDataDiskOperationDetail = "修改数据盘："
+	EditClusterAddDataDiskOperationDetail  = "添加数据盘："
+	EditClusterEditDescOperationDetail     = "修改集群描述："
 )
 
 func GetClusterById(ctx *gin.Context) {
@@ -254,6 +258,37 @@ func CreateCluster(ctx *gin.Context) {
 	return
 }
 
+type CreateClusterLogReader struct{}
+
+func (m CreateClusterLogReader) GetOperation(handler string) string {
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return EditClusterOperation
+	case EnUs:
+		return handler
+	default:
+		return EditClusterOperation
+	}
+}
+
+func (m CreateClusterLogReader) GetOperationDetail(info, resp string) string {
+	var req request.ModifyAdminPasswordRequest
+	_ = jsoniter.UnmarshalFromString(info, &req)
+	var res response.ResWithRemark
+	_ = jsoniter.UnmarshalFromString(info, &res)
+
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return CreateClusterOperationDetail
+	case EnUs:
+		return info
+	default:
+		return CreateClusterOperationDetail
+	}
+}
+
 func EditCluster(ctx *gin.Context) {
 	user := helper.GetUserClaims(ctx)
 	if user == nil {
@@ -309,6 +344,32 @@ func convertToClusterModel(clusterInput *types.ClusterInfo) (*model.Cluster, err
 		ChargeConfig:  cc,
 	}
 	return &m, nil
+}
+
+type EditClusterLogReader struct{}
+
+func (m EditClusterLogReader) GetOperation(handler string) string {
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return CreateClusterOperation
+	case EnUs:
+		return handler
+	default:
+		return CreateClusterOperation
+	}
+}
+
+func (m EditClusterLogReader) GetOperationDetail(info, resp string) string {
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return CreateClusterOperationDetail
+	case EnUs:
+		return info
+	default:
+		return CreateClusterOperationDetail
+	}
 }
 
 func AddClusterTags(ctx *gin.Context) {

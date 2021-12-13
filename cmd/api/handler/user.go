@@ -17,6 +17,11 @@ import (
 	"github.com/spf13/cast"
 )
 
+const (
+	ModifyAdminPwdOperation       = "修改密码"
+	ModifyAdminPwdOperationDetail = "修改了管理员密码：%s -> %s"
+)
+
 func Login(ctx *gin.Context) {
 	loginReq := request.LoginRequest{}
 	if err := ctx.ShouldBind(&loginReq); err != nil {
@@ -198,7 +203,7 @@ func (m ModifyAdminPasswordLogReader) GetOperation(handler string) string {
 		return ModifyAdminPwdOperation
 	}
 }
-func (m ModifyAdminPasswordLogReader) GetOperationDetail(info, response string) string {
+func (m ModifyAdminPasswordLogReader) GetOperationDetail(info, resp string) string {
 	var req request.ModifyAdminPasswordRequest
 	_ = jsoniter.UnmarshalFromString(info, &req)
 

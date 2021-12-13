@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/galaxy-future/BridgX/cmd/api/response"
+
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/model"
@@ -21,19 +23,6 @@ type bodyLogWriter struct {
 	body *bytes.Buffer
 }
 
-type ResWithRemark struct {
-	Res
-	Remark `json:"remark"`
-}
-
-type Res struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
-}
-
-type Remark []interface{}
-
 func (w bodyLogWriter) Write(b []byte) (int, error) {
 	w.body.Write(b)
 	bWithoutRemark := removeRemarkFromResponse(b)
@@ -41,7 +30,7 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 }
 
 func removeRemarkFromResponse(b []byte) []byte {
-	res := Res{}
+	res := response.Response{}
 	_ = jsoniter.Unmarshal(b, &res)
 	resB, _ := jsoniter.Marshal(&res)
 	return resB

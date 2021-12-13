@@ -10,7 +10,7 @@ import (
 
 type logReader interface {
 	GetOperation(handler string) string
-	GetOperationDetail(info, response string) string
+	GetOperationDetail(info, resp string) string
 }
 
 var (
@@ -42,6 +42,6 @@ func (d defaultLogReader) GetOperation(handler string) string {
 	return handler
 }
 
-func (d defaultLogReader) GetOperationDetail(info, response string) string {
+func (d defaultLogReader) GetOperationDetail(info, resp string) string {
 	return info
 }
