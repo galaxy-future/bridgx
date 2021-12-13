@@ -3,7 +3,6 @@ package cluster
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/galaxy-future/BridgX/internal/service"
 	"io/ioutil"
 	"net/http"
 	"runtime/debug"
@@ -19,6 +18,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/instance"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/galaxy-future/BridgX/pkg/encrypt"
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
 	"github.com/gin-gonic/gin"
