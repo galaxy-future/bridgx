@@ -3,6 +3,7 @@ package routers
 import (
 	"net/http"
 
+	operation "github.com/galaxy-future/BridgX/cmd/api/middleware/operation_log"
 	"github.com/galaxy-future/BridgX/cmd/api/handler"
 	gf_cluster "github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster"
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/authorization"
@@ -62,9 +63,8 @@ func Init() *gin.Engine {
 			clusterPath.POST("add_tags", handler.AddClusterTags)
 			clusterPath.POST("edit_tags", handler.EditClusterTags)
 			clusterPath.DELETE("delete_tags", handler.DeleteClusterTags)
-
-			clusterPath.POST("expand", handler.ExpandCluster)
-			clusterPath.POST("shrink", handler.ShrinkCluster)
+			clusterPath.Use(operation.Log()).POST("expand", handler.ExpandCluster)
+			clusterPath.Use(operation.Log()).POST("shrink", handler.ShrinkCluster)
 			clusterPath.POST("shrink_all", handler.ShrinkAllInstances)
 		}
 		vpcPath := v1Api.Group("vpc/")
@@ -122,7 +122,7 @@ func Init() *gin.Engine {
 		{
 			userPath.GET("info", handler.GetUserInfo)
 			userPath.POST("create_ram_user", handler.CreateUser)
-			userPath.POST("modify_password", handler.ModifyAdminPassword)
+			userPath.Use(operation.Log()).POST("modify_password", handler.ModifyAdminPassword)
 			userPath.POST("modify_username", handler.ModifyUsername)
 			userPath.POST("enable_ram_user", handler.EnableUser)
 			userPath.GET("list", handler.ListUsers)
@@ -137,6 +137,10 @@ func Init() *gin.Engine {
 		imagePath := v1Api.Group("image/")
 		{
 			imagePath.GET("list", handler.GetImageList)
+		}
+		logPath := v1Api.Group("log/")
+		{
+			logPath.GET("extract", handler.ExtractLog)
 		}
 
 		gfCluster := v1Api.Group("galaxy_cloud")

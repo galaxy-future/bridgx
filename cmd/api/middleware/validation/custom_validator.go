@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/galaxy-future/BridgX/pkg/utils"
+
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 )
@@ -57,8 +59,7 @@ func RegisterCustomValidators() {
 }
 
 func getStructFieldName(fe validator.FieldError) string {
-	f := strings.Split(fe.StructNamespace(), ".")
-	return f[len(f)-1]
+	return utils.GetStringSuffix(fe.StructNamespace())
 }
 
 // wrapErrWithStructFieldName will wrap msg with "[`StructFieldName`] "

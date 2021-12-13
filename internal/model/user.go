@@ -46,3 +46,15 @@ func GetUserById(ctx context.Context, uid int64) (*User, error) {
 	}
 	return &user, nil
 }
+
+func GetUsersByIDs(ctx context.Context, ids []int64) []User {
+	users := make([]User, 0)
+	err := clients.ReadDBCli.WithContext(ctx).
+		Where("id in (?)", ids).Find(&users).
+		Error
+	if err != nil {
+		logErr("get user from readDB", err)
+		return nil
+	}
+	return users
+}

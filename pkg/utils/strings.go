@@ -3,9 +3,12 @@ package utils
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	jsoniter "github.com/json-iterator/go"
 )
+
+const defaultSep = "."
 
 func Interface2String(value interface{}) string {
 	key := ""
@@ -92,4 +95,19 @@ func StringSliceSplit(slice []string, singleLen int64) [][]string {
 		sliceList = append(sliceList, newSlice)
 	}
 	return sliceList
+}
+
+func GetStringSuffix(s string, sep ...string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	seperator := defaultSep
+	if len(sep) > 0 {
+		seperator = sep[0]
+	}
+	sl := strings.Split(s, seperator)
+	if len(sl) == 0 {
+		return ""
+	}
+	return sl[len(sl)-1]
 }

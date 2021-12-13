@@ -183,7 +183,7 @@ func Test_validateOneOfMembers(t *testing.T) {
 			args: args{
 				Provider: "TencentCloud",
 			},
-			want: fmt.Sprintf("[Password] %s", errMsg),
+			want: fmt.Sprintf("[Provider] %s", errMsg),
 		},
 	}
 	type ValidateCase struct {

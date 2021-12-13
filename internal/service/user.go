@@ -95,3 +95,12 @@ func ModifyUsername(ctx context.Context, uid int64, newUsername string) error {
 	user.UpdateAt = &now
 	return model.Save(user)
 }
+
+func UserMapByIDs(ctx context.Context, ids []int64) map[int64]string {
+	userMap := make(map[int64]string)
+	users := model.GetUsersByIDs(ctx, ids)
+	for _, user := range users {
+		userMap[user.Id] = user.Username
+	}
+	return userMap
+}

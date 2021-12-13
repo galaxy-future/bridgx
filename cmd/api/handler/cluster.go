@@ -2,10 +2,12 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
+	operation "github.com/galaxy-future/BridgX/cmd/api/middleware/operation_log"
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/validation"
 	"github.com/galaxy-future/BridgX/cmd/api/request"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
@@ -17,6 +19,17 @@ import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
+)
+
+const (
+	ExpandClusterOperation        = "扩容"
+	ShrinkClusterOperation        = "缩容"
+	ClusterOperationDetail        = "任务名称：%s 执行集群：%s 变动机器台数：%d"
+	Chinese                       = "zh-cn"
+	EnUs                          = "en-us"
+	LocalLanguage                 = Chinese
+	ModifyAdminPwdOperation       = "修改密码"
+	ModifyAdminPwdOperationDetail = "修改了管理员密码：%s -> %s"
 )
 
 func GetClusterById(ctx *gin.Context) {
@@ -436,6 +449,9 @@ func ExpandCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
 		return
 	}
+
+	operation.LogReq(ctx, req)
+
 	taskId, err := service.CreateExpandTask(ctx, req.ClusterName, req.Count, req.TaskName, user.UserId)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
@@ -443,6 +459,35 @@ func ExpandCluster(ctx *gin.Context) {
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, taskId)
 	return
+}
+
+type ExpandClusterLogReader struct{}
+
+func (c ExpandClusterLogReader) GetOperation(handler string) string {
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return ExpandClusterOperation
+	case EnUs:
+		return handler
+	default:
+		return ExpandClusterOperation
+	}
+}
+
+func (c ExpandClusterLogReader) GetOperationDetail(info string) string {
+	var req request.ExpandClusterRequest
+	_ = jsoniter.UnmarshalFromString(info, &req)
+
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return fmt.Sprintf(ClusterOperationDetail, req.TaskName, req.ClusterName, req.Count)
+	case EnUs:
+		return info
+	default:
+		return fmt.Sprintf(ClusterOperationDetail, req.TaskName, req.ClusterName, req.Count)
+	}
 }
 
 func ShrinkCluster(ctx *gin.Context) {
@@ -457,6 +502,9 @@ func ShrinkCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
 		return
 	}
+
+	operation.LogReq(ctx, req)
+
 	taskId, err := service.CreateShrinkTask(ctx, req.ClusterName, req.Count, strings.Join(req.IPs, ","), req.TaskName, user.UserId)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
@@ -464,6 +512,35 @@ func ShrinkCluster(ctx *gin.Context) {
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, taskId)
 	return
+}
+
+type ShrinkClusterLogReader struct{}
+
+func (c ShrinkClusterLogReader) GetOperation(handler string) string {
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return ShrinkClusterOperation
+	case EnUs:
+		return handler
+	default:
+		return ShrinkClusterOperation
+	}
+}
+
+func (c ShrinkClusterLogReader) GetOperationDetail(info string) string {
+	var req request.ExpandClusterRequest
+	_ = jsoniter.UnmarshalFromString(info, &req)
+
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return fmt.Sprintf(ClusterOperationDetail, req.TaskName, req.ClusterName, req.Count)
+	case EnUs:
+		return info
+	default:
+		return fmt.Sprintf(ClusterOperationDetail, req.TaskName, req.ClusterName, req.Count)
+	}
 }
 
 func ShrinkAllInstances(ctx *gin.Context) {

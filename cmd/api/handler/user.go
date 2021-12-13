@@ -1,18 +1,20 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/spf13/cast"
-
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/authorization"
+	operation "github.com/galaxy-future/BridgX/cmd/api/middleware/operation_log"
 	"github.com/galaxy-future/BridgX/cmd/api/request"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/config"
 	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
+	"github.com/spf13/cast"
 )
 
 func Login(ctx *gin.Context) {
@@ -172,6 +174,8 @@ func ModifyAdminPassword(ctx *gin.Context) {
 		return
 	}
 
+	operation.LogReq(ctx, req)
+
 	err := service.ModifyAdminPassword(ctx, user.UserId, user.Name, req.OldPassword, req.NewPassword)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
@@ -179,6 +183,34 @@ func ModifyAdminPassword(ctx *gin.Context) {
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, nil)
 	return
+}
+
+type ModifyAdminPasswordLogReader struct{}
+
+func (m ModifyAdminPasswordLogReader) GetOperation(handler string) string {
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return ModifyAdminPwdOperation
+	case EnUs:
+		return handler
+	default:
+		return ModifyAdminPwdOperation
+	}
+}
+func (m ModifyAdminPasswordLogReader) GetOperationDetail(info string) string {
+	var req request.ModifyAdminPasswordRequest
+	_ = jsoniter.UnmarshalFromString(info, &req)
+
+	// TODO:local language
+	switch LocalLanguage {
+	case Chinese:
+		return fmt.Sprintf(ModifyAdminPwdOperationDetail, req.OldPassword, req.NewPassword)
+	case EnUs:
+		return info
+	default:
+		return fmt.Sprintf(ModifyAdminPwdOperationDetail, req.OldPassword, req.NewPassword)
+	}
 }
 
 func ModifyUsername(ctx *gin.Context) {
