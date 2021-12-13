@@ -80,7 +80,7 @@ func modelLog2Res(logs []model.OperationLog, total, page, size int) ExtractLogsR
 			Operator:        log.Operator,
 			UserName:        log.UserName,
 			Operation:       reader.GetOperation(log.Handler),
-			OperationDetail: reader.GetOperationDetail(log.Info),
+			OperationDetail: reader.GetOperationDetail(log.Info, log.Response),
 			ExecTime:        utils.FormatTime(*log.CreateAt),
 		})
 	}

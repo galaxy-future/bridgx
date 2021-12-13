@@ -2,11 +2,12 @@ package response
 
 import "github.com/gin-gonic/gin"
 
-func MkResponse(ctx *gin.Context, code int, msg string, data interface{}) {
+func MkResponse(ctx *gin.Context, code int, msg string, data interface{}, remark ...interface{}) {
 	ctx.JSON(code, gin.H{
-		"code": code,
-		"msg":  msg,
-		"data": data,
+		"code":   code,
+		"msg":    msg,
+		"data":   data,
+		"remark": remark,
 	})
 }
 

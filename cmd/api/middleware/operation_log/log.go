@@ -21,9 +21,25 @@ type bodyLogWriter struct {
 	body *bytes.Buffer
 }
 
+type ResWithRemark struct {
+	Res
+	Remark `json:"remark"`
+}
+
+type Res struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+type Remark []interface{}
+
 func (w bodyLogWriter) Write(b []byte) (int, error) {
 	w.body.Write(b)
-	return w.ResponseWriter.Write(b)
+	res := Res{}
+	_ = jsoniter.Unmarshal(b, &res)
+	resB, _ := jsoniter.Marshal(&res)
+	return w.ResponseWriter.Write(resB)
 }
 
 func Log() gin.HandlerFunc {

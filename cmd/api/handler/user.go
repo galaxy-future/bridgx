@@ -198,7 +198,7 @@ func (m ModifyAdminPasswordLogReader) GetOperation(handler string) string {
 		return ModifyAdminPwdOperation
 	}
 }
-func (m ModifyAdminPasswordLogReader) GetOperationDetail(info string) string {
+func (m ModifyAdminPasswordLogReader) GetOperationDetail(info, response string) string {
 	var req request.ModifyAdminPasswordRequest
 	_ = jsoniter.UnmarshalFromString(info, &req)
 

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -22,9 +21,6 @@ import (
 )
 
 const (
-	ExpandClusterOperation        = "扩容"
-	ShrinkClusterOperation        = "缩容"
-	ClusterOperationDetail        = "任务名称：%s 执行集群：%s 变动机器台数：%d"
 	Chinese                       = "zh-cn"
 	EnUs                          = "en-us"
 	LocalLanguage                 = Chinese
@@ -461,35 +457,6 @@ func ExpandCluster(ctx *gin.Context) {
 	return
 }
 
-type ExpandClusterLogReader struct{}
-
-func (c ExpandClusterLogReader) GetOperation(handler string) string {
-	// TODO:local language
-	switch LocalLanguage {
-	case Chinese:
-		return ExpandClusterOperation
-	case EnUs:
-		return handler
-	default:
-		return ExpandClusterOperation
-	}
-}
-
-func (c ExpandClusterLogReader) GetOperationDetail(info string) string {
-	var req request.ExpandClusterRequest
-	_ = jsoniter.UnmarshalFromString(info, &req)
-
-	// TODO:local language
-	switch LocalLanguage {
-	case Chinese:
-		return fmt.Sprintf(ClusterOperationDetail, req.TaskName, req.ClusterName, req.Count)
-	case EnUs:
-		return info
-	default:
-		return fmt.Sprintf(ClusterOperationDetail, req.TaskName, req.ClusterName, req.Count)
-	}
-}
-
 func ShrinkCluster(ctx *gin.Context) {
 	user := helper.GetUserClaims(ctx)
 	if user == nil {
@@ -512,35 +479,6 @@ func ShrinkCluster(ctx *gin.Context) {
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, taskId)
 	return
-}
-
-type ShrinkClusterLogReader struct{}
-
-func (c ShrinkClusterLogReader) GetOperation(handler string) string {
-	// TODO:local language
-	switch LocalLanguage {
-	case Chinese:
-		return ShrinkClusterOperation
-	case EnUs:
-		return handler
-	default:
-		return ShrinkClusterOperation
-	}
-}
-
-func (c ShrinkClusterLogReader) GetOperationDetail(info string) string {
-	var req request.ExpandClusterRequest
-	_ = jsoniter.UnmarshalFromString(info, &req)
-
-	// TODO:local language
-	switch LocalLanguage {
-	case Chinese:
-		return fmt.Sprintf(ClusterOperationDetail, req.TaskName, req.ClusterName, req.Count)
-	case EnUs:
-		return info
-	default:
-		return fmt.Sprintf(ClusterOperationDetail, req.TaskName, req.ClusterName, req.Count)
-	}
 }
 
 func ShrinkAllInstances(ctx *gin.Context) {
