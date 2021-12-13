@@ -28,7 +28,7 @@ func (array ClusterPodsSummaryArray) Len() int {
 	return len(array)
 }
 func (array ClusterPodsSummaryArray) Less(i, j int) bool {
-	return array[i].StartTime > array[j].StartTime
+	return array[j].StartTime < array[i].StartTime
 }
 func (array ClusterPodsSummaryArray) Swap(i, j int) {
 	array[i], array[j] = array[j], array[i]

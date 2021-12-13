@@ -162,14 +162,16 @@ func HandleListMyInstance(c *gin.Context) {
 	}))
 }
 
+//getKubernetesMap 获取kubernetes集群&实例组map
 func getKubernetesMap(groups []*gf_cluster.InstanceGroup) map[int64][]string {
-	kubernetesMap := make(map[int64][]string)
+	kubernetesMap := make(map[int64][]string, len(groups))
 	for _, group := range groups {
 		kubernetesMap[group.KubernetesId] = append(kubernetesMap[group.KubernetesId], group.Name)
 	}
 	return kubernetesMap
 }
 
+//filterPods 过滤pod列表
 func filterPods(pods gf_cluster.ClusterPodsSummaryArray, nodeIp string, podIp string, groupNames []string, instanceGroupName string, result gf_cluster.ClusterPodsSummaryArray) gf_cluster.ClusterPodsSummaryArray {
 	for _, pod := range pods {
 		if nodeIp != "" && strings.Index(pod.NodeIp, nodeIp) != 0 {
