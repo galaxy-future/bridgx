@@ -6,11 +6,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/galaxy-future/BridgX/pkg/utils"
-
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/pkg/utils"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -51,7 +50,7 @@ func Log() gin.HandlerFunc {
 			Handler:  getHandlerFunc(ctx),
 			Params:   getParams(ctx),
 			Info:     getReq(ctx),
-			UserId:   user.UserId,
+			Operator: user.UserId,
 			Response: response,
 		})
 	}

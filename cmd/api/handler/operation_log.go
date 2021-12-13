@@ -14,7 +14,7 @@ import (
 )
 
 type ExtractLogRequest struct {
-	UserIDs    []int64  `json:"user_ids" form:"user_ids"`
+	Operators  []int64  `json:"operators" form:"operators"`
 	Handlers   []string `json:"handlers" form:"handlers"`
 	TimeStart  string   `json:"time_start" form:"time_start"`
 	TimeEnd    string   `json:"time_end" form:"time_end"`
@@ -27,7 +27,7 @@ type ExtractLogsResponse struct {
 }
 type Log struct {
 	ID              int64  `json:"id"`
-	UserID          int64  `json:"user_id"`
+	Operator        int64  `json:"operator"`
 	UserName        string `json:"user_name"`
 	Operation       string `json:"operation"`
 	OperationDetail string `json:"operation_detail"`
@@ -49,7 +49,7 @@ func ExtractLog(ctx *gin.Context) {
 	}
 
 	logs, total, err := service.ExtractLogs(ctx, model.ExtractCondition{
-		UserIDs:    req.UserIDs,
+		Operators:  req.Operators,
 		Handlers:   req.Handlers,
 		TimeStart:  utils.ParseTime(req.TimeStart),
 		TimeEnd:    utils.ParseTime(req.TimeEnd),
@@ -77,7 +77,7 @@ func modelLog2Res(logs []model.OperationLog, total, page, size int) ExtractLogsR
 		reader := helper.GetLogReader(log.Handler)
 		res.Logs = append(res.Logs, Log{
 			ID:              log.Id,
-			UserID:          log.UserId,
+			Operator:        log.Operator,
 			UserName:        log.UserName,
 			Operation:       reader.GetOperation(log.Handler),
 			OperationDetail: reader.GetOperationDetail(log.Info),

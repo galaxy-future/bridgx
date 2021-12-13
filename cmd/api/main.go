@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/handler"
-
 	"github.com/galaxy-future/BridgX/cmd/api/middleware"
 	"github.com/galaxy-future/BridgX/cmd/api/routers"
 	"github.com/galaxy-future/BridgX/config"

@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/galaxy-future/BridgX/pkg/utils"
-
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 )

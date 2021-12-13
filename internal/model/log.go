@@ -9,11 +9,11 @@ import (
 
 type OperationLog struct {
 	Base
-	Handler  string
-	Params   string
-	Info     string
-	UserId   int64
-	Response string
+	Handler  string `gorm:"column:handler"`
+	Params   string `gorm:"column:params"`
+	Info     string `gorm:"column:info"`
+	Operator int64  `gorm:"column:operator"`
+	Response string `gorm:"column:response"`
 	UserName string `gorm:"-"`
 }
 
@@ -22,7 +22,7 @@ func (OperationLog) TableName() string {
 }
 
 type ExtractCondition struct {
-	UserIDs    []int64
+	Operators  []int64
 	Handlers   []string
 	TimeStart  time.Time
 	TimeEnd    time.Time
@@ -32,8 +32,8 @@ type ExtractCondition struct {
 
 func ExtractLogs(ctx context.Context, conds ExtractCondition) (logs []OperationLog, count int64, err error) {
 	query := clients.ReadDBCli.WithContext(ctx).Select(OperationLog{}.TableName())
-	if len(conds.UserIDs) > 0 {
-		query = query.Where("user_id IN (?)", conds.UserIDs)
+	if len(conds.Operators) > 0 {
+		query = query.Where("operator IN (?)", conds.Operators)
 	}
 	if len(conds.Handlers) > 0 {
 		query = query.Where("handler IN (?)", conds.Handlers)

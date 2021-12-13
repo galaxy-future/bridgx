@@ -13,13 +13,13 @@ func ExtractLogs(ctx context.Context, conds model.ExtractCondition) ([]model.Ope
 	if err != nil {
 		return nil, 0, err
 	}
-	userIds := make([]int64, 0, len(logs))
+	operators := make([]int64, 0, len(logs))
 	for _, l := range logs {
-		userIds = append(userIds, l.UserId)
+		operators = append(operators, l.Operator)
 	}
-	userMap := UserMapByIDs(ctx, userIds)
+	userMap := UserMapByIDs(ctx, operators)
 	for i, l := range logs {
-		logs[i].UserName = userMap[l.UserId]
+		logs[i].UserName = userMap[l.Operator]
 	}
 
 	return logs, count, nil
