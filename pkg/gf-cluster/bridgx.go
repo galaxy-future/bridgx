@@ -109,6 +109,7 @@ type AKSKData struct {
 	AccountKey           string `json:"account_key"`
 	AccountSecretEncrypt string `json:"account_secret_encrypt"`
 	Provider             string `json:"provider"`
+	Salt                 string `json:"salt"`
 }
 
 //GetAKSKResponse 获得AKSKresponse
