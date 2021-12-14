@@ -41,6 +41,14 @@ func initBigCache() *bigcache.BigCache {
 	return BigLocalCache
 }
 
+//GetFromBigCache
+//inputs:
+//	ids should be unique ids
+//	out should be a pointer to a slice contains your custom type pointer, which will receive the outputs
+//	keyMaker should be a func will format the key of ids
+//outputs:
+//	[]int64 is the missing ids, need fetch from your distributed cache or database
+//	error return error(if it has)
 func GetFromBigCache(ids []int64, out interface{}, keyMaker func(int64) string) ([]int64, error) {
 	if len(ids) == 0 {
 		return ids, nil

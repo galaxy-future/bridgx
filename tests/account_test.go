@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 
 	"github.com/galaxy-future/BridgX/internal/service"
@@ -23,9 +22,4 @@ func TestGetAccount(t *testing.T) {
 	account, err = service.GetAccount("AlibabaCloud", "xxxx")
 	assert.NotNil(t, err)
 	assert.Nil(t, account)
-}
-
-func TestGetAccountSecretByAccountKey(t *testing.T) {
-	res, _ := service.GetAccountSecretByAccountKey(context.Background(), "LTAI5tLHkdCJJDbJA7dqByvi")
-	t.Logf("sk:%v", res)
 }
