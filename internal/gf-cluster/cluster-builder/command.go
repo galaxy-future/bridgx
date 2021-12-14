@@ -65,7 +65,7 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 			go func(masterMachine gf_cluster.ClusterBuildMachine) {
 				defer wg.Done()
 				resetMachine(masterMachine)
-				_, err = Run(masterMachine, masterCmd)
+				_, err = sshRun(masterMachine, masterCmd)
 				recordStep(params.KubernetesId, masterMachine.IP, gf_cluster.KubernetesStepInstallMaster+masterMachine.Hostname, err)
 				if err != nil {
 					failed(params.KubernetesId, "add master err:"+err.Error())
@@ -85,7 +85,7 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 		go func(nodeMachine gf_cluster.ClusterBuildMachine) {
 			defer wg.Done()
 			resetMachine(nodeMachine)
-			_, err = Run(nodeMachine, nodeCmd)
+			_, err = sshRun(nodeMachine, nodeCmd)
 			recordStep(params.KubernetesId, nodeMachine.IP, gf_cluster.KubernetesStepInstallNode+nodeMachine.Hostname, err)
 			if err != nil {
 				failed(params.KubernetesId, "add node err:"+err.Error())
@@ -102,7 +102,23 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 	updateStatus(params.KubernetesId, gf_cluster.KubernetesStatusRunning)
 }
 
-func Run(machine gf_cluster.ClusterBuildMachine, cmd string) (string, error) {
+func AddMachine(master gf_cluster.ClusterBuildMachine, machine gf_cluster.ClusterBuildMachine) error {
+	cmd, err := getJoinCommand(master)
+	if err != nil {
+		return err
+	}
+
+	resetMachine(machine)
+
+	_, err = sshRun(machine, cmd)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func sshRun(machine gf_cluster.ClusterBuildMachine, cmd string) (string, error) {
 	fmt.Println(cmd)
 	client, err := ssh.Dial("tcp", machine.IP+":22", &ssh.ClientConfig{
 		User:            machine.Username,
