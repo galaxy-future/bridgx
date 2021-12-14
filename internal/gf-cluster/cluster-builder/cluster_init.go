@@ -50,13 +50,13 @@ func initFlannel(machine gf_cluster.ClusterBuildMachine, data FlannelData) error
 		return err
 	}
 
-	_, err = Run(machine, "tee flannel.yaml <<"+buf.String())
+	_, err = sshRun(machine, "tee flannel.yaml <<"+buf.String())
 	if err != nil {
 		return err
 	}
 
 	command := `kubectl apply -f flannel.yaml`
-	_, err = Run(machine, command)
+	_, err = sshRun(machine, command)
 	return err
 }
 
@@ -74,7 +74,7 @@ func initCluster(machine gf_cluster.ClusterBuildMachine, podCidr, svcCidr string
 		return "", err
 	}
 
-	result, err := Run(machine, initCommand)
+	result, err := sshRun(machine, initCommand)
 	if err != nil {
 		return "", err
 	}
@@ -83,7 +83,7 @@ func initCluster(machine gf_cluster.ClusterBuildMachine, podCidr, svcCidr string
 }
 
 func initKubeConfig(machine gf_cluster.ClusterBuildMachine) (string, error) {
-	result, err := Run(machine, "mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && cat $HOME/.kube/config")
+	result, err := sshRun(machine, "mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && cat $HOME/.kube/config")
 	if err != nil {
 		return "", err
 	}
@@ -107,26 +107,26 @@ func labelCluster(master gf_cluster.ClusterBuildMachine, list []gf_cluster.Clust
 	for _, machine := range list {
 		for label, values := range machine.Labels {
 			cmd := fmt.Sprintf("kubectl label nodes %s %s=%s", convertHostName(machine.Hostname), label, values)
-			_, _ = Run(master, cmd)
+			_, _ = sshRun(master, cmd)
 		}
 	}
 }
 
 func resetMachine(machine gf_cluster.ClusterBuildMachine) {
 	initMachine(machine)
-	_, _ = Run(machine, "echo y | kubeadm reset")
-	_, _ = Run(machine, "rm -rf .kube & rm flannel.yaml")
+	_, _ = sshRun(machine, "echo y | kubeadm reset")
+	_, _ = sshRun(machine, "rm -rf .kube & rm flannel.yaml")
 	resetFlannel(machine)
 }
 
 func taintMaster(master gf_cluster.ClusterBuildMachine, node string) {
 	cmd := fmt.Sprintf("kubectl taint nodes %s node-role.kubernetes.io/master:NoSchedule-",
 		convertHostName(node))
-	_, _ = Run(master, cmd)
+	_, _ = sshRun(master, cmd)
 }
 
 func initMachine(machine gf_cluster.ClusterBuildMachine) {
-	result, err := Run(machine, "ls -lah")
+	result, err := sshRun(machine, "ls -lah")
 	if err != nil {
 		return
 	}
@@ -135,11 +135,24 @@ func initMachine(machine gf_cluster.ClusterBuildMachine) {
 		return
 	}
 
-	_, _ = Run(machine, "tee init.sh <<"+initConfig)
-	_, _ = Run(machine, "sh init.sh")
+	_, _ = sshRun(machine, "tee init.sh <<"+initConfig)
+	_, _ = sshRun(machine, "sh init.sh")
 }
 
 func resetFlannel(machine gf_cluster.ClusterBuildMachine) {
 	cmd := "ifconfig cni0 down && ip link delete cni0 && ifconfig flannel.1 down && ip link delete flannel.1 && rm -rf /var/lib/cni/ && rm -f /etc/cni/net.d/* && systemctl stop kubelet"
-	_, _ = Run(machine, cmd)
+	_, _ = sshRun(machine, cmd)
+}
+
+func getJoinCommand(master gf_cluster.ClusterBuildMachine) (string, error) {
+	result, err := sshRun(master, "kubeadm token create --print-join-command")
+	if err != nil {
+		return "", err
+	}
+
+	if strings.Contains(result, "kubeadm join") {
+		return result, nil
+	} else {
+		return "", errors.New("打印加入命令返回错误:" + result)
+	}
 }
