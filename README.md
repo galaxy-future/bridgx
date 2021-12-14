@@ -18,12 +18,8 @@ BridgX是业界领先的基于全链路Serverless技术的云原生基础架构�
 联系我们
 ----
 [微博](https://weibo.com/galaxyfuture) | [知乎](https://www.zhihu.com/org/xing-yi-wei-lai) | [B站](https://space.bilibili.com/2057006251)
-
-微信公众号：GalaxyFutureTech <br>
-![image](https://user-images.githubusercontent.com/94337797/142592631-0bed59e6-7840-4c1c-870e-13dd9edd0c9b.png)
-
-企业微信交流群:<br>
-![image](https://user-images.githubusercontent.com/94337797/144558612-e7f36bd4-4afd-45ba-aa18-8be6d39c4537.png)
+| [微信公众号](https://github.com/galaxy-future/comandx/blob/main/docs/resource/wechat_public_account.md)
+| [企业微信交流群](https://github.com/galaxy-future/comandx/blob/main/docs/resource/wechat.md)
 
 
 上手指南
