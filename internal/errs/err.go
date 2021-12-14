@@ -12,6 +12,7 @@ var (
 	ErrGetRegionsFailed          = errors.New("获取地域信息失败")
 	ErrGetZonesFailed            = errors.New("获取可用区信息失败")
 	ErrVpcPending                = errors.New("pending")
-	ErrBadEncryptedText          = errors.New("bad encrypted text")
 	ErrSaveAccountFailed         = errors.New("save account falied")
+	ErrOperatorIsNull = errors.New("operator shouldn't be null")
+	ErrNewOrOldDataIsNull = errors.New("new or old data shouldn't be null")
 )

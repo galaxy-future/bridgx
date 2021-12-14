@@ -394,6 +394,17 @@ CREATE TABLE `kubernetes_install_steps` (
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `operation_log` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `operation` varchar(256) NOT NULL DEFAULT '' COMMENT '操作',
+    `object_name` varchar(128) NOT NULL DEFAULT '' COMMENT '备操作的对象名,一般为表名',
+    `operator` bigint(20) NOT NULL DEFAULT '0' COMMENT '操作人的 id',
+    `diff` varchar(4096) DEFAULT NULL,
+    `create_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='操作日志'
+
 
 -- init super admin info
 INSERT INTO `user`

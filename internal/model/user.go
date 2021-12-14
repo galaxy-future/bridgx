@@ -81,3 +81,15 @@ func GetUserThroughBigCache(ids []int64, keyMaker func(int64) string, delegate f
 	}
 	return users, needFetchIds, nil
 }
+
+func GetUsersByIDs(ctx context.Context, ids []int64) []User {
+	users := make([]User, 0)
+	err := clients.ReadDBCli.WithContext(ctx).
+		Where("id in (?)", ids).Find(&users).
+		Error
+	if err != nil {
+		logErr("get user from readDB", err)
+		return nil
+	}
+	return users
+}

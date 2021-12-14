@@ -138,6 +138,10 @@ func Init() *gin.Engine {
 		{
 			imagePath.GET("list", handler.GetImageList)
 		}
+		logPath := v1Api.Group("log/")
+		{
+			logPath.GET("extract", handler.ExtractLog)
+		}
 
 		gfCluster := v1Api.Group("galaxy_cloud")
 		gf_cluster.RegisterHandler(gfCluster)
