@@ -369,7 +369,7 @@ func queryAndSaveExpandIPs(c *types.ClusterInfo, err error, expandInstanceIds []
 	for k := 0; k < constants.Interval; k++ {
 		expandInstances, err = GetInstances(c, expandInstanceIds)
 		logs.Logger.Infof("[queryAndSaveExpandIPs] expandInstances: %v, err: %v", expandInstances, err)
-		if err == nil && len(expandInstances) == len(expandInstanceIds) && judgeInstancesIsReady(expandInstances) {
+		if err == nil && len(expandInstances) == len(expandInstanceIds) && judgeInstancesIsReady(expandInstances, c.NetworkConfig) {
 			break
 		}
 		time.Sleep(constants.Delay * time.Second)
@@ -500,9 +500,17 @@ func publishShrinkConfig(clusterName string) error {
 	return err
 }
 
-func judgeInstancesIsReady(instances []cloud.Instance) bool {
+func judgeInstancesIsReady(instances []cloud.Instance, chargeConfig *types.NetworkConfig) bool {
+	var internetChargeType string
+	if chargeConfig != nil {
+		internetChargeType = chargeConfig.InternetChargeType
+	}
+	needCheckIpOuter := internetChargeType == cloud.InternetChargeTypePayByTraffic || internetChargeType == cloud.InternetChargeTypePayByBandwidth
 	for _, instance := range instances {
 		if instance.Status == cloud.Pending || instance.IpInner == "" {
+			return false
+		}
+		if needCheckIpOuter && instance.IpOuter == "" {
 			return false
 		}
 	}

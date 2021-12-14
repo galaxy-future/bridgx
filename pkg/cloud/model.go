@@ -15,6 +15,11 @@ const (
 	InstanceChargeTypePostPaid = "PostPaid"
 )
 
+const (
+	InternetChargeTypePayByTraffic   = "PayByTraffic"
+	InternetChargeTypePayByBandwidth = "PayByBandwidth"
+)
+
 type Params struct {
 	Provider     string
 	InstanceType string
