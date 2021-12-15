@@ -13,6 +13,6 @@ var (
 	ErrGetZonesFailed            = errors.New("获取可用区信息失败")
 	ErrVpcPending                = errors.New("pending")
 	ErrSaveAccountFailed         = errors.New("save account falied")
-	ErrOperatorIsNull = errors.New("operator shouldn't be null")
-	ErrNewOrOldDataIsNull = errors.New("new or old data shouldn't be null")
+	ErrOperatorIsNull            = errors.New("operator shouldn't be null")
+	ErrNewOrOldDataIsNull        = errors.New("new or old data shouldn't be null")
 )
