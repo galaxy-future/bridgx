@@ -20,14 +20,27 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func CreateCluster(cluster *model.Cluster, username string) error {
+func CreateCluster(ctx context.Context, cluster *model.Cluster, username string, userId int64) error {
 	cluster.Status = constants.ClusterStatusEnable
 	now := time.Now()
 	cluster.CreateAt = &now
 	cluster.UpdateAt = &now
 	cluster.CreateBy = username
 	cluster.UpdateBy = username
-	return model.Create(cluster)
+	err := model.Create(cluster)
+	if err != nil {
+		return err
+	}
+	err = RecordOperationLog(ctx, OperationLog{
+		Operation: "create cluster",
+		Operator:  userId,
+		Old:       nil,
+		New:       cluster,
+	})
+	if err != nil {
+		logs.Logger.Errorf("RecordOperationLog failed.Err:[%s]", err.Error())
+	}
+	return nil
 }
 
 func EditCluster(cluster *model.Cluster, username string) error {

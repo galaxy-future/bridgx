@@ -229,7 +229,7 @@ func CreateCluster(ctx *gin.Context) {
 		}
 		tags = append(tags, tag)
 	}
-	err = service.CreateCluster(m, user.Name)
+	err = service.CreateCluster(ctx, m, user.Name, user.UserId)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return

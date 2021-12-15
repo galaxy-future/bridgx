@@ -57,7 +57,7 @@ func ExtractLog(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, modelLog2Res(logs, int(total), req.PageNumber, req.PageSize))
