@@ -44,7 +44,7 @@ func RecordOperationLog(ctx context.Context, oplog OperationLog) error {
 		return err
 	}
 	now := time.Now()
-	return clients.WriteDBCli.Create(model.OperationLog{
+	return clients.WriteDBCli.Create(&model.OperationLog{
 		Base: model.Base{
 			CreateAt: &now,
 			UpdateAt: &now,

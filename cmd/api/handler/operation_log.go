@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
-	"github.com/galaxy-future/BridgX/cmd/api/middleware/validation"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
@@ -44,7 +43,7 @@ func ExtractLog(ctx *gin.Context) {
 	req := ExtractLogRequest{}
 	err := ctx.BindQuery(&req)
 	if err != nil {
-		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 
