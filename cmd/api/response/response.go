@@ -111,18 +111,19 @@ type InstanceListResponse struct {
 }
 
 type InstanceThumb struct {
-	InstanceId    string `json:"instance_id"`
-	IpInner       string `json:"ip_inner"`
-	IpOuter       string `json:"ip_outer"`
-	Provider      string `json:"provider"`
-	CreateAt      string `json:"create_at"`
-	Status        string `json:"status"`
-	StartupTime   int    `json:"startup_time"`
-	ClusterName   string `json:"cluster_name"`
-	InstanceType  string `json:"instance_type"`
-	LoginName     string `json:"login_name"`
-	LoginPassword string `json:"login_password"`
-	ChargeType    string `json:"charge_type"`
+	InstanceId         string `json:"instance_id"`
+	IpInner            string `json:"ip_inner"`
+	IpOuter            string `json:"ip_outer"`
+	Provider           string `json:"provider"`
+	CreateAt           string `json:"create_at"`
+	Status             string `json:"status"`
+	StartupTime        int    `json:"startup_time"`
+	ClusterName        string `json:"cluster_name"`
+	InstanceType       string `json:"instance_type"`
+	LoginName          string `json:"login_name"`
+	LoginPassword      string `json:"login_password"`
+	ChargeType         string `json:"charge_type"`
+	ComputingPowerType string `json:"computing_power_type"`
 }
 
 type InstanceUsage struct {

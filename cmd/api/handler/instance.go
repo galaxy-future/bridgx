@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/galaxy-future/BridgX/internal/constants"
 	"net/http"
 	"strings"
 	"time"
@@ -246,7 +247,35 @@ func ListInstanceType(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	response.MkResponse(ctx, http.StatusOK, response.Success, zones.InstanceTypes)
+
+	filterByComputingPowerType(ctx, zones)
+}
+
+func filterByComputingPowerType(ctx *gin.Context, zones service.ListInstanceTypeResponse) {
+	computingPowerType := ctx.Query("computing_power_type")
+	instanceTypes := zones.InstanceTypes
+	if computingPowerType == "" {
+		response.MkResponse(ctx, http.StatusOK, response.Success, instanceTypes)
+	}
+
+	ret := make([]service.InstanceTypeByZone, len(instanceTypes))
+	if computingPowerType == constants.GPU {
+		for _, instanceType := range instanceTypes {
+			if strings.Contains(instanceType.InstanceTypeFamily, constants.IsGpu) {
+				ret = append(ret, instanceType)
+			}
+		}
+		response.MkResponse(ctx, http.StatusOK, response.Success, ret)
+	}
+
+	if computingPowerType == constants.CPU {
+		for _, instanceType := range instanceTypes {
+			if !strings.Contains(instanceType.InstanceTypeFamily, constants.IsGpu) {
+				ret = append(ret, instanceType)
+			}
+		}
+		response.MkResponse(ctx, http.StatusOK, response.Success, ret)
+	}
 }
 
 func checkListInstanceTypeParams(provider, regionId, zoneId string) bool {

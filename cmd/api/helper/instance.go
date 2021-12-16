@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
@@ -24,23 +25,33 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 		if instance.RunningAt != nil {
 			startupTime = int(instance.RunningAt.Sub(*instance.CreateAt).Seconds())
 		}
+		instanceTypeDesc := getInstanceTypeDesc(instance.ClusterName, clusterMap)
 		r := response.InstanceThumb{
-			InstanceId:    instance.InstanceId,
-			IpInner:       instance.IpInner,
-			IpOuter:       instance.IpOuter,
-			Provider:      getProvider(instance.ClusterName, clusterMap),
-			ClusterName:   instance.ClusterName,
-			InstanceType:  getInstanceTypeDesc(instance.ClusterName, clusterMap),
-			LoginName:     getLoginName(instance.ClusterName, clusterMap),
-			LoginPassword: getLoginPassword(instance.ClusterName, clusterMap),
-			CreateAt:      instance.CreateAt.String(),
-			Status:        getStringStatus(instance.Status),
-			StartupTime:   startupTime,
-			ChargeType:    instance.ChargeType,
+			InstanceId:         instance.InstanceId,
+			IpInner:            instance.IpInner,
+			IpOuter:            instance.IpOuter,
+			Provider:           getProvider(instance.ClusterName, clusterMap),
+			ClusterName:        instance.ClusterName,
+			InstanceType:       instanceTypeDesc,
+			LoginName:          getLoginName(instance.ClusterName, clusterMap),
+			LoginPassword:      getLoginPassword(instance.ClusterName, clusterMap),
+			CreateAt:           instance.CreateAt.String(),
+			Status:             getStringStatus(instance.Status),
+			StartupTime:        startupTime,
+			ChargeType:         instance.ChargeType,
+			ComputingPowerType: getComputingPowerType(instanceTypeDesc),
 		}
 		ret = append(ret, r)
 	}
 	return ret
+}
+
+func getComputingPowerType(instanceTypeDesc string) string {
+	if strings.Contains(instanceTypeDesc, constants.IsGpu) {
+		return constants.GPU
+	} else {
+		return constants.CPU
+	}
 }
 
 func getProvider(clusterName string, m map[string]model.Cluster) string {
