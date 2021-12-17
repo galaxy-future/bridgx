@@ -73,13 +73,17 @@ func modelLog2Res(logs []model.OperationLog, total, page, size int) ExtractLogsR
 		},
 	}
 	for _, log := range logs {
+		var execTime string
+		if log.CreateAt != nil {
+			execTime = utils.FormatTime(*log.CreateAt)
+		}
 		res.Logs = append(res.Logs, Log{
 			ID:              log.Id,
 			Operator:        log.Operator,
 			UserName:        log.UserName,
-			Operation:       log.Operation,
+			Operation:       log.Operation+" "+ log.ObjectName, // TODO: translation
 			OperationDetail: log.Diff,
-			ExecTime:        utils.FormatTime(*log.CreateAt),
+			ExecTime:        execTime,
 		})
 	}
 	return res

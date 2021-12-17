@@ -392,7 +392,7 @@ CREATE TABLE `kubernetes_install_steps` (
   `operation` varchar(255) ,
   `message` varchar(255) ,
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `operation_log` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT,

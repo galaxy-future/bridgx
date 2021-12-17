@@ -12,8 +12,16 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+type Operation string
+
+const (
+	OperationCreate Operation = "CREATE"
+	OperationUpdate Operation = "UPDATE"
+	OperationDelete Operation = "DELETE"
+)
+
 type OperationLog struct {
-	Operation string
+	Operation Operation
 	Operator  int64
 
 	Old schema.Tabler
@@ -49,7 +57,7 @@ func RecordOperationLog(ctx context.Context, oplog OperationLog) error {
 			CreateAt: &now,
 			UpdateAt: &now,
 		},
-		Operation:  oplog.Operation,
+		Operation:  string(oplog.Operation),
 		ObjectName: oplog.New.TableName(),
 		Operator:   oplog.Operator,
 		Diff:       diffStr,

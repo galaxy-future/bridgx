@@ -31,7 +31,7 @@ type ExtractCondition struct {
 }
 
 func ExtractLogs(ctx context.Context, conds ExtractCondition) (logs []OperationLog, count int64, err error) {
-	query := clients.ReadDBCli.WithContext(ctx).Select(OperationLog{}.TableName())
+	query := clients.ReadDBCli.WithContext(ctx).Model(OperationLog{})
 	if len(conds.Operators) > 0 {
 		query.Where("operator IN (?)", conds.Operators)
 	}

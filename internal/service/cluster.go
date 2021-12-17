@@ -32,7 +32,7 @@ func CreateCluster(ctx context.Context, cluster *model.Cluster, username string,
 		return err
 	}
 	err = RecordOperationLog(ctx, OperationLog{
-		Operation: "create cluster",
+		Operation: OperationCreate,
 		Operator:  userId,
 		Old:       nil,
 		New:       cluster,
