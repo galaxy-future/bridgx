@@ -256,25 +256,28 @@ func filterByComputingPowerType(ctx *gin.Context, zones service.ListInstanceType
 	instanceTypes := zones.InstanceTypes
 	if computingPowerType == "" {
 		response.MkResponse(ctx, http.StatusOK, response.Success, instanceTypes)
+		return
 	}
 
-	ret := make([]service.InstanceTypeByZone, len(instanceTypes))
+	ret := make([]service.InstanceTypeByZone, 0)
 	if computingPowerType == constants.GPU {
-		for _, instanceType := range instanceTypes {
+		for i, instanceType := range instanceTypes {
 			if strings.Contains(instanceType.InstanceTypeFamily, constants.IsGpu) {
-				ret = append(ret, instanceType)
+				ret = append(ret, instanceTypes[i])
 			}
 		}
 		response.MkResponse(ctx, http.StatusOK, response.Success, ret)
+		return
 	}
 
 	if computingPowerType == constants.CPU {
-		for _, instanceType := range instanceTypes {
+		for i, instanceType := range instanceTypes {
 			if !strings.Contains(instanceType.InstanceTypeFamily, constants.IsGpu) {
-				ret = append(ret, instanceType)
+				ret = append(ret, instanceTypes[i])
 			}
 		}
 		response.MkResponse(ctx, http.StatusOK, response.Success, ret)
+		return
 	}
 }
 
