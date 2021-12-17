@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"strings"
 	"time"
 
@@ -150,6 +151,34 @@ func ConvertToInstanceDetail(ctx context.Context, instance *model.Instance) (*re
 		NetworkConfig: parseNetworkConfig(cluster.NetworkConfig),
 	}
 	return &ret, nil
+}
+
+func FilterByComputingPowerType(ctx *gin.Context, zones service.ListInstanceTypeResponse) []service.InstanceTypeByZone {
+	computingPowerType := ctx.Query("computing_power_type")
+	instanceTypes := zones.InstanceTypes
+	if computingPowerType == "" {
+		return instanceTypes
+	}
+
+	ret := make([]service.InstanceTypeByZone, 0)
+	if computingPowerType == constants.GPU {
+		for i, instanceType := range instanceTypes {
+			if strings.Contains(instanceType.InstanceTypeFamily, constants.IsGpu) {
+				ret = append(ret, instanceTypes[i])
+			}
+		}
+		return ret
+	}
+
+	if computingPowerType == constants.CPU {
+		for i, instanceType := range instanceTypes {
+			if !strings.Contains(instanceType.InstanceTypeFamily, constants.IsGpu) {
+				ret = append(ret, instanceTypes[i])
+			}
+		}
+		return ret
+	}
+	return instanceTypes
 }
 
 func parseNetworkConfig(config string) *response.NetworkConfig {
