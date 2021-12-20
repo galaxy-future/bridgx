@@ -47,7 +47,7 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 }
 
 func getComputingPowerType(instanceTypeDesc string, provider string) string {
-	if CheckIsGpuComputingPowerType(instanceTypeDesc, provider) {
+	if service.CheckIsGpuComputingPowerType(instanceTypeDesc, provider) {
 		return constants.GPU
 	} else {
 		return constants.CPU
