@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/galaxy-future/BridgX/pkg/cloud"
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/internal/constants"
@@ -28,11 +28,12 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 			startupTime = int(instance.RunningAt.Sub(*instance.CreateAt).Seconds())
 		}
 		instanceTypeDesc := getInstanceTypeDesc(instance.ClusterName, clusterMap)
+		provider := getProvider(instance.ClusterName, clusterMap)
 		r := response.InstanceThumb{
 			InstanceId:         instance.InstanceId,
 			IpInner:            instance.IpInner,
 			IpOuter:            instance.IpOuter,
-			Provider:           getProvider(instance.ClusterName, clusterMap),
+			Provider:           provider,
 			ClusterName:        instance.ClusterName,
 			InstanceType:       instanceTypeDesc,
 			LoginName:          getLoginName(instance.ClusterName, clusterMap),
@@ -41,15 +42,15 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 			Status:             getStringStatus(instance.Status),
 			StartupTime:        startupTime,
 			ChargeType:         instance.ChargeType,
-			ComputingPowerType: getComputingPowerType(instanceTypeDesc),
+			ComputingPowerType: getComputingPowerType(instanceTypeDesc, provider),
 		}
 		ret = append(ret, r)
 	}
 	return ret
 }
 
-func getComputingPowerType(instanceTypeDesc string) string {
-	if strings.Contains(instanceTypeDesc, constants.IsGpu) {
+func getComputingPowerType(instanceTypeDesc string, provider string) string {
+	if CheckIsGpuComputingPowerType(instanceTypeDesc, provider) {
 		return constants.GPU
 	} else {
 		return constants.CPU
@@ -154,9 +155,7 @@ func ConvertToInstanceDetail(ctx context.Context, instance *model.Instance) (*re
 	return &ret, nil
 }
 
-func FilterByComputingPowerType(ctx *gin.Context, zones service.ListInstanceTypeResponse) []service.InstanceTypeByZone {
-	computingPowerType := ctx.Query("computing_power_type")
-	instanceTypes := zones.InstanceTypes
+func FilterByComputingPowerType(computingPowerType string, provider string, instanceTypes []service.InstanceTypeByZone) []service.InstanceTypeByZone {
 	if computingPowerType == "" {
 		return instanceTypes
 	}
@@ -164,7 +163,7 @@ func FilterByComputingPowerType(ctx *gin.Context, zones service.ListInstanceType
 	ret := make([]service.InstanceTypeByZone, 0)
 	if computingPowerType == constants.GPU {
 		for i, instanceType := range instanceTypes {
-			if strings.Contains(instanceType.InstanceTypeFamily, constants.IsGpu) {
+			if CheckIsGpuComputingPowerType(instanceType.InstanceTypeFamily, provider) {
 				ret = append(ret, instanceTypes[i])
 			}
 		}
@@ -173,13 +172,24 @@ func FilterByComputingPowerType(ctx *gin.Context, zones service.ListInstanceType
 
 	if computingPowerType == constants.CPU {
 		for i, instanceType := range instanceTypes {
-			if !strings.Contains(instanceType.InstanceTypeFamily, constants.IsGpu) {
+			if !CheckIsGpuComputingPowerType(instanceType.InstanceTypeFamily, provider) {
 				ret = append(ret, instanceTypes[i])
 			}
 		}
 		return ret
 	}
 	return instanceTypes
+}
+
+func CheckIsGpuComputingPowerType(instanceType string, provider string) bool {
+	switch provider {
+	case cloud.AlibabaCloud:
+		return strings.Contains(instanceType, constants.IsAlibabaCloudGpuType)
+	case "HuaweiCloud":
+		return strings.HasPrefix(instanceType, constants.IsHuaweiCloudGpuType) || strings.HasPrefix(instanceType, constants.IsHuaweiCloudGpuTypeTwo)
+	default:
+		return false
+	}
 }
 
 func parseNetworkConfig(config string) *response.NetworkConfig {

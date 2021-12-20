@@ -31,7 +31,9 @@ const (
 )
 
 const (
-	GPU   = "GPU"
-	CPU   = "CPU"
-	IsGpu = "gn"
+	GPU                     = "GPU"
+	CPU                     = "CPU"
+	IsAlibabaCloudGpuType   = "gn"
+	IsHuaweiCloudGpuType    = "G"
+	IsHuaweiCloudGpuTypeTwo = "P"
 )

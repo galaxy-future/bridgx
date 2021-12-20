@@ -247,7 +247,7 @@ func ListInstanceType(ctx *gin.Context) {
 		return
 	}
 
-	resp := helper.FilterByComputingPowerType(ctx, zones)
+	resp := helper.FilterByComputingPowerType(ctx.Query("computing_power_type"), provider, zones.InstanceTypes)
 	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
 	return
 
