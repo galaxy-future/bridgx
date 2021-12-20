@@ -236,7 +236,7 @@ func ListInstanceType(ctx *gin.Context) {
 		return
 	}
 	logs.Logger.Infof("provider:[%s] regionId:[%s] zoneId:[%s]", provider, regionId, zoneId)
-	zones, err := service.ListInstanceType(ctx, service.ListInstanceTypeRequest{
+	zones, err := service.ListInstanceType(ctx.Query("computing_power_type"), provider, service.ListInstanceTypeRequest{
 		Provider: provider,
 		RegionId: regionId,
 		ZoneId:   zoneId,
@@ -247,8 +247,7 @@ func ListInstanceType(ctx *gin.Context) {
 		return
 	}
 
-	resp := helper.FilterByComputingPowerType(ctx.Query("computing_power_type"), provider, zones.InstanceTypes)
-	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
+	response.MkResponse(ctx, http.StatusOK, response.Success, zones)
 	return
 
 }

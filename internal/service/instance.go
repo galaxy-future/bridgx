@@ -7,6 +7,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/galaxy-future/BridgX/cmd/api/helper"
+
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -285,19 +287,19 @@ func (i *InstanceTypeByZone) GetDesc() string {
 	return fmt.Sprintf(instanceTypeTmpl, i.Core, i.Memory, i.InstanceType)
 }
 
-func ListInstanceType(ctx context.Context, req ListInstanceTypeRequest) (ListInstanceTypeResponse, error) {
+func ListInstanceType(computingPowerType string, provider string, req ListInstanceTypeRequest) ([]InstanceTypeByZone, error) {
 	if len(zoneInsTypeCache) == 0 {
 		RefreshCache()
 	}
 	zoneMap, ok := zoneInsTypeCache[req.Provider]
 	if !ok {
-		return ListInstanceTypeResponse{}, nil
+		return []InstanceTypeByZone{}, nil
 	}
 	res, ok := zoneMap[req.ZoneId]
 	if !ok {
-		return ListInstanceTypeResponse{}, nil
+		return []InstanceTypeByZone{}, nil
 	}
-	return ListInstanceTypeResponse{InstanceTypes: res}, nil
+	return helper.FilterByComputingPowerType(computingPowerType, provider, res), nil
 }
 
 func BatchCreateInstanceType(ctx context.Context, inss []model.InstanceType) error {
