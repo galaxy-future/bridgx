@@ -2,10 +2,7 @@ package helper
 
 import (
 	"context"
-	"strings"
 	"time"
-
-	"github.com/galaxy-future/BridgX/pkg/cloud"
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/internal/constants"
@@ -153,43 +150,6 @@ func ConvertToInstanceDetail(ctx context.Context, instance *model.Instance) (*re
 		NetworkConfig: parseNetworkConfig(cluster.NetworkConfig),
 	}
 	return &ret, nil
-}
-
-func FilterByComputingPowerType(computingPowerType string, provider string, instanceTypes []service.InstanceTypeByZone) []service.InstanceTypeByZone {
-	if computingPowerType == "" {
-		return instanceTypes
-	}
-
-	ret := make([]service.InstanceTypeByZone, 0)
-	if computingPowerType == constants.GPU {
-		for i, instanceType := range instanceTypes {
-			if CheckIsGpuComputingPowerType(instanceType.InstanceTypeFamily, provider) {
-				ret = append(ret, instanceTypes[i])
-			}
-		}
-		return ret
-	}
-
-	if computingPowerType == constants.CPU {
-		for i, instanceType := range instanceTypes {
-			if !CheckIsGpuComputingPowerType(instanceType.InstanceTypeFamily, provider) {
-				ret = append(ret, instanceTypes[i])
-			}
-		}
-		return ret
-	}
-	return instanceTypes
-}
-
-func CheckIsGpuComputingPowerType(instanceType string, provider string) bool {
-	switch provider {
-	case cloud.AlibabaCloud:
-		return strings.Contains(instanceType, constants.IsAlibabaCloudGpuType)
-	case cloud.HuaweiCloud:
-		return strings.HasPrefix(instanceType, constants.IsHuaweiCloudGpuType) || strings.HasPrefix(instanceType, constants.IsHuaweiCloudGpuTypeTwo)
-	default:
-		return false
-	}
 }
 
 func parseNetworkConfig(config string) *response.NetworkConfig {

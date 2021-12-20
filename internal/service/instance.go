@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
-
-	"github.com/galaxy-future/BridgX/cmd/api/helper"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
@@ -299,7 +298,44 @@ func ListInstanceType(computingPowerType string, provider string, req ListInstan
 	if !ok {
 		return []InstanceTypeByZone{}, nil
 	}
-	return helper.FilterByComputingPowerType(computingPowerType, provider, res), nil
+	return filterByComputingPowerType(computingPowerType, provider, res), nil
+}
+
+func filterByComputingPowerType(computingPowerType string, provider string, instanceTypes []InstanceTypeByZone) []InstanceTypeByZone {
+	if computingPowerType == "" {
+		return instanceTypes
+	}
+
+	ret := make([]InstanceTypeByZone, 0)
+	if computingPowerType == constants.GPU {
+		for i, instanceType := range instanceTypes {
+			if CheckIsGpuComputingPowerType(instanceType.InstanceTypeFamily, provider) {
+				ret = append(ret, instanceTypes[i])
+			}
+		}
+		return ret
+	}
+
+	if computingPowerType == constants.CPU {
+		for i, instanceType := range instanceTypes {
+			if !CheckIsGpuComputingPowerType(instanceType.InstanceTypeFamily, provider) {
+				ret = append(ret, instanceTypes[i])
+			}
+		}
+		return ret
+	}
+	return instanceTypes
+}
+
+func CheckIsGpuComputingPowerType(instanceType string, provider string) bool {
+	switch provider {
+	case cloud.AlibabaCloud:
+		return strings.Contains(instanceType, constants.IsAlibabaCloudGpuType)
+	case cloud.HuaweiCloud:
+		return strings.HasPrefix(instanceType, constants.IsHuaweiCloudGpuType) || strings.HasPrefix(instanceType, constants.IsHuaweiCloudGpuTypeTwo)
+	default:
+		return false
+	}
 }
 
 func BatchCreateInstanceType(ctx context.Context, inss []model.InstanceType) error {
