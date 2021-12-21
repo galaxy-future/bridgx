@@ -231,23 +231,25 @@ func ListInstanceType(ctx *gin.Context) {
 	provider := ctx.Query("provider")
 	regionId := ctx.Query("region_id")
 	zoneId := ctx.Query("zone_id")
+	computingPowerType := ctx.Query("computing_power_type")
 	if !checkListInstanceTypeParams(provider, regionId, zoneId) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
 	logs.Logger.Infof("provider:[%s] regionId:[%s] zoneId:[%s]", provider, regionId, zoneId)
-	zones, err := service.ListInstanceType(ctx.Query("computing_power_type"), provider, service.ListInstanceTypeRequest{
-		Provider: provider,
-		RegionId: regionId,
-		ZoneId:   zoneId,
-		Account:  account,
+	instanceTypes, err := service.ListInstanceType(service.ListInstanceTypeRequest{
+		Provider:           provider,
+		RegionId:           regionId,
+		ZoneId:             zoneId,
+		Account:            account,
+		ComputingPowerType: computingPowerType,
 	})
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
-	response.MkResponse(ctx, http.StatusOK, response.Success, zones)
+	response.MkResponse(ctx, http.StatusOK, response.Success, instanceTypes)
 	return
 
 }

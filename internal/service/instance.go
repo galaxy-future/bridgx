@@ -262,10 +262,11 @@ func getAvailableResource(regions []cloud.Region, provider, ak string) ([]model.
 }
 
 type ListInstanceTypeRequest struct {
-	Provider string
-	RegionId string
-	ZoneId   string
-	Account  *types.OrgKeys
+	Provider           string
+	RegionId           string
+	ZoneId             string
+	Account            *types.OrgKeys
+	ComputingPowerType string
 }
 
 type ListInstanceTypeResponse struct {
@@ -286,7 +287,7 @@ func (i *InstanceTypeByZone) GetDesc() string {
 	return fmt.Sprintf(instanceTypeTmpl, i.Core, i.Memory, i.InstanceType)
 }
 
-func ListInstanceType(computingPowerType string, provider string, req ListInstanceTypeRequest) ([]InstanceTypeByZone, error) {
+func ListInstanceType(req ListInstanceTypeRequest) ([]InstanceTypeByZone, error) {
 	if len(zoneInsTypeCache) == 0 {
 		RefreshCache()
 	}
@@ -298,7 +299,7 @@ func ListInstanceType(computingPowerType string, provider string, req ListInstan
 	if !ok {
 		return []InstanceTypeByZone{}, nil
 	}
-	return filterByComputingPowerType(computingPowerType, provider, res), nil
+	return filterByComputingPowerType(req.ComputingPowerType, req.Provider, res), nil
 }
 
 func filterByComputingPowerType(computingPowerType string, provider string, instanceTypes []InstanceTypeByZone) []InstanceTypeByZone {
@@ -307,24 +308,24 @@ func filterByComputingPowerType(computingPowerType string, provider string, inst
 	}
 
 	ret := make([]InstanceTypeByZone, 0)
-	if computingPowerType == constants.GPU {
+	switch computingPowerType {
+	case constants.GPU:
 		for i, instanceType := range instanceTypes {
 			if CheckIsGpuComputingPowerType(instanceType.InstanceTypeFamily, provider) {
 				ret = append(ret, instanceTypes[i])
 			}
 		}
 		return ret
-	}
-
-	if computingPowerType == constants.CPU {
+	case constants.CPU:
 		for i, instanceType := range instanceTypes {
 			if !CheckIsGpuComputingPowerType(instanceType.InstanceTypeFamily, provider) {
 				ret = append(ret, instanceTypes[i])
 			}
 		}
 		return ret
+	default:
+		return instanceTypes
 	}
-	return instanceTypes
 }
 
 func CheckIsGpuComputingPowerType(instanceType string, provider string) bool {
