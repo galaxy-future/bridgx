@@ -15,17 +15,21 @@ func TestCreateInstance(t *testing.T) {
 	instances := make([]model.Instance, 0)
 	now := time.Now()
 	instances = append(instances, model.Instance{
+		Base: model.Base{
+			CreateAt: &now,
+		},
 		InstanceId:  "test1",
 		Status:      constants.Pending,
 		ClusterName: "test_cluster1",
-		CreateAt:    &now,
 		DeleteAt:    &now,
 	})
 	instances = append(instances, model.Instance{
+		Base: model.Base{
+			CreateAt: &now,
+		},
 		InstanceId:  "test2",
 		Status:      constants.Pending,
 		ClusterName: "test_cluster2",
-		CreateAt:    &now,
 		DeleteAt:    &now,
 	})
 	err := model.BatchCreateInstance(instances)

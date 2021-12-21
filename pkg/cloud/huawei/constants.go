@@ -1,6 +1,8 @@
 package huawei
 
 import (
+	"time"
+
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/model"
 	imsModel "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
@@ -10,6 +12,16 @@ const (
 	_maxNumEcsPerOperation = 1000
 	_pageSize              = 1000
 )
+
+type prePaidResources struct {
+	Id            string
+	Name          string
+	RegionId      string
+	EffectiveTime time.Time
+	ExpireTime    time.Time
+	ExpirePolicy  int
+	Status        int
+}
 
 //in
 var _inEcsChargeType = map[string]model.PrePaidServerExtendParamChargingMode{

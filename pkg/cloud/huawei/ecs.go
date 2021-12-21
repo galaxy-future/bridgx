@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -117,29 +118,50 @@ func (p *HuaweiCloud) GetInstances(ids []string) (instances []cloud.Instance, er
 	if idNum < 1 {
 		return []cloud.Instance{}, nil
 	}
-	request := &model.ShowServerRequest{}
 	ecsInfos := make([]model.ServerDetail, 0, idNum)
+	resources := make(map[string]prePaidResources, idNum)
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
+	wg.Add(idNum)
 	for _, id := range ids {
-		if id == "" {
-			continue
-		}
-		request.ServerId = id
-		response, err := p.ecsClient.ShowServer(request)
-		if err != nil {
-			logs.Logger.Errorf("ShowServer failed, %s, %s", id, err.Error())
-			continue
-		}
-		if response.HttpStatusCode != http.StatusOK {
-			logs.Logger.Errorf("id %s, httpcode %d", id, response.HttpStatusCode)
-			continue
-		}
-		ecsInfos = append(ecsInfos, *(response.Server))
+		go func(id string) {
+			defer wg.Done()
+			if id == "" {
+				return
+			}
+			request := &model.ShowServerRequest{}
+			request.ServerId = id
+			response, err := p.ecsClient.ShowServer(request)
+			if err != nil {
+				logs.Logger.Errorf("ShowServer failed, %s, %s", id, err.Error())
+				return
+			}
+			if response.HttpStatusCode != http.StatusOK {
+				logs.Logger.Errorf("id %s, httpcode %d", id, response.HttpStatusCode)
+				return
+			}
+			mutex.Lock()
+			ecsInfos = append(ecsInfos, *(response.Server))
+			mutex.Unlock()
+		}(id)
 	}
-	return ecsInfo2CloudIns(ecsInfos), nil
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		resources, err = p.listPrePaidResources(ids)
+		if err != nil {
+			logs.Logger.Errorf("listPrePaidResources failed, %v", err)
+			return
+		}
+	}()
+	wg.Wait()
+	return ecsInfo2CloudIns(ecsInfos, resources), nil
 }
 
 func (p *HuaweiCloud) GetInstancesByTags(regionId string, tags []cloud.Tag) (instances []cloud.Instance, err error) {
 	ecsInfos := make([]model.ServerDetail, 0, _pageSize)
+	resources := make(map[string]prePaidResources, _pageSize)
 	request := &model.ListServersDetailsRequest{}
 	listTag := make([]string, 0, len(tags))
 	for _, tag := range tags {
@@ -166,7 +188,17 @@ func (p *HuaweiCloud) GetInstancesByTags(regionId string, tags []cloud.Tag) (ins
 		}
 		pageNum++
 	}
-	return ecsInfo2CloudIns(ecsInfos), nil
+	if len(ecsInfos) > 0 && _ecsChargeType[ecsInfos[0].Metadata["charging_mode"]] == cloud.InstanceChargeTypePrePaid {
+		ids := make([]string, 0, len(ecsInfos))
+		for _, info := range ecsInfos {
+			ids = append(ids, info.Id)
+		}
+		resources, err = p.listPrePaidResources(ids)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ecsInfo2CloudIns(ecsInfos, resources), nil
 }
 
 func (p *HuaweiCloud) GetInstancesByCluster(regionId, clusterName string) (instances []cloud.Instance, err error) {
@@ -333,7 +365,7 @@ func (p *HuaweiCloud) DescribeInstanceTypes(req cloud.DescribeInstanceTypesReque
 }
 
 //缺少子网id,eip带宽相关信息. ListServerInterfaces 可以拿到子网id,ListPublicips 可以获取eip信息
-func ecsInfo2CloudIns(ecsInfos []model.ServerDetail) []cloud.Instance {
+func ecsInfo2CloudIns(ecsInfos []model.ServerDetail, resources map[string]prePaidResources) []cloud.Instance {
 	instances := make([]cloud.Instance, 0, len(ecsInfos))
 	for _, info := range ecsInfos {
 		var ipInner []string
@@ -351,6 +383,7 @@ func ecsInfo2CloudIns(ecsInfos []model.ServerDetail) []cloud.Instance {
 		for _, row := range info.SecurityGroups {
 			securityGroup = append(securityGroup, row.Id)
 		}
+		expTime := resources[info.Id].ExpireTime
 
 		instances = append(instances, cloud.Instance{
 			Id:       info.Id,
@@ -363,7 +396,8 @@ func ecsInfo2CloudIns(ecsInfos []model.ServerDetail) []cloud.Instance {
 				VpcId:         info.Metadata["vpc_id"],
 				SecurityGroup: strings.Join(securityGroup, ","),
 			},
-			Status: _ecsStatus[info.Status],
+			Status:   _ecsStatus[info.Status],
+			ExpireAt: &expTime,
 		})
 	}
 	return instances

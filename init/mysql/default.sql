@@ -177,8 +177,8 @@ CREATE TABLE `cluster_tag`
     `cluster_name` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
     `tag_key`      varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
     `tag_value`    varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-    `create_at`    timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `update_at`    timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `create_at`    timestamp DEFAULT CURRENT_TIMESTAMP,
+    `update_at`    timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `cluster_tags_cluster_name_tag_key_uindex` (`cluster_name`,`tag_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -203,7 +203,7 @@ CREATE TABLE `instance`
     `ip_outer`       varchar(255)         DEFAULT NULL,
     `attrs`          varchar(1024)        DEFAULT NULL,
     `create_at`      timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_at`      timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_at`      timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `delete_at`      timestamp NULL DEFAULT NULL,
     `running_at`     timestamp NULL DEFAULT NULL,
     `charge_type`    varchar(32) collate utf8mb4_bin NOT NULL DEFAULT 'PostPaid',

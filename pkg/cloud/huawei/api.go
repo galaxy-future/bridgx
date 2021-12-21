@@ -3,8 +3,10 @@ package huawei
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/galaxy-future/BridgX/pkg/cloud"
+	"github.com/galaxy-future/BridgX/pkg/utils"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/global"
 	bss "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/bss/v2"
@@ -116,10 +118,10 @@ func (p *HuaweiCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.Des
 	request := &imsModel.ListImagesRequest{}
 	imageType := _imageType[req.ImageType]
 	request.Imagetype = &imageType
-	sortDirRequest := imsModel.GetListImagesRequestSortDirEnum().DESC
-	request.SortDir = &sortDirRequest
-	sortKeyRequest := imsModel.GetListImagesRequestSortKeyEnum().NAME
-	request.SortKey = &sortKeyRequest
+	if req.ImageType == cloud.ImageGlobal {
+		protected := true
+		request.Protected = &protected
+	}
 	statusRequest := imsModel.GetListImagesRequestStatusEnum().ACTIVE
 	request.Status = &statusRequest
 	if req.InsType != "" {
@@ -171,6 +173,45 @@ func (p *HuaweiCloud) payOrders(orderId string) error {
 		return fmt.Errorf("httpcode %d", response.HttpStatusCode)
 	}
 	return nil
+}
+
+//up to 50 at once
+func (p *HuaweiCloud) listPrePaidResources(ids []string) (map[string]prePaidResources, error) {
+	pageSize := 50
+	batchIds := utils.StringSliceSplit(ids, int64(pageSize))
+	resource := make(map[string]prePaidResources, len(ids))
+	request := &bssModel.ListPayPerUseCustomerResourcesRequest{}
+	limitQueryResourcesReq := int32(pageSize)
+	onlyMainResourceQueryResourcesReq := int32(1)
+	for _, onceIds := range batchIds {
+		request.Body = &bssModel.QueryResourcesReq{
+			Limit:            &limitQueryResourcesReq,
+			OnlyMainResource: &onlyMainResourceQueryResourcesReq,
+			ResourceIds:      &onceIds,
+		}
+		response, err := p.bssClient.ListPayPerUseCustomerResources(request)
+		if err != nil {
+			return nil, err
+		}
+		if response.HttpStatusCode != http.StatusOK {
+			return nil, fmt.Errorf("httpcode %d", response.HttpStatusCode)
+		}
+
+		for _, res := range *response.Data {
+			effTime, _ := time.Parse("2006-01-02T15:04:05Z", *res.EffectiveTime)
+			expTime, _ := time.Parse("2006-01-02T15:04:05Z", *res.ExpireTime)
+			resource[*res.ResourceId] = prePaidResources{
+				Id:            *res.ResourceId,
+				Name:          *res.ResourceName,
+				RegionId:      *res.RegionCode,
+				EffectiveTime: effTime,
+				ExpireTime:    expTime,
+				ExpirePolicy:  int(*res.ExpirePolicy),
+				Status:        int(*res.Status),
+			}
+		}
+	}
+	return resource, nil
 }
 
 func (p *HuaweiCloud) GetOrders(req cloud.GetOrdersRequest) (cloud.GetOrdersResponse, error) {

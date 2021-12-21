@@ -32,7 +32,7 @@ type ConnectableResult struct {
 }
 
 type Instance struct {
-	Id           int64 `gorm:"primary_key"`
+	Base
 	Status       constants.Status
 	IpInner      string
 	IpOuter      string
@@ -42,7 +42,6 @@ type Instance struct {
 	ShrinkTaskId int64 //缩容任务ID
 	ChargeType   string
 	Attrs        *string //扩展属性
-	CreateAt     *time.Time
 	DeleteAt     *time.Time
 	RunningAt    *time.Time
 	ExpireAt     *time.Time //PrePaid instance expire time

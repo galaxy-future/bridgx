@@ -52,12 +52,18 @@ func (p *AlibabaCloud) GetInstancesByTags(region string, tags []cloud.Tag) (inst
 	request.PageSize = requests.NewInteger(50)
 	cloudInstance := make([]ecs.Instance, 0)
 	response, err := p.client.DescribeInstances(request)
+	if err != nil {
+		return nil, err
+	}
 	cloudInstance = append(cloudInstance, response.Instances.Instance...)
-	maxPage := math.Ceil(float64(response.TotalCount / 50))
+	maxPage := math.Ceil(float64(response.TotalCount) / 50)
 	for pageNumber < int(maxPage) {
 		pageNumber++
 		request.PageNumber = requests.NewInteger(pageNumber)
 		response, err = p.client.DescribeInstances(request)
+		if err != nil {
+			return nil, err
+		}
 		cloudInstance = append(cloudInstance, response.Instances.Instance...)
 	}
 	instances = generateInstances(cloudInstance)

@@ -43,7 +43,6 @@ func UpdateUserStatus(ctx context.Context, model interface{}, usernames []string
 
 func GetUserById(ctx context.Context, uid int64) (*User, error) {
 	ret, _, err := GetUserThroughBigCache([]int64{uid}, cache.UserKeyMaker, func(ids []int64) ([]*User, error) {
-		logs.Logger.Infof("get user:%v from db", uid)
 		user := User{}
 		err := Get(uid, &user)
 		if err != nil {
@@ -63,7 +62,6 @@ func GetUserById(ctx context.Context, uid int64) (*User, error) {
 func GetUserThroughBigCache(ids []int64, keyMaker func(int64) string, delegate func(ids []int64) ([]*User, error)) ([]*User, []int64, error) {
 	users := make([]*User, 0)
 	needFetchIds, err := cache.GetFromBigCache(ids, &users, keyMaker)
-	logs.Logger.Infof("Get user from local cache:%v", ids)
 	if err != nil {
 		needFetchIds = ids
 	}
