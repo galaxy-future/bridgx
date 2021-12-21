@@ -17,7 +17,7 @@ const (
 	createOperation     = "create"
 )
 
-var errDifferenTypeCompare = errors.New("different types cannot be compared")
+var errDifferentTypeCompare = errors.New("different types cannot be compared")
 
 type DiffResult struct {
 	Fields []FieldInfo
@@ -59,7 +59,7 @@ func Diff(o, n interface{}) (res DiffResult, err error) {
 	}()
 	t1, t2 := reflect.TypeOf(o), reflect.TypeOf(n)
 	if t1 != t2 {
-		return DiffResult{}, errDifferenTypeCompare
+		return DiffResult{}, errDifferentTypeCompare
 	}
 	v1, v2 := reflect.ValueOf(o), reflect.ValueOf(n)
 	for i := 0; i < v1.NumField(); i++ {
