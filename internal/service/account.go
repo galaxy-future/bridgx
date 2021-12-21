@@ -211,8 +211,8 @@ func GetAksByOrgId(orgId int64) ([]string, error) {
 	return aks, nil
 }
 
-func GetAksByOrgAkProvider(ctx context.Context, orgId int64, ak, provider string) ([]string, error) {
-	return model.GetAksByOrgAkProvider(ctx, orgId, ak, provider)
+func GetAksByOrgAk(ctx context.Context, orgId int64, ak string) ([]string, error) {
+	return model.GetAksByOrgAk(ctx, orgId, ak)
 }
 
 func GetOrgKeysByAk(ctx context.Context, ak string) (*types.OrgKeys, error) {

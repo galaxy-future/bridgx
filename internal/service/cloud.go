@@ -282,18 +282,29 @@ func GetInstancesByAccount(ctx context.Context, accountKey string, pageNum, page
 	return ret, total, nil
 }
 
-func GetInstancesByAccounts(ctx context.Context, accountKeys, status []string, pageNum, pageSize int, instanceId, ip, clusterName string) (clusterNames []string, instances []model.Instance, total int64, err error) {
-	clusterNames, err = GetEnabledClusterNamesByCond(ctx, "", clusterName, accountKeys, true)
+type GetInstancesCond struct {
+	AccountKeys []string
+	Status      []string
+	InstanceId  string
+	Ip          string
+	ClusterName string
+	Provider    string
+	PageNum     int
+	PageSize    int
+}
+
+func GetInstancesByAccounts(ctx context.Context, cond GetInstancesCond) (clusterNames []string, instances []model.Instance, total int64, err error) {
+	clusterNames, err = GetEnabledClusterNamesByCond(ctx, cond.Provider, cond.ClusterName, cond.AccountKeys, true)
 	if err != nil {
 		return nil, nil, 0, err
 	}
 	instances, total, err = model.GetInstanceByCond(ctx, model.InstanceSearchCond{
-		Ip:           ip,
-		InstanceId:   instanceId,
+		Ip:           cond.Ip,
+		InstanceId:   cond.InstanceId,
 		ClusterNames: clusterNames,
-		Status:       status,
-		PageNumber:   pageNum,
-		PageSize:     pageSize,
+		Status:       cond.Status,
+		PageNumber:   cond.PageNum,
+		PageSize:     cond.PageSize,
 	})
 	return clusterNames, instances, total, err
 }

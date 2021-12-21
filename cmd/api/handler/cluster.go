@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/validation"
@@ -14,6 +15,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/galaxy-future/BridgX/internal/types"
+	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
@@ -70,7 +72,7 @@ func GetInstanceStat(ctx *gin.Context) {
 func GetClusterCount(ctx *gin.Context) {
 	user := helper.GetUserClaims(ctx)
 	accountKey := ctx.Query("account")
-	accountKeys, err := service.GetAksByOrgAkProvider(ctx, user.GetOrgIdForTest(), accountKey, "")
+	accountKeys, err := service.GetAksByOrgAk(ctx, user.GetOrgIdForTest(), accountKey)
 	cnt, err := service.GetClusterCount(ctx, accountKeys)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
@@ -145,10 +147,22 @@ func ListClusters(ctx *gin.Context) {
 	}
 	clusterName, _ := ctx.GetQuery("cluster_name")
 	provider, _ := ctx.GetQuery("provider")
-
+	usage, _ := ctx.GetQuery("usage")
+	clusterType, _ := ctx.GetQuery("cluster_type")
 	pn, ps := getPager(ctx)
 
-	clusters, total, err := service.ListClusters(ctx, accountKeys, clusterName, provider, pn, ps)
+	cond := model.ClusterSearchCond{
+		AccountKeys: accountKeys,
+		ClusterName: clusterName,
+		ClusterType: clusterType,
+		Provider:    provider,
+		Usage:       usage,
+
+		PageNum:  pn,
+		PageSize: ps,
+	}
+
+	clusters, total, err := service.ListClusters(ctx, cond)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
@@ -211,37 +225,117 @@ func CreateCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), err)
 		return
 	}
-	tags := make([]model.ClusterTag, 0)
-	tags = append(tags, model.ClusterTag{
-		ClusterName: clusterInput.Name,
-		TagKey:      constants.DefaultClusterUsageKey,
-		TagValue:    constants.DefaultClusterUsageUnused,
-	})
+	tags := unusedTag(clusterInput.Name)
 	for k, v := range clusterInput.Tags {
 		if k == "" || v == "" {
 			response.MkResponse(ctx, http.StatusBadRequest, "empty key/value for tags", nil)
 			return
 		}
-		tag := model.ClusterTag{
+		tag := &model.ClusterTag{
 			ClusterName: clusterInput.Name,
 			TagKey:      k,
 			TagValue:    v,
 		}
 		tags = append(tags, tag)
 	}
-	err = service.CreateCluster(ctx, m, user.Name, user.UserId)
+	err = service.CreateClusterWithTagsAndInstances(ctx, m, tags, nil, user.Name, user.UserId)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	if len(tags) > 0 {
-		err = service.CreateClusterTags(tags)
-		if err != nil {
-			response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
-			return
-		}
-	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, m.ClusterName)
+	return
+}
+
+func CreateCustomPublic(ctx *gin.Context) {
+	user := helper.GetUserClaims(ctx)
+	if user == nil {
+		response.MkResponse(ctx, http.StatusBadRequest, response.TokenInvalid, nil)
+		return
+	}
+	req := request.CustomPublicCloudClusterRequest{}
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	cluster, err := convertPublicCluster(&req)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	instances, err := convertCustomClusterInstances(req.InstanceList, req.ClusterName)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	err = service.CreateClusterWithTagsAndInstances(ctx, cluster, unusedTag(cluster.ClusterName), instances, user.Name, user.UserId)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, cluster.ClusterName)
+	return
+}
+
+func CreateCustomPrivate(ctx *gin.Context) {
+	user := helper.GetUserClaims(ctx)
+	if user == nil {
+		response.MkResponse(ctx, http.StatusBadRequest, response.TokenInvalid, nil)
+		return
+	}
+	req := request.CustomPrivateCloudClusterRequest{}
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	cluster, err := convertPrivateCluster(&req)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	instances, err := convertCustomClusterInstances(req.InstanceList, req.ClusterName)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	err = service.CreateClusterWithTagsAndInstances(ctx, cluster, unusedTag(cluster.ClusterName), instances, user.Name, user.UserId)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, cluster.ClusterName)
+	return
+}
+
+func unusedTag(clusterName string) []*model.ClusterTag {
+	return []*model.ClusterTag{{
+		ClusterName: clusterName,
+		TagKey:      constants.DefaultClusterUsageKey,
+		TagValue:    constants.DefaultClusterUsageUnused,
+	}}
+}
+
+func CustomClusterDetail(ctx *gin.Context) {
+	clusterId, _ := ctx.GetQuery("cluster_id")
+	clusterName, _ := ctx.GetQuery("cluster_name")
+	if clusterId == "" && clusterName == "" {
+		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
+		return
+	}
+	var cluster *model.Cluster
+	var err error
+	if clusterName != "" {
+		cluster, err = service.GetClusterByName(ctx, clusterName)
+	} else {
+		cluster, err = service.GetClusterById(ctx, cast.ToInt64(clusterId))
+	}
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, helper.ConvertToCustomClusterDetail(cluster))
 	return
 }
 
@@ -269,6 +363,51 @@ func EditCluster(ctx *gin.Context) {
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, m.ClusterName)
 	return
+}
+
+func convertPublicCluster(req *request.CustomPublicCloudClusterRequest) (*model.Cluster, error) {
+	ret := model.Cluster{
+		ClusterName: req.ClusterName,
+		ClusterType: constants.ClusterTypeCustom,
+		ClusterDesc: req.ClusterDesc,
+		Provider:    req.Provider,
+		AccountKey:  req.AccountKey,
+	}
+	return &ret, nil
+}
+
+func convertPrivateCluster(req *request.CustomPrivateCloudClusterRequest) (*model.Cluster, error) {
+	ret := model.Cluster{
+		ClusterName: req.ClusterName,
+		ClusterType: constants.ClusterTypeCustom,
+		ClusterDesc: req.ClusterDesc,
+		Provider:    cloud.PrivateCloud,
+	}
+	return &ret, nil
+}
+
+func convertCustomClusterInstances(instanceList []model.CustomClusterInstance, clusterName string) ([]model.Instance, error) {
+	ret := make([]model.Instance, 0)
+	now := time.Now()
+	for _, instance := range instanceList {
+		attr, err := jsoniter.MarshalToString(model.InstanceAttr{
+			LoginName:     instance.LoginName,
+			LoginPassword: instance.LoginPassword,
+		})
+		if err != nil {
+			return nil, err
+		}
+		m := model.Instance{
+			Status:      constants.Running,
+			IpInner:     instance.InstanceIp,
+			ClusterName: clusterName,
+			Attrs:       &attr,
+			CreateAt:    &now,
+			RunningAt:   &now,
+		}
+		ret = append(ret, m)
+	}
+	return ret, nil
 }
 
 func convertToClusterModel(clusterInput *types.ClusterInfo) (*model.Cluster, error) {
@@ -492,14 +631,14 @@ func ShrinkAllInstances(ctx *gin.Context) {
 	return
 }
 
-func CheckMachine(ctx *gin.Context) {
-	req := request.CheckMachineRequest{}
+func CheckInstanceConnectable(ctx *gin.Context) {
+	req := request.CheckInstanceConnectableRequest{}
 	err := ctx.Bind(&req)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
-	res := service.CheckMachine(req.MachineList)
+	res := service.CheckInstanceConnectable(req.InstanceList)
 	response.MkResponse(ctx, http.StatusOK, response.Success, res)
 	return
 }

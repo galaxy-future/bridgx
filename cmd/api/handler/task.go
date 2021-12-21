@@ -15,7 +15,7 @@ import (
 func GetTaskCount(ctx *gin.Context) {
 	user := helper.GetUserClaims(ctx)
 	accountKey := ctx.Query("account")
-	accountKeys, err := service.GetAksByOrgAkProvider(ctx, user.GetOrgIdForTest(), accountKey, "")
+	accountKeys, err := service.GetAksByOrgAk(ctx, user.GetOrgIdForTest(), accountKey)
 	cnt, err := service.GetTaskCount(ctx, accountKeys)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)

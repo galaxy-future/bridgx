@@ -156,3 +156,18 @@ func TestGetInstanceCount(t *testing.T) {
 	assert.Nil(t, err)
 	assert.EqualValues(t, cnt, 0)
 }
+
+func TestListClustersByCond(t *testing.T) {
+	cond := model.ClusterSearchCond{
+		AccountKeys: nil,
+		ClusterName: "",
+		Provider:    "",
+		Usage:       "unused",
+		PageNum:     1,
+		PageSize:    10,
+	}
+
+	res, total, _ := model.ListClustersByCond(context.Background(), cond)
+	t.Logf("res:%v", res)
+	t.Logf("total:%v", total)
+}

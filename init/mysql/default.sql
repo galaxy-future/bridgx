@@ -137,6 +137,7 @@ CREATE TABLE `cluster`
 (
     `id`              bigint(20) unsigned NOT NULL AUTO_INCREMENT,
     `cluster_name`    varchar(64) COLLATE utf8mb4_bin  NOT NULL,
+    `cluster_type`    varchar(20) COLLATE utf8mb4_bin  DEFAULT 'standard',
     `cluster_desc`    varchar(128) COLLATE utf8mb4_bin NOT NULL,
     `expect_count`    int(7) NOT NULL DEFAULT '0',
     `status`          varchar(32) COLLATE utf8mb4_bin           DEFAULT NULL,

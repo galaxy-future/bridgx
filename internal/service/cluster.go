@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"go.uber.org/zap"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -23,22 +22,29 @@ import (
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
+	"go.uber.org/zap"
 )
 
-func CreateCluster(ctx context.Context, cluster *model.Cluster, username string, userId int64) error {
-	cluster.Status = constants.ClusterStatusEnable
+func CreateClusterWithTagsAndInstances(ctx context.Context, cluster *model.Cluster, tags []*model.ClusterTag, instances []model.Instance, username string, uid int64) error {
 	now := time.Now()
 	cluster.CreateAt = &now
 	cluster.UpdateAt = &now
 	cluster.CreateBy = username
 	cluster.UpdateBy = username
-	err := model.Create(cluster)
+	cluster.Status = constants.ClusterStatusEnable
+	if len(tags) > 0 {
+		for _, tag := range tags {
+			tag.CreateAt = &now
+			tag.UpdateAt = &now
+		}
+	}
+	err := model.CreateClusterWithTagsAndInstances(ctx, cluster, tags, instances)
 	if err != nil {
 		return err
 	}
 	err = RecordOperationLog(ctx, OperationLog{
 		Operation: OperationCreate,
-		Operator:  userId,
+		Operator:  uid,
 		Old:       nil,
 		New:       cluster,
 	})
@@ -138,8 +144,8 @@ func GetClusterCount(ctx context.Context, accountKeys []string) (count int64, er
 	return count, nil
 }
 
-func ListClusters(ctx context.Context, accountKeys []string, clusterName, provider string, pageNum, pageSize int) ([]model.Cluster, int, error) {
-	return model.ListClustersByCond(ctx, accountKeys, clusterName, provider, pageNum, pageSize)
+func ListClusters(ctx context.Context, cond model.ClusterSearchCond) ([]model.Cluster, int, error) {
+	return model.ListClustersByCond(ctx, cond)
 }
 
 func GetEnabledClusterNamesByAccount(ctx context.Context, accountKey string) ([]string, error) {
@@ -152,17 +158,17 @@ func GetEnabledClusterNamesByAccount(ctx context.Context, accountKey string) ([]
 
 }
 
-func GetEnabledClusterNamesByCond(ctx context.Context, ak, clusterName string, aks []string, strict bool) ([]string, error) {
+func GetEnabledClusterNamesByCond(ctx context.Context, provider, clusterName string, aks []string, strict bool) ([]string, error) {
 	res := make([]string, 0)
 	query := clients.ReadDBCli.WithContext(ctx).
 		Model(&model.Cluster{}).
 		Select("cluster_name").
 		Where("status = ?", constants.ClusterStatusEnable)
-	if ak == "" && len(aks) > 0 {
+	if len(aks) > 0 && provider != cloud.PrivateCloud {
 		query = query.Where("account_key IN (?)", aks)
 	}
-	if ak != "" {
-		query = query.Where("account_key = ?", ak)
+	if provider != "" {
+		query = query.Where("provider = ?", provider)
 	}
 	if clusterName != "" {
 		if strict {
@@ -200,18 +206,23 @@ func ConvertToClusterInfo(m *model.Cluster, tags []model.ClusterTag) (*types.Clu
 			return nil, err
 		}
 	}
-
-	err := jsoniter.UnmarshalFromString(m.NetworkConfig, networkConfig)
-	if err != nil {
-		return nil, err
+	if m.NetworkConfig != "" {
+		err := jsoniter.UnmarshalFromString(m.NetworkConfig, networkConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
-	err = jsoniter.UnmarshalFromString(m.StorageConfig, storageConfig)
-	if err != nil {
-		return nil, err
+	if m.StorageConfig != "" {
+		err := jsoniter.UnmarshalFromString(m.StorageConfig, storageConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
-	err = jsoniter.UnmarshalFromString(m.ChargeConfig, chargeConfig)
-	if err != nil {
-		return nil, err
+	if m.ChargeConfig != "" {
+		err := jsoniter.UnmarshalFromString(m.ChargeConfig, chargeConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var mt = make(map[string]string, 0)
 	for _, clusterTag := range tags {
@@ -219,24 +230,25 @@ func ConvertToClusterInfo(m *model.Cluster, tags []model.ClusterTag) (*types.Clu
 	}
 	instanceType := GetInstanceTypeByName(m.InstanceType)
 	clusterInfo := &types.ClusterInfo{
-		Id:             m.Id,
-		Name:           m.ClusterName,
-		Desc:           m.ClusterDesc,
-		RegionId:       m.RegionId,
-		ZoneId:         m.ZoneId,
-		InstanceType:   m.InstanceType,
-		Image:          m.Image,
-		Provider:       m.Provider,
-		Username:       constants.DefaultUsername,
-		Password:       m.Password,
-		AccountKey:     m.AccountKey,
-		ImageConfig:    imageConfig,
-		NetworkConfig:  networkConfig,
-		StorageConfig:  storageConfig,
-		ChargeConfig:   chargeConfig,
-		Tags:           mt,
-		InstanceCore:   instanceType.Core,
-		InstanceMemory: instanceType.Memory,
+		Id:                 m.Id,
+		Name:               m.ClusterName,
+		Desc:               m.ClusterDesc,
+		RegionId:           m.RegionId,
+		ZoneId:             m.ZoneId,
+		InstanceType:       m.InstanceType,
+		Image:              m.Image,
+		Provider:           m.Provider,
+		Username:           constants.DefaultUsername,
+		Password:           m.Password,
+		AccountKey:         m.AccountKey,
+		ImageConfig:        imageConfig,
+		NetworkConfig:      networkConfig,
+		StorageConfig:      storageConfig,
+		ChargeConfig:       chargeConfig,
+		Tags:               mt,
+		InstanceCore:       instanceType.Core,
+		InstanceMemory:     instanceType.Memory,
+		ComputingPowerType: GetComputingPowerType(m.InstanceType, m.Provider),
 	}
 	return clusterInfo, nil
 }
@@ -544,41 +556,41 @@ func judgeInstancesIsReady(instances []cloud.Instance, chargeConfig *types.Netwo
 	return true
 }
 
-// CheckMachine 检测机器连通性
-func CheckMachine(reqMachines []model.MachineRequest) response.CheckMachineResponse {
-	resMachines := make([]*model.MachineResponse, 0)
-	ch := make(chan *model.MachineResponse, len(reqMachines))
+// CheckInstanceConnectable 检测机器连通性
+func CheckInstanceConnectable(instances []model.CustomClusterInstance) response.CheckInstanceConnectableResponse {
+	resMachines := make([]*model.ConnectableResult, 0)
+	ch := make(chan *model.ConnectableResult, len(instances))
 	var wg sync.WaitGroup
-	for _, req := range reqMachines {
+	for _, req := range instances {
 		wg.Add(1)
-		go func(req model.MachineRequest) {
+		go func(req model.CustomClusterInstance) {
 			defer func() {
 				if r := recover(); r != nil {
-					logs.Logger.Errorf("CheckMachine err:%v ", r)
-					logs.Logger.Errorw("CheckMachine panic", zap.String("stack", string(debug.Stack())))
+					logs.Logger.Errorf("CheckInstanceConnectable err:%v ", r)
+					logs.Logger.Errorw("CheckInstanceConnectable panic", zap.String("stack", string(debug.Stack())))
 				}
 				wg.Done()
 			}()
-			isPass := utils.SshCheck(req.Ip, req.Username, req.Password)
-			machine := &model.MachineResponse{
-				Ip:     req.Ip,
-				IsPass: isPass,
+			isPass := utils.SshCheck(req.InstanceIp, req.LoginName, req.LoginPassword)
+			res := &model.ConnectableResult{
+				InstanceIp: req.InstanceIp,
+				IsPass:     isPass,
 			}
-			ch <- machine
+			ch <- res
 		}(req)
 	}
 	wg.Wait()
 	isAllPass := true
-	for i := 0; i < len(reqMachines); i++ {
+	for i := 0; i < len(instances); i++ {
 		machine := <-ch
 		if !machine.IsPass {
 			isAllPass = false
 		}
 		resMachines = append(resMachines, machine)
 	}
-	res := response.CheckMachineResponse{
-		IsAllPass:   isAllPass,
-		MachineList: resMachines,
+	res := response.CheckInstanceConnectableResponse{
+		IsAllPass:    isAllPass,
+		InstanceList: resMachines,
 	}
 	return res
 }

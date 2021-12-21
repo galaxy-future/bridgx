@@ -81,7 +81,7 @@ func modelLog2Res(logs []model.OperationLog, total, page, size int) ExtractLogsR
 			ID:              log.Id,
 			Operator:        log.Operator,
 			UserName:        log.UserName,
-			Operation:       log.Operation+" "+ log.ObjectName, // TODO: translation
+			Operation:       log.Operation + " " + log.ObjectName, // TODO: translation
 			OperationDetail: log.Diff,
 			ExecTime:        execTime,
 		})

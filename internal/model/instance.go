@@ -15,6 +15,22 @@ const (
 	InstanceTypeStatusExpired
 )
 
+type CustomClusterInstance struct {
+	InstanceIp    string `json:"instance_ip"`
+	LoginName     string `json:"login_name"`
+	LoginPassword string `json:"login_password"`
+}
+
+type InstanceAttr struct {
+	LoginName     string `json:"login_name"`
+	LoginPassword string `json:"login_password"`
+}
+
+type ConnectableResult struct {
+	InstanceIp string `json:"instance_ip"`
+	IsPass     bool   `json:"is_pass"`
+}
+
 type Instance struct {
 	Id           int64 `gorm:"primary_key"`
 	Status       constants.Status
@@ -25,6 +41,7 @@ type Instance struct {
 	TaskId       int64 //扩容任务ID
 	ShrinkTaskId int64 //缩容任务ID
 	ChargeType   string
+	Attrs        *string //扩展属性
 	CreateAt     *time.Time
 	DeleteAt     *time.Time
 	RunningAt    *time.Time

@@ -5,8 +5,10 @@ import (
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
 )
 
@@ -96,6 +98,40 @@ func ConvertToTaskThumbList(tasks []model.Task) []response.TaskThumb {
 		res = append(res, t)
 	}
 	return res
+}
+
+func ConvertToCustomClusterDetail(cluster *model.Cluster) *response.CustomClusterResponse {
+	return &response.CustomClusterResponse{
+		ClusterName: cluster.ClusterName,
+		ClusterDesc: cluster.ClusterDesc,
+		Provider:    cluster.Provider,
+		AccountKey:  cluster.AccountKey,
+	}
+}
+
+func ConvertToCustomInstanceList(instances []model.Instance) []response.CustomClusterInstance {
+	ret := make([]response.CustomClusterInstance, 0, len(instances))
+	for _, instance := range instances {
+		attrs := model.InstanceAttr{}
+		loginName := ""
+		loginPassword := ""
+		if instance.Attrs != nil {
+			err := jsoniter.UnmarshalFromString(*instance.Attrs, &attrs)
+			if err == nil {
+				loginName = attrs.LoginName
+				loginPassword = attrs.LoginPassword
+			} else {
+				logs.Logger.Errorf("custom cluster unmarshal error:%v", err)
+			}
+		}
+		ins := response.CustomClusterInstance{
+			InstanceIp:    instance.IpInner,
+			LoginName:     loginName,
+			LoginPassword: loginPassword,
+		}
+		ret = append(ret, ins)
+	}
+	return ret
 }
 
 func getStringTime(time *time.Time) string {
