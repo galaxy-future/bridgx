@@ -156,11 +156,12 @@ func GetInstanceUsageStatistics(ctx context.Context, clusterName string, specify
 }
 
 type InstancesSearchCond struct {
-	TaskId     int64
-	TaskAction string
-	Status     string
-	PageNumber int
-	PageSize   int
+	TaskId      int64
+	TaskAction  string
+	Status      string
+	ClusterName string
+	PageNumber  int
+	PageSize    int
 }
 
 func GetInstancesByCond(ctx context.Context, cond InstancesSearchCond) (ret []model.Instance, total int64, err error) {
@@ -173,6 +174,9 @@ func GetInstancesByCond(ctx context.Context, cond InstancesSearchCond) (ret []mo
 	}
 	if cond.Status != "" {
 		queryMap["status"] = cond.Status
+	}
+	if cond.ClusterName != "" {
+		queryMap["cluster_name"] = cond.ClusterName
 	}
 	total, err = model.Query(queryMap, cond.PageNumber, cond.PageSize, &ret, "id", true)
 	if err != nil {
@@ -337,6 +341,13 @@ func CheckIsGpuComputingPowerType(instanceType string, provider string) bool {
 	default:
 		return false
 	}
+}
+
+func GetComputingPowerType(instanceType string, provider string) string {
+	if CheckIsGpuComputingPowerType(instanceType, provider) {
+		return constants.GPU
+	}
+	return constants.CPU
 }
 
 func BatchCreateInstanceType(ctx context.Context, inss []model.InstanceType) error {

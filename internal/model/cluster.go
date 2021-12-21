@@ -3,11 +3,13 @@ package model
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/types"
+	"github.com/galaxy-future/BridgX/pkg/cloud"
 	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
 )
@@ -15,6 +17,7 @@ import (
 type Cluster struct {
 	Base
 	ClusterName  string //uniq_key
+	ClusterType  string
 	ClusterDesc  string
 	ExpectCount  int
 	Status       string //ENABLE, DISABLE
@@ -49,9 +52,11 @@ func (c *Cluster) GetChargeType() string {
 
 func (c *Cluster) UnmarshalChargeConfig() (*types.ChargeConfig, error) {
 	chargeConfig := types.ChargeConfig{}
-	err := jsoniter.UnmarshalFromString(c.ChargeConfig, &chargeConfig)
-	if err != nil {
-		return nil, err
+	if c.ChargeConfig != "" {
+		err := jsoniter.UnmarshalFromString(c.ChargeConfig, &chargeConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &chargeConfig, nil
 }
@@ -64,6 +69,25 @@ type ClusterSnapshot struct {
 
 func (Cluster) TableName() string {
 	return "cluster"
+}
+
+func CreateClusterWithTagsAndInstances(ctx context.Context, cluster *Cluster, tags []*ClusterTag, instances []Instance) error {
+	return clients.WriteDBCli.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(cluster).Error; err != nil {
+			return err
+		}
+		if len(tags) > 0 {
+			if err := tx.Create(&tags).Error; err != nil {
+				return err
+			}
+		}
+		if len(instances) > 0 {
+			if err := tx.Create(&instances).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // GetByClusterName find first record that match given conditions
@@ -140,24 +164,45 @@ func GetClusterSnapshot(clusterName string) (*ClusterSnapshot, error) {
 	}, nil
 }
 
-func ListClustersByCond(ctx context.Context, accountKeys []string, clusterName, provider string, pageNum, pageSize int) ([]Cluster, int, error) {
+type ClusterSearchCond struct {
+	AccountKeys []string
+	ClusterName string
+	ClusterType string
+	Provider    string
+	Usage       string
+	PageNum     int
+	PageSize    int
+}
+
+func ListClustersByCond(ctx context.Context, cond ClusterSearchCond) ([]Cluster, int, error) {
 	res := make([]Cluster, 0)
-	sql := clients.ReadDBCli.WithContext(ctx).Where(map[string]interface{}{})
-	if len(accountKeys) > 0 {
-		sql.Where("account_key IN (?)", accountKeys)
+	sql := clients.ReadDBCli.Debug().WithContext(ctx).Where(map[string]interface{}{})
+	if len(cond.AccountKeys) > 0 {
+		sql.Where("cluster.account_key IN (?)", cond.AccountKeys)
 	}
-	if provider != "" {
-		sql.Where("provider = ?", provider)
+	if cond.Provider != "" {
+		sql.Where("cluster.provider = ?", cond.Provider)
+	} else {
+		sql.Where("cluster.provider != ?", cloud.PrivateCloud)
 	}
-	if clusterName != "" {
-		sql.Where("cluster_name LIKE ?", fmt.Sprintf("%%%v%%", clusterName))
+	if cond.ClusterName != "" {
+		sql.Where("cluster.cluster_name LIKE ?", fmt.Sprintf("%%%v%%", cond.ClusterName))
 	}
-	err := sql.Order("id DESC").Offset((pageNum - 1) * pageSize).Limit(pageSize).Find(&res).Error
+	if cond.ClusterType != "" {
+		sql.Where("cluster.cluster_type = ?", strings.ToLower(cond.ClusterType))
+	}
+	joins := ""
+	if cond.Usage != "" {
+		joins = "LEFT JOIN cluster_tag ct on ct.cluster_name = cluster.cluster_name"
+		sql.Where("ct.tag_key = ? and ct.tag_value LIKE ?", constants.DefaultClusterUsageKey, fmt.Sprintf("%%%v%%", cond.Usage))
+	}
+
+	err := sql.Distinct().Order("id DESC").Offset((cond.PageNum - 1) * cond.PageSize).Limit(cond.PageSize).Joins(joins).Find(&res).Error
 	if err != nil {
 		return res, 0, err
 	}
 	var cnt int64
-	err = sql.Offset(-1).Limit(-1).Count(&cnt).Error
+	err = sql.Distinct("cluster.cluster_name").Offset(-1).Limit(-1).Count(&cnt).Error
 	if err != nil {
 		return res, 0, err
 	}

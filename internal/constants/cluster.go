@@ -18,11 +18,12 @@ const (
 	DefaultUsername           = "root"
 	DefaultClusterUsageKey    = "usage"
 	DefaultClusterUsageUnused = "unused"
-)
 
-const (
 	ClusterStatusEnable  = "ENABLE"
 	ClusterStatusDisable = "DISABLE"
+
+	ClusterTypeStandard = "standard"
+	ClusterTypeCustom   = "custom"
 )
 
 const (

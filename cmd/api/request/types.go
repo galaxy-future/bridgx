@@ -172,6 +172,20 @@ type SyncInstanceExpireTimeRequest struct {
 	ClusterName string `json:"cluster_name" binding:"required"`
 }
 
-type CheckMachineRequest struct {
-	MachineList []model.MachineRequest `json:"machine_list" binding:"min=1"`
+type CustomPublicCloudClusterRequest struct {
+	ClusterName  string                        `json:"name" binding:"required"`
+	ClusterDesc  string                        `json:"desc"`
+	Provider     string                        `json:"provider" binding:"required,mustIn=cloud"`
+	AccountKey   string                        `json:"account_key"`
+	InstanceList []model.CustomClusterInstance `json:"instance_list" binding:"required,min=1"`
+}
+
+type CustomPrivateCloudClusterRequest struct {
+	ClusterName  string                        `json:"name" binding:"required"`
+	ClusterDesc  string                        `json:"desc"`
+	InstanceList []model.CustomClusterInstance `json:"instance_list" binding:"required,min=1"`
+}
+
+type CheckInstanceConnectableRequest struct {
+	InstanceList []model.CustomClusterInstance `json:"instance_list"`
 }

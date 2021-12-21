@@ -69,8 +69,8 @@ func GetDefaultAccountByProvider(provider string) (account *Account, err error) 
 	return account, nil
 }
 
-//GetAksByOrgAkProvider get aks by ak and provider
-func GetAksByOrgAkProvider(ctx context.Context, orgId int64, ak, provider string) ([]string, error) {
+//GetAksByOrgAk get aks by ak
+func GetAksByOrgAk(ctx context.Context, orgId int64, ak string) ([]string, error) {
 	aks := make([]string, 0)
 	query := clients.ReadDBCli.WithContext(ctx).
 		Table(Account{}.TableName()).
@@ -79,12 +79,9 @@ func GetAksByOrgAkProvider(ctx context.Context, orgId int64, ak, provider string
 	if ak != "" {
 		query = query.Where("account_key = ?", ak)
 	}
-	if provider != "" {
-		query = query.Where("provider = ?", provider)
-	}
 
 	if err := query.Find(&aks).Error; err != nil {
-		logErr("GetAksByOrgAkProvider from read db", err)
+		logErr("GetAksByOrgAk from read db", err)
 		return nil, err
 	}
 	return aks, nil

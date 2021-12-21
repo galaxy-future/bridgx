@@ -6,17 +6,18 @@ import (
 
 type ClusterInfo struct {
 	//Base Config
-	Id           int64  `json:"id"`
-	Name         string `json:"name" binding:"required,max=20"`
-	Desc         string `json:"desc"`
-	RegionId     string `json:"region_id" binding:"required"`
-	ZoneId       string `json:"zone_id" binding:"required"`
-	InstanceType string `json:"instance_type" binding:"required"`
-	Image        string `json:"image"`
-	Provider     string `json:"provider" binding:"required,mustIn=cloud"`
-	Username     string `json:"username"`
-	Password     string `json:"password" binding:"required,min=8,max=30,charTypeGT3"`
-	AccountKey   string `json:"account_key" binding:"required"` //阿里云ak
+	Id                 int64  `json:"id"`
+	Name               string `json:"name" binding:"required,max=20"`
+	Desc               string `json:"desc"`
+	RegionId           string `json:"region_id" binding:"required"`
+	ZoneId             string `json:"zone_id" binding:"required"`
+	InstanceType       string `json:"instance_type" binding:"required"`
+	Image              string `json:"image"`
+	Provider           string `json:"provider" binding:"required,mustIn=cloud"`
+	Username           string `json:"username"`
+	Password           string `json:"password" binding:"required,min=8,max=30,charTypeGT3"`
+	AccountKey         string `json:"account_key" binding:"required"` //阿里云ak
+	ComputingPowerType string `json:"computing_power_type"`
 
 	//Advanced Config
 	ImageConfig   *ImageConfig   `json:"image_config"`

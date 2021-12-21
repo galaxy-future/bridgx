@@ -54,11 +54,14 @@ func Init() *gin.Engine {
 			clusterPath.GET("id/:id", handler.GetClusterById)
 			clusterPath.GET("name/:name", handler.GetClusterByName)
 			clusterPath.POST("create", handler.CreateCluster)
+			clusterPath.POST("create_custom_public", handler.CreateCustomPublic)
+			clusterPath.POST("create_custom_private", handler.CreateCustomPrivate)
 			clusterPath.POST("edit", handler.EditCluster)
 			clusterPath.DELETE("delete/:ids", handler.DeleteClusters)
 			clusterPath.GET("num", handler.GetClusterCount)
 			clusterPath.GET("instance_stat", handler.GetInstanceStat)
 			clusterPath.GET("describe_all", handler.ListClusters)
+			clusterPath.GET("custom/detail", handler.CustomClusterDetail)
 
 			clusterPath.POST("list_by_tags", handler.ListClustersByTags)
 			clusterPath.GET("get_tags", handler.GetClusterTags)
@@ -70,7 +73,7 @@ func Init() *gin.Engine {
 			clusterPath.POST("shrink", handler.ShrinkCluster)
 			clusterPath.POST("shrink_all", handler.ShrinkAllInstances)
 
-			clusterPath.POST("machine/check", handler.CheckMachine)
+			clusterPath.POST("instance/check", handler.CheckInstanceConnectable)
 		}
 		vpcPath := v1Api.Group("vpc/")
 		{
@@ -111,6 +114,7 @@ func Init() *gin.Engine {
 			instancePath.GET("num", handler.GetInstanceCount)
 			instancePath.GET("id/describe", handler.GetInstance)
 			instancePath.GET("describe_all", handler.GetInstanceList)
+			instancePath.GET("list_custom", handler.GetCustomInstanceList)
 			instancePath.GET("usage_total", handler.GetInstanceUsageTotal)
 			instancePath.GET("usage_statistics", handler.GetInstanceUsageStatistics)
 			instancePath.POST("sync_expire_time", handler.SyncInstanceExpireTime)

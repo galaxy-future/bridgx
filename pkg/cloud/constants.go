@@ -1,6 +1,8 @@
 package cloud
 
 const (
+	PrivateCloud = "PrivateCloud" //自建机房 私有云
+
 	AlibabaCloud = "AlibabaCloud"
 	HuaweiCloud  = "HuaweiCloud"
 )

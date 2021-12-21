@@ -22,7 +22,7 @@ func GetInstanceCount(ctx *gin.Context) {
 	}
 	clusterName := ctx.Query("cluster_name")
 	accountKey := ctx.Query("account")
-	accountKeys, err := service.GetAksByOrgAkProvider(ctx, user.OrgId, accountKey, "")
+	accountKeys, err := service.GetAksByOrgAk(ctx, user.OrgId, accountKey)
 	cnt, err := service.GetInstanceCount(ctx, accountKeys, clusterName)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
@@ -78,9 +78,19 @@ func GetInstanceList(ctx *gin.Context) {
 			status[i] = strings.ToUpper(st)
 		}
 	}
-	accountKeys, err := service.GetAksByOrgAkProvider(ctx, user.OrgId, accountKey, provider)
+	accountKeys, err := service.GetAksByOrgAk(ctx, user.OrgId, accountKey)
 	pn, ps := getPager(ctx)
-	clusterNames, instances, total, err := service.GetInstancesByAccounts(ctx, accountKeys, status, pn, ps, instanceId, ip, clusterName)
+
+	clusterNames, instances, total, err := service.GetInstancesByAccounts(ctx, service.GetInstancesCond{
+		AccountKeys: accountKeys,
+		Status:      status,
+		InstanceId:  instanceId,
+		Ip:          ip,
+		ClusterName: clusterName,
+		Provider:    provider,
+		PageNum:     pn,
+		PageSize:    ps,
+	})
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
@@ -96,6 +106,34 @@ func GetInstanceList(ctx *gin.Context) {
 		Pager:        pager,
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
+	return
+}
+
+func GetCustomInstanceList(ctx *gin.Context) {
+	clusterName, _ := ctx.GetQuery("cluster_name")
+	if clusterName == "" {
+		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
+		return
+	}
+	pn, ps := getPager(ctx)
+	instances, total, err := service.GetInstancesByCond(ctx, service.InstancesSearchCond{
+		ClusterName: clusterName,
+		PageNumber:  pn,
+		PageSize:    ps,
+	})
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	pager := response.Pager{
+		PageNumber: pn,
+		PageSize:   ps,
+		Total:      int(total),
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, &response.CustomInstanceListResponse{
+		InstanceList: helper.ConvertToCustomInstanceList(instances),
+		Pager:        pager,
+	})
 	return
 }
 

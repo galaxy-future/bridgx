@@ -22,6 +22,10 @@ func InitDBClients() {
 	if err != nil {
 		panic(err)
 	}
+	if config.GlobalConfig.DebugMode {
+		WriteDBCli = WriteDBCli.Debug()
+		ReadDBCli = ReadDBCli.Debug()
+	}
 }
 
 func GetSqlDriver(dbConf config.DBConfig) (*gorm.DB, error) {
