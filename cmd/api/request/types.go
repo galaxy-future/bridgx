@@ -53,10 +53,10 @@ func (c *CreateVpcRequest) Check() bool {
 }
 
 type DescribeVpcRequest struct {
-	Provider string `form:"provider" binding:"required"`
-	RegionId string `form:"region_id" binding:"required"`
-	VpcName  string `form:"vpc_name"`
-	Ak       string `form:"ak" binding:"required"`
+	Provider   string `form:"provider" binding:"required"`
+	RegionId   string `form:"region_id" binding:"required"`
+	VpcName    string `form:"vpc_name"`
+	AccountKey string `form:"account_key" binding:"required"`
 }
 
 type CreateSwitchRequest struct {

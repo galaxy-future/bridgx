@@ -80,7 +80,7 @@ func DescribeVpc(ctx *gin.Context) {
 		VpcName:    req.VpcName,
 		PageNumber: pageNumber,
 		PageSize:   pageSize,
-		Ak:         req.Ak,
+		AccountKey: req.AccountKey,
 	})
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)

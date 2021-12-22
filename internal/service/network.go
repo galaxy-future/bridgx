@@ -546,7 +546,7 @@ type GetVPCRequest struct {
 	VpcName    string
 	PageNumber int
 	PageSize   int
-	Ak         string
+	AccountKey string
 }
 type VPCResponse struct {
 	Vpcs  []Vpc
@@ -589,7 +589,7 @@ func model2VpcResponse(vpcs []model.Vpc, pageNumber, pageSize, total int) VPCRes
 func GetVPC(ctx context.Context, req GetVPCRequest) (resp VPCResponse, err error) {
 	// TODO: cache
 	vs, total, err := model.FindVpcsWithPage(ctx, model.FindVpcConditions{
-		Ak:        req.Ak,
+		AccountKey: req.AccountKey,
 		VpcName:    req.VpcName,
 		RegionId:   req.RegionId,
 		PageNumber: req.PageNumber,

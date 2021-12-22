@@ -93,7 +93,7 @@ func (SecurityGroupRule) TableName() string {
 }
 
 type FindVpcConditions struct {
-	Ak         string
+	AccountKey string
 	VpcId      string
 	VpcName    string
 	RegionId   string
@@ -124,7 +124,7 @@ func FindVpcById(ctx context.Context, cond FindVpcConditions) (result Vpc, err e
 }
 
 func FindVpcsWithPage(ctx context.Context, cond FindVpcConditions) (result []Vpc, total int64, err error) {
-	query := clients.ReadDBCli.WithContext(ctx).Table(Vpc{}.TableName()).Where("ak = ? and is_del = 0", cond.Ak)
+	query := clients.ReadDBCli.WithContext(ctx).Table(Vpc{}.TableName()).Where("ak = ? and is_del = 0", cond.AccountKey)
 	if cond.RegionId != "" {
 		query.Where("region_id = ?", cond.RegionId)
 	}
