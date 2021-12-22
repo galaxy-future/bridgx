@@ -67,22 +67,20 @@ func CreateVpc(ctx *gin.Context) {
 }
 
 func DescribeVpc(ctx *gin.Context) {
-	account, err := GetOrgKeys(ctx)
+	req := request.DescribeVpcRequest{}
+	err := ctx.Bind(&req)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, response.PermissionDenied, nil)
+		return
 	}
-	provider := ctx.Query("provider")
-	regionId := ctx.Query("region_id")
-	vpcName := ctx.Query("vpc_name")
 	pageNumber, pageSize := getPager(ctx)
-	logs.Logger.Infof("provider:[%s] regionId:[%s] vpcName:[%s] pageNumber[%d]  pageSize[%d]", provider, regionId, vpcName, pageNumber, pageSize)
 	resp, err := service.GetVPC(ctx, service.GetVPCRequest{
-		Provider:   provider,
-		RegionId:   regionId,
-		VpcName:    vpcName,
+		Provider:   req.Provider,
+		RegionId:   req.RegionId,
+		VpcName:    req.VpcName,
 		PageNumber: pageNumber,
 		PageSize:   pageSize,
-		Account:    account,
+		Ak:         req.Ak,
 	})
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
