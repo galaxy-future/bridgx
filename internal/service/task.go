@@ -117,7 +117,7 @@ func hasUnfinishedTask(clusterName string) bool {
 }
 
 func GetTaskCount(ctx context.Context, accountKeys []string) (int64, error) {
-	clusterNames, err := GetEnabledClusterNamesByAccounts(ctx, accountKeys)
+	clusterNames, err := GetStandardClusterNamesByAccounts(ctx, accountKeys)
 	if err != nil {
 		return 0, err
 	}
@@ -142,7 +142,7 @@ func GetTaskListByAk(ctx context.Context, accountKey string, pageNum, pageSize i
 }
 
 func GetTaskListByAks(ctx context.Context, accountKeys []string, pageNum, pageSize int) ([]model.Task, int64, error) {
-	clusterNames, err := GetEnabledClusterNamesByAccounts(ctx, accountKeys)
+	clusterNames, err := GetStandardClusterNamesByAccounts(ctx, accountKeys)
 	if err != nil {
 		return nil, 0, err
 	}

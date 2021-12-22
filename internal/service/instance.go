@@ -78,7 +78,7 @@ func GetInstanceUsageTotal(ctx context.Context, clusterName string, specifyDay t
 		if len(accounts) == 0 {
 			return 0, nil
 		}
-		clusterNames, err = GetEnabledClusterNamesByAccounts(ctx, accounts)
+		clusterNames, err = GetStandardClusterNamesByAccounts(ctx, accounts)
 		if err != nil {
 			return 0, err
 		}
@@ -136,7 +136,7 @@ func GetInstanceUsageStatistics(ctx context.Context, clusterName string, specify
 		if len(accounts) == 0 {
 			return nil, 0, nil
 		}
-		clusterNames, err = GetEnabledClusterNamesByAccounts(ctx, accounts)
+		clusterNames, err = GetStandardClusterNamesByAccounts(ctx, accounts)
 		if err != nil {
 			return nil, 0, err
 		}

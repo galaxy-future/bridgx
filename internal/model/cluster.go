@@ -177,7 +177,7 @@ type ClusterSearchCond struct {
 func ListClustersByCond(ctx context.Context, cond ClusterSearchCond) ([]Cluster, int, error) {
 	res := make([]Cluster, 0)
 	sql := clients.ReadDBCli.Debug().WithContext(ctx).Where(map[string]interface{}{})
-	if len(cond.AccountKeys) > 0 {
+	if cond.ClusterType != constants.ClusterTypeCustom && len(cond.AccountKeys) > 0 {
 		sql.Where("cluster.account_key IN (?)", cond.AccountKeys)
 	}
 	if cond.Provider != "" {

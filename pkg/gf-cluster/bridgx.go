@@ -119,7 +119,7 @@ type GetAKSKResponse struct {
 	Msg  string    `json:"msg"`
 }
 
-//BridgxUnusedCluster we未被占用的集群
+//BridgxUnusedCluster 未被占用的集群
 type BridgxUnusedCluster struct {
 	ClusterName string   `json:"cluster_name"`
 	CloudType   string   `json:"cloud_type"`

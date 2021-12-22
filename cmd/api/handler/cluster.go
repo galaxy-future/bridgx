@@ -430,6 +430,7 @@ func convertToClusterModel(clusterInput *types.ClusterInfo) (*model.Cluster, err
 	m := model.Cluster{
 		ClusterName:  clusterInput.Name,
 		ClusterDesc:  clusterInput.Desc,
+		ClusterType:  constants.ClusterTypeStandard,
 		RegionId:     clusterInput.RegionId,
 		ZoneId:       clusterInput.ZoneId,
 		InstanceType: clusterInput.InstanceType,

@@ -201,6 +201,7 @@ CREATE TABLE `instance`
     `status`         varchar(32) NOT NULL DEFAULT 'UNDEFINED',
     `ip_inner`       varchar(255)         DEFAULT NULL,
     `ip_outer`       varchar(255)         DEFAULT NULL,
+    `attrs`          varchar(1024)        DEFAULT NULL,
     `create_at`      timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_at`      timestamp NULL DEFAULT CURRENT_TIMESTAMP,
     `delete_at`      timestamp NULL DEFAULT NULL,
