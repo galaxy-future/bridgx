@@ -97,12 +97,18 @@ func (p *HuaweiCloud) BatchCreate(m cloud.Params, num int) ([]string, error) {
 	request.Body = &model.CreateServersRequestBody{
 		Server: serverbody,
 	}
+	if m.DryRun {
+		request.Body.DryRun = &m.DryRun
+	}
 	response, err := p.ecsClient.CreateServers(request)
 	if err != nil {
 		return []string{}, err
 	}
+	if m.DryRun {
+		return []string{}, nil
+	}
 	if response.HttpStatusCode != http.StatusOK {
-		return []string{}, fmt.Errorf("httpcode %d, %v", response.HttpStatusCode, *response.JobId)
+		return []string{}, fmt.Errorf("httpcode %d", response.HttpStatusCode)
 	}
 
 	if m.Charge.ChargeType == cloud.InstanceChargeTypePrePaid {
@@ -125,7 +131,13 @@ func (p *HuaweiCloud) GetInstances(ids []string) (instances []cloud.Instance, er
 	wg.Add(idNum)
 	for _, id := range ids {
 		go func(id string) {
-			defer wg.Done()
+			defer func() {
+				wg.Done()
+				if e := recover(); e != nil {
+					logs.Logger.Errorf("ShowServer %s panic, %v", id, e)
+				}
+			}()
+
 			if id == "" {
 				return
 			}
@@ -148,7 +160,13 @@ func (p *HuaweiCloud) GetInstances(ids []string) (instances []cloud.Instance, er
 
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer func() {
+			wg.Done()
+			if e := recover(); e != nil {
+				logs.Logger.Errorf("listPrePaidResources panic, %v", e)
+			}
+		}()
+
 		resources, err = p.listPrePaidResources(ids)
 		if err != nil {
 			logs.Logger.Errorf("listPrePaidResources failed, %v", err)
@@ -231,7 +249,7 @@ func (p *HuaweiCloud) BatchDelete(ids []string, regionId string) error {
 			return err
 		}
 		if response.HttpStatusCode != http.StatusOK {
-			return fmt.Errorf("httpcode %d, %v", response.HttpStatusCode, *response.JobId)
+			return fmt.Errorf("httpcode %d", response.HttpStatusCode)
 		}
 	}
 	return nil
@@ -258,7 +276,7 @@ func (p *HuaweiCloud) StartInstances(ids []string) error {
 			return err
 		}
 		if response.HttpStatusCode != http.StatusOK {
-			return fmt.Errorf("httpcode %d, %v", response.HttpStatusCode, *response.JobId)
+			return fmt.Errorf("httpcode %d", response.HttpStatusCode)
 		}
 	}
 	return nil
@@ -285,7 +303,7 @@ func (p *HuaweiCloud) StopInstances(ids []string) error {
 			return err
 		}
 		if response.HttpStatusCode != http.StatusOK {
-			return fmt.Errorf("httpcode %d, %v", response.HttpStatusCode, *response.JobId)
+			return fmt.Errorf("httpcode %d", response.HttpStatusCode)
 		}
 	}
 	return nil

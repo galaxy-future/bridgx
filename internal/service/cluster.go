@@ -447,35 +447,37 @@ func queryAndSaveExpandIPs(c *types.ClusterInfo, taskId int64, idNum int) ([]str
 	}
 	if err != nil {
 		logs.Logger.Errorf("[ExpandCluster] GetInstances error. cluster name: %s, error: %s", c.Name, err.Error())
+		return nil, nil, err
 	}
 	for _, instance := range expandInstances {
-		if instance.IpInner != "" {
-			expandIps = append(expandIps, instance.IpInner)
-			update := func(attempt uint) error {
-				now := time.Now()
-				var expireAt *time.Time
-				if instance.CostWay == cloud.InstanceChargeTypePrePaid {
-					expireAt = instance.ExpireAt
-				}
-				return model.UpdateByInstanceId(model.Instance{
-					InstanceId:  instance.Id,
-					IpInner:     instance.IpInner,
-					IpOuter:     instance.IpOuter,
-					ClusterName: c.Name,
-					Status:      constants.Running,
-					RunningAt:   &now,
-					ExpireAt:    expireAt,
-				})
-			}
-			err = retry.Retry(update, strategy.Limit(3), strategy.Backoff(backoff.Fibonacci(10*time.Millisecond)))
-			if err != nil {
-				logs.Logger.Errorf("[syncDbAndConfig] UpdateByInstanceId Error IP:%v, instanceId:%v", instance.IpInner, instance.Id)
-			}
-		} else {
+		if instance.IpInner == "" {
 			logs.Logger.Errorf("[syncDbAndConfig] InstanceId:%v, GOT NO IP", instance.Id)
+			continue
+		}
+		expandIps = append(expandIps, instance.IpInner)
+		update := func(attempt uint) error {
+			now := time.Now()
+			var expireAt *time.Time
+			if instance.CostWay == cloud.InstanceChargeTypePrePaid {
+				expireAt = instance.ExpireAt
+			}
+			return model.UpdateByInstanceId(model.Instance{
+				InstanceId:  instance.Id,
+				IpInner:     instance.IpInner,
+				IpOuter:     instance.IpOuter,
+				ClusterName: c.Name,
+				Status:      constants.Running,
+				RunningAt:   &now,
+				ExpireAt:    expireAt,
+			})
+		}
+		err = retry.Retry(update, strategy.Limit(3), strategy.Backoff(backoff.Fibonacci(10*time.Millisecond)))
+		if err != nil {
+			logs.Logger.Errorf("[syncDbAndConfig] UpdateByInstanceId Error IP:%v, instanceId:%v", instance.IpInner, instance.Id)
+			continue
 		}
 	}
-	return expandIps, expandInstances, err
+	return expandIps, expandInstances, nil
 }
 
 func saveExpandInstancesToDB(c *types.ClusterInfo, expandInstanceIds []string, taskId int64) error {

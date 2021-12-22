@@ -25,6 +25,7 @@ type Params struct {
 	Charge       *Charge
 	Password     string
 	Tags         []Tag
+	DryRun       bool
 }
 
 type Tag struct {

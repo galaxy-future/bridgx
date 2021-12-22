@@ -220,6 +220,11 @@ func CreateCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
 		return
 	}
+	err = service.CheckClusterParam(&clusterInput)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
 	m, err := convertToClusterModel(&clusterInput)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), err)
@@ -349,6 +354,11 @@ func EditCluster(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&clusterInput)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), err)
+		return
+	}
+	err = service.CheckClusterParam(&clusterInput)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 	m, err := convertToClusterModel(&clusterInput)

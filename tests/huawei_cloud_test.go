@@ -31,7 +31,7 @@ func TestCreateIns(t *testing.T) {
 			VpcId:                   "",
 			SubnetId:                "",
 			SecurityGroup:           "",
-			InternetChargeType:      "traffic",
+			InternetChargeType:      cloud.BandwidthPayByTraffic,
 			InternetMaxBandwidthOut: 0,
 			InternetIpType:          "5_bgp",
 		},
@@ -55,6 +55,7 @@ func TestCreateIns(t *testing.T) {
 				Value: "cluster2",
 			},
 		},
+		DryRun: true,
 	}
 	res, err := client.BatchCreate(param, 1)
 	if err != nil {

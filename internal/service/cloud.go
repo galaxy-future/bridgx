@@ -122,6 +122,20 @@ func cloudDiff(cloudIds, memoryIds []string) (onlyCouldIds, onlyMemoryIds []stri
 	return
 }
 
+func CheckClusterParam(clusterInfo *types.ClusterInfo) error {
+	provider, err := getProvider(clusterInfo.Provider, clusterInfo.AccountKey, clusterInfo.RegionId)
+	if err != nil {
+		return err
+	}
+	params, err := generateParams(clusterInfo, nil)
+	params.DryRun = true
+	_, err = provider.BatchCreate(params, 1)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func Expand(clusterInfo *types.ClusterInfo, tags []cloud.Tag, num int) (instanceIds []string, err error) {
 	batch := getBatch(num, constants.BatchMax)
 	createdBatch := make(chan []string, batch)

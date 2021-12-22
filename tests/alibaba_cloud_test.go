@@ -1,13 +1,13 @@
 package tests
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/bssopenapi"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,6 +18,80 @@ func getAlibabaClient() (*alibaba.AlibabaCloud, error) {
 	}
 
 	return c, nil
+}
+
+func TestCreateAliIns(t *testing.T) {
+	client, err := getAlibabaClient()
+	if err != nil {
+		t.Log(err)
+		return
+	}
+
+	param := cloud.Params{
+		InstanceType: "",
+		ImageId:      "",
+		Network: &cloud.Network{
+			VpcId:                   "",
+			SubnetId:                "",
+			SecurityGroup:           "",
+			InternetChargeType:      cloud.BandwidthPayByTraffic,
+			InternetMaxBandwidthOut: 0,
+		},
+		Disks: &cloud.Disks{
+			SystemDisk: cloud.DiskConf{Size: 40, Category: "cloud_efficiency"},
+			DataDisk:   []cloud.DiskConf{},
+		},
+		Charge: &cloud.Charge{
+			ChargeType: cloud.InstanceChargeTypePostPaid,
+			Period:     1,
+			PeriodUnit: "Month",
+		},
+		Password: "",
+		Tags: []cloud.Tag{
+			{
+				Key:   cloud.TaskId,
+				Value: "12345",
+			},
+			{
+				Key:   cloud.ClusterName,
+				Value: "cluster2",
+			},
+		},
+		DryRun: true,
+	}
+	res, err := client.BatchCreate(param, 1)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	t.Log(res)
+}
+
+func TestCtlAliIns(t *testing.T) {
+	client, err := getAlibabaClient()
+	if err != nil {
+		t.Log(err)
+		return
+	}
+
+	ids := []string{""}
+
+	err = client.StopInstances(ids)
+	if err != nil {
+		t.Log(err.Error())
+	}
+
+	time.Sleep(time.Duration(60) * time.Second)
+	err = client.StartInstances(ids)
+	if err != nil {
+		t.Log(err.Error())
+	}
+
+	time.Sleep(time.Duration(60) * time.Second)
+	err = client.BatchDelete(ids, "cn-qingdao")
+	if err != nil {
+		t.Log(err.Error())
+	}
 }
 
 func TestDescribeAvailableResource(t *testing.T) {
@@ -35,7 +109,7 @@ func TestDescribeAvailableResource(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = json.Marshal(res)
+	resStr, _ = jsoniter.Marshal(res)
 	t.Log(string(resStr))
 
 	res, err = cli.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: []string{"ecs.g6.large"}})
@@ -43,7 +117,7 @@ func TestDescribeAvailableResource(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = json.Marshal(res)
+	resStr, _ = jsoniter.Marshal(res)
 	t.Log(string(resStr))
 
 	res, err = cli.DescribeImages(cloud.DescribeImagesRequest{RegionId: "cn-beijing", InsType: "ecs.g6.large"})
@@ -51,7 +125,7 @@ func TestDescribeAvailableResource(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = json.Marshal(res)
+	resStr, _ = jsoniter.Marshal(res)
 	t.Log(string(resStr))
 }
 
@@ -84,7 +158,7 @@ func TestQueryOrders(t *testing.T) {
 				t.Log("---------------")
 				break
 			}
-			rowStr, _ := json.Marshal(row)
+			rowStr, _ := jsoniter.Marshal(row)
 			t.Log(string(rowStr))
 		}
 		if len(res.Orders) < pageSize {
@@ -110,7 +184,7 @@ func TestGetOrderDetail(t *testing.T) {
 		return
 	}
 
-	orders, err := json.Marshal(response.Data.OrderList)
+	orders, err := jsoniter.Marshal(response.Data.OrderList)
 	if err != nil {
 		t.Log(err.Error())
 		return
