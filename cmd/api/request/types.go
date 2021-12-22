@@ -176,7 +176,7 @@ type CustomPublicCloudClusterRequest struct {
 	ClusterName  string                        `json:"name" binding:"required"`
 	ClusterDesc  string                        `json:"desc"`
 	Provider     string                        `json:"provider" binding:"required,mustIn=cloud"`
-	AccountKey   string                        `json:"account_key"`
+	AccountKey   string                        `json:"account_key" binding:"required"`
 	InstanceList []model.CustomClusterInstance `json:"instance_list" binding:"required,min=1"`
 }
 

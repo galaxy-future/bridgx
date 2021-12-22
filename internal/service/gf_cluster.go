@@ -26,15 +26,10 @@ func GetBridgxUnusedCluster(ctx context.Context, user *authorization.CustomClaim
 			CloudType:   cluster.Provider,
 			Nodes:       nil,
 		}
-		accountKeys, err := GetAksByOrgAk(ctx, user.OrgId, "")
-		if err != nil {
-			return nil, 0, err
-		}
-		_, instances, total, err := GetInstancesByAccounts(ctx, GetInstancesCond{
-			AccountKeys: accountKeys,
-			Status:      []string{string(constants.Running)},
+		instances, insTotal, err := GetInstancesByCond(ctx, InstancesSearchCond{
+			Status:      string(constants.Running),
 			ClusterName: cluster.ClusterName,
-			PageNum:     1,
+			PageNumber:  1,
 			PageSize:    10,
 		})
 		if err != nil {
@@ -43,7 +38,7 @@ func GetBridgxUnusedCluster(ctx context.Context, user *authorization.CustomClaim
 		for _, instance := range instances {
 			targetCluster.Nodes = append(targetCluster.Nodes, instance.IpInner)
 		}
-		targetCluster.Total = int(total)
+		targetCluster.Total = int(insTotal)
 		clustersList = append(clustersList, targetCluster)
 	}
 
@@ -95,17 +90,12 @@ func GetAllInstanceInCluster(ctx context.Context, user *authorization.CustomClai
 	return instances, nil
 }
 
-//getClusterInstances 根据peage获取实例列表
+//getClusterInstances 根据clusterName获取实例列表
 func getClusterInstances(ctx context.Context, user *authorization.CustomClaims, clusterName string, pageNum, pageSize int) ([]model.Instance, int, error) {
-	accountKeys, err := GetAksByOrgAk(ctx, user.OrgId, "")
-	if err != nil {
-		return nil, 0, err
-	}
-	_, instances, total, err := GetInstancesByAccounts(ctx, GetInstancesCond{
-		AccountKeys: accountKeys,
-		Status:      []string{string(constants.Running)},
+	instances, total, err := GetInstancesByCond(ctx, InstancesSearchCond{
+		Status:      string(constants.Running),
 		ClusterName: clusterName,
-		PageNum:     pageNum,
+		PageNumber:  pageNum,
 		PageSize:    pageSize,
 	})
 	if err != nil {

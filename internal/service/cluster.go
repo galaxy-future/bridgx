@@ -184,9 +184,9 @@ func GetEnabledClusterNamesByCond(ctx context.Context, provider, clusterName str
 	return res, nil
 }
 
-func GetEnabledClusterNamesByAccounts(ctx context.Context, accountKeys []string) ([]string, error) {
+func GetStandardClusterNamesByAccounts(ctx context.Context, accountKeys []string) ([]string, error) {
 	res := make([]string, 0)
-	err := clients.ReadDBCli.WithContext(ctx).Model(&model.Cluster{}).Select("cluster_name").Where("account_key in (?) AND status = ?", accountKeys, constants.ClusterStatusEnable).Find(&res).Error
+	err := clients.ReadDBCli.WithContext(ctx).Model(&model.Cluster{}).Select("cluster_name").Where("account_key in (?) AND status = ? AND cluster_type = ?", accountKeys, constants.ClusterStatusEnable, constants.ClusterTypeStandard).Find(&res).Error
 	if err != nil {
 		return res, err
 	}
