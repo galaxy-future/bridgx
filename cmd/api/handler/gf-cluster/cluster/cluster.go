@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
+	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/cluster"
 	cluster_builder "github.com/galaxy-future/BridgX/internal/gf-cluster/cluster-builder"
 	"github.com/galaxy-future/BridgX/internal/gf-cluster/instance"
@@ -61,15 +62,22 @@ func HandleCreateCluster(c *gin.Context) {
 	}
 
 	//5. 获取AKSK信息
-	aksk, err := service.GetClusterAccount(c, buildRequest.BridgxClusterName)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("获取集群信息认证时失败,错误信息： %s", err.Error())))
-		return
-	}
-	descryptRes, err := service.DecryptAccount(encrypt.AesKeyPepper, aksk.Salt, aksk.AccountKey, aksk.EncryptedAccountSecret)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("解密集群信息认证时失败,错误信息： %s", err.Error())))
-		return
+	var accountKey, descryptRes string
+	var netMode gf_cluster.BuildNetMode = gf_cluster.VxLanNetMode
+	// 标准类型集群｜存在AK的自定义类型集群，需要获取AKSK信息
+	if clusterInfo.ClusterType == constants.ClusterTypeStandard || (clusterInfo.ClusterType == constants.ClusterTypeCustom && clusterInfo.AccountKey != "") {
+		aksk, err := service.GetClusterAccount(clusterInfo)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("获取集群信息认证时失败,错误信息： %s", err.Error())))
+			return
+		}
+		accountKey = aksk.AccountKey
+		descryptRes, err = service.DecryptAccount(encrypt.AesKeyPepper, aksk.Salt, accountKey, aksk.EncryptedAccountSecret)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse(fmt.Sprintf("解密集群信息认证时失败,错误信息： %s", err.Error())))
+			return
+		}
+		netMode = gf_cluster.AliCloudNetMode
 	}
 
 	//6. 集群搭建策略
@@ -121,8 +129,9 @@ func HandleCreateCluster(c *gin.Context) {
 		SvcCidr:      buildRequest.ServiceCidr,
 		MachineList:  nil,
 		Mode:         gf_cluster.String2BuildMode(buildRequest.ClusterType),
+		NetMode:      netMode,
 		KubernetesId: clusterRecord.Id,
-		AccessKey:    aksk.AccountKey,
+		AccessKey:    accountKey,
 		AccessSecret: descryptRes,
 	}
 

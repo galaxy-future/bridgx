@@ -235,6 +235,7 @@ func ConvertToClusterInfo(m *model.Cluster, tags []model.ClusterTag) (*types.Clu
 		Desc:               m.ClusterDesc,
 		RegionId:           m.RegionId,
 		ZoneId:             m.ZoneId,
+		ClusterType:        m.ClusterType,
 		InstanceType:       m.InstanceType,
 		Image:              m.Image,
 		Provider:           m.Provider,

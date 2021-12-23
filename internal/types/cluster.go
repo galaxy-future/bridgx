@@ -11,6 +11,7 @@ type ClusterInfo struct {
 	Desc               string `json:"desc"`
 	RegionId           string `json:"region_id" binding:"required"`
 	ZoneId             string `json:"zone_id" binding:"required"`
+	ClusterType        string `json:"cluster_type"`
 	InstanceType       string `json:"instance_type" binding:"required"`
 	Image              string `json:"image"`
 	Provider           string `json:"provider" binding:"required,mustIn=cloud"`

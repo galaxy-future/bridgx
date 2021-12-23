@@ -9,7 +9,6 @@ import (
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/types"
 	gf_cluster "github.com/galaxy-future/BridgX/pkg/gf-cluster"
-	"github.com/gin-gonic/gin"
 )
 
 //GetBridgxUnusedCluster 获取所有没有被占用的集群
@@ -106,11 +105,7 @@ func getClusterInstances(ctx context.Context, user *authorization.CustomClaims, 
 }
 
 //GetClusterAccount 根据集群获取Account信息
-func GetClusterAccount(ctx *gin.Context, clusterName string) (*model.Account, error) {
-	cluster, err := GetClusterByName(ctx, clusterName)
-	if err != nil {
-		return nil, err
-	}
+func GetClusterAccount(cluster *types.ClusterInfo) (*model.Account, error) {
 	account, err := GetAccount(cluster.Provider, cluster.AccountKey)
 	if account == nil {
 		return nil, fmt.Errorf("account not found")
