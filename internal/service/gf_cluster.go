@@ -115,3 +115,44 @@ func GetClusterAccount(cluster *types.ClusterInfo) (*model.Account, error) {
 	}
 	return account, nil
 }
+
+//getCustomClusterInstances 根据clusterName获取自定义实例列表
+func getCustomClusterInstances(ctx context.Context, user *authorization.CustomClaims, clusterName string, pageNum, pageSize int) ([]model.Instance, int, error) {
+	instances, total, err := GetInstancesByCond(ctx, InstancesSearchCond{
+		ClusterName: clusterName,
+		PageNumber:  pageNum,
+		PageSize:    pageSize,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+	return instances, int(total), nil
+
+}
+
+//GetAllCustomInstanceInCluster 获取自定义集群中所有节点实例
+func GetAllCustomInstanceInCluster(ctx context.Context, user *authorization.CustomClaims, clusterName string) ([]model.Instance, error) {
+	pageNum := 1
+	pageSize := 50
+	instances, total, err := getCustomClusterInstances(ctx, user, clusterName, pageNum, pageSize)
+	if err != nil {
+		return nil, err
+	}
+	pageNum++
+
+	for len(instances) < total {
+		var tmpInstances []model.Instance
+		tmpInstances, total, err = getCustomClusterInstances(ctx, user, clusterName, pageNum, pageSize)
+		if err != nil {
+			return nil, err
+		}
+		instances = append(instances, tmpInstances...)
+		pageNum++
+	}
+	return instances, nil
+}
+
+// IsNeedAkSk 标准类型集群｜存在AK的自定义类型集群，需要获取AKSK信息
+func IsNeedAkSk(clusterInfo *types.ClusterInfo) bool {
+	return clusterInfo.ClusterType == constants.ClusterTypeStandard || (clusterInfo.ClusterType == constants.ClusterTypeCustom && clusterInfo.AccountKey != "")
+}
