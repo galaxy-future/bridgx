@@ -13,7 +13,7 @@ import (
 type GetImageListRequest struct {
 	RegionID  string `json:"region_id" binding:"required" form:"region_id"`
 	Provider  string `json:"provider" binding:"required,mustIn=cloud" form:"provider"`
-	InsType   string `json:"instance_type" binding:"required" form:"instance_type"`
+	InsType   string `json:"instance_type" form:"instance_type"`
 	ImageType string `json:"image_type" binding:"required" form:"image_type"`
 }
 

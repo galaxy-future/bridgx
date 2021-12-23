@@ -37,6 +37,6 @@ case $input in
 esac
 
 # deploy api
-docker run -d --name bridgx_api --network host -v $(pwd)/conf/config.yml.prod:/home/tiger/api/conf/config.yml.prod galaxyfuture/bridgx-api:latest bin/wait-for-api.sh
+docker run -d --name bridgx_api --network host -v $(pwd)/conf/config.yml.prod:/home/tiger/api/conf/config.yml.prod galaxyfuture/bridgx-api:"${1:-latest}" bin/wait-for-api.sh
 # deploy scheduler
-docker run -d --name bridgx_scheduler --network host -v $(pwd)/conf/config.yml.prod:/home/tiger/scheduler/conf/config.yml.prod  galaxyfuture/bridgx-scheduler:latest bin/wait-for-scheduler.sh
+docker run -d --name bridgx_scheduler --network host -v $(pwd)/conf/config.yml.prod:/home/tiger/scheduler/conf/config.yml.prod  galaxyfuture/bridgx-scheduler:"${1:-latest}" bin/wait-for-scheduler.sh
