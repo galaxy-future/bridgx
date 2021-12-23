@@ -80,3 +80,13 @@ func ListRunningKubernetesClusters() ([]*gf_cluster.KubernetesInfo, error) {
 	}
 	return clusters, nil
 }
+
+//GetKubernetesClusterByName 根据集群名称获取集群配置信息
+func GetKubernetesClusterByName(clusterName string) (*gf_cluster.KubernetesInfo, error) {
+	var cluster gf_cluster.KubernetesInfo
+	if err := clients.ReadDBCli.Where("name = ?", clusterName).First(&cluster).Error; err != nil {
+		logErr("GetKubernetesClusterByName from read db", err)
+		return nil, err
+	}
+	return &cluster, nil
+}

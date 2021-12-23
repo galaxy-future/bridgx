@@ -117,6 +117,7 @@ type InstanceThumb struct {
 	IpInner            string `json:"ip_inner"`
 	IpOuter            string `json:"ip_outer"`
 	Provider           string `json:"provider"`
+	ClusterType        string `json:"cluster_type"`
 	CreateAt           string `json:"create_at"`
 	Status             string `json:"status"`
 	StartupTime        int    `json:"startup_time"`

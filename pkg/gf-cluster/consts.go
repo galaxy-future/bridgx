@@ -35,6 +35,9 @@ const (
 	ClusterInstanceTypeKey          = "galaxy-future.org/machine-type"
 	ClusterInstanceProviderLabelKey = "galaxy-future.org/machine-provider"
 	ClusterInstanceClusterLabelKey  = "galaxy-future.org/bridgx-group"
+
+	ClusterNodeTypeKey   = "bridgx.gf/node-type"
+	ClusterNodeTypeValue = "connection"
 )
 
 const (

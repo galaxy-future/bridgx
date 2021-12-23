@@ -53,10 +53,8 @@ func RegisterHandler(route *gin.RouterGroup) {
 	clusterRoute := route.Group("/cluster")
 	{
 		clusterRoute.GET("/bridgx/available_clusters", cluster.HandleListUnusedBridgxCluster)
-
 		clusterRoute.DELETE("/:clusterId", cluster.HandleDeleteKubernetes)
 		clusterRoute.POST("", cluster.HandleCreateCluster)
-
 		clusterRoute.GET("/summary", cluster.HandleListClusterSummary)
 		clusterRoute.GET("/summary/:clusterId", cluster.HandleGetClusterSummary)
 		clusterRoute.GET("/nodes/:clusterId", cluster.HandleListNodesSummary)

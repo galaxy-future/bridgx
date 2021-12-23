@@ -16,6 +16,8 @@ type KubernetesInfo struct {
 	Type              string `json:"type"`
 	CreatedUser       string `json:"created_user"`
 	CreatedTime       int64  `json:"created_time"`
+	PodCidr           string `json:"pod_cidr"`
+	ServiceCidr       string `json:"service_cidr"`
 }
 
 type KubernetesInfoListResponse struct {

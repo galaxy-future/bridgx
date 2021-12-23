@@ -160,3 +160,12 @@ func storageQuantity2Float(mem resource.Quantity) float64 {
 	memoryContent := mem.ScaledValue(resource.Mega)
 	return float64(memoryContent) / 1024.0
 }
+
+// GetClusterConfigInfo 根据集群名称获取集群配置信息
+func GetClusterConfigInfo(clusterName string) (*gf_cluster.KubernetesInfo, error) {
+	cluster, err := model.GetKubernetesClusterByName(clusterName)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}

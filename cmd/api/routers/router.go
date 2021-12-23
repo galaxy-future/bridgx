@@ -5,6 +5,7 @@ import (
 
 	"github.com/galaxy-future/BridgX/cmd/api/handler"
 	gf_cluster "github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster"
+	"github.com/galaxy-future/BridgX/cmd/api/handler/gf-cluster/cluster"
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/authorization"
 	"github.com/galaxy-future/BridgX/config"
 	"github.com/gin-contrib/pprof"
@@ -26,6 +27,8 @@ func Init() *gin.Engine {
 	router.GET("/", func(context *gin.Context) {
 		context.String(http.StatusOK, "hello world!")
 	})
+
+	router.GET("/api/v1/galaxy_cloud/cluster/config", cluster.HandleGetClusterConfigInfoByName)
 
 	user := router.Group("/user")
 	{

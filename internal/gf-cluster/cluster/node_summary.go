@@ -57,6 +57,10 @@ func getClusterNodeInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.ClusterN
 
 	var nodesSummary []*gf_cluster.ClusterNodeSummary
 	for _, node := range nodes.Items {
+		clusterNodeTypeValue := node.Labels[gf_cluster.ClusterNodeTypeKey]
+		if clusterNodeTypeValue != "" && clusterNodeTypeValue == gf_cluster.ClusterNodeTypeValue {
+			continue
+		}
 		var ipAddress, hostName string
 		for _, address := range node.Status.Addresses {
 			if address.Type == v1.NodeHostName {

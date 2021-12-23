@@ -345,6 +345,8 @@ create table kubernetes_infos (
   `message` varchar (255) ,
   `bridgx_cluster_name` varchar(255) NOT NULL,
   `type` varchar(255) NOT NULL,
+  `pod_cidr` VARCHAR(255) NOT NULL,
+  `service_cidr` VARCHAR(255) NOT NULL,
   `created_user` varchar(255),
   `created_time` int(11),
   PRIMARY KEY (`id`),
@@ -405,8 +407,7 @@ CREATE TABLE `operation_log` (
     `create_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
     `update_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='操作日志'
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='操作日志';
 
 -- init super admin info
 INSERT INTO `user`
