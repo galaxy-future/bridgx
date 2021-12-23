@@ -1,6 +1,7 @@
 package gf_cluster
 
 type BuildMode int
+type BuildNetMode string
 
 const (
 	//SingleMode da单节点模式
@@ -9,6 +10,9 @@ const (
 	ClusterMode
 	//ClusterUnknown 未知
 	ClusterUnknown
+
+	AliCloudNetMode = "alicloud"
+	VxLanNetMode    = "vxlan"
 )
 
 //ClusterBuilderParams  集群创建相关参数
@@ -17,6 +21,7 @@ type ClusterBuilderParams struct {
 	SvcCidr      string                `json:"svc_cidr"`
 	MachineList  []ClusterBuildMachine `json:"machine_list"`
 	Mode         BuildMode             `json:"mode"`
+	NetMode      BuildNetMode          `json:"net_mode"`
 	KubernetesId int64                 `json:"kubernetes_id"`
 	AccessKey    string                `json:"ak"`
 	AccessSecret string                `json:"sk"`

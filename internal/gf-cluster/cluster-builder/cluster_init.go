@@ -21,6 +21,7 @@ type FlannelData struct {
 	PodCidr      string
 	AccessKey    string
 	AccessSecret string
+	NetMode      gf_cluster.BuildNetMode
 }
 
 func initClusterTmpl(data InitClusterData) (string, error) {

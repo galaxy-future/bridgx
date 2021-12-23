@@ -48,6 +48,7 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 			AccessKey:    params.AccessKey,
 			AccessSecret: params.AccessSecret,
 			PodCidr:      params.PodCidr,
+			NetMode:      params.NetMode,
 		})
 		recordStep(params.KubernetesId, master.IP, gf_cluster.KubernetesStepInstallFlannel, err)
 		if err != nil {
