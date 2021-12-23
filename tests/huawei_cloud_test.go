@@ -73,15 +73,15 @@ func TestShowIns(t *testing.T) {
 	}
 
 	var res interface{}
-	var resStr []byte
+	var resStr string
 	ids := []string{""}
 	res, err = client.GetInstances(ids)
 	if err != nil {
 		t.Log(err)
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	tags := []cloud.Tag{{Key: cloud.TaskId, Value: "12345"}}
 	res, err = client.GetInstancesByTags("", tags)
@@ -89,8 +89,8 @@ func TestShowIns(t *testing.T) {
 		t.Log(err)
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 }
 
 func TestCtlIns(t *testing.T) {
@@ -128,46 +128,46 @@ func TestGetResource(t *testing.T) {
 	}
 
 	var res interface{}
-	var resStr []byte
+	var resStr string
 	res, err = client.GetRegions()
 	if err != nil {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	res, err = client.GetZones(cloud.GetZonesRequest{})
 	if err != nil {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	res, err = client.DescribeAvailableResource(cloud.DescribeAvailableResourceRequest{})
 	if err != nil {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	res, err = client.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: []string{"1"}})
 	if err != nil {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	res, err = client.DescribeImages(cloud.DescribeImagesRequest{InsType: "c6s.large.2"})
 	if err != nil {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 }
 
 func TestCreateSecGrp(t *testing.T) {
@@ -186,8 +186,8 @@ func TestCreateSecGrp(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ := jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ := jsoniter.MarshalToString(res)
+	t.Log(resStr)
 }
 
 func TestAddSecGrpRule(t *testing.T) {
@@ -232,7 +232,7 @@ func TestShowSecGrp(t *testing.T) {
 	}
 
 	var res interface{}
-	var resStr []byte
+	var resStr string
 	res, err = client.DescribeSecurityGroups(cloud.DescribeSecurityGroupsRequest{
 		VpcId: "",
 	})
@@ -240,8 +240,8 @@ func TestShowSecGrp(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	res, err = client.DescribeGroupRules(cloud.DescribeGroupRulesRequest{
 		SecurityGroupId: "",
@@ -250,8 +250,8 @@ func TestShowSecGrp(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 }
 
 func TestCreateVpc(t *testing.T) {
@@ -261,7 +261,7 @@ func TestCreateVpc(t *testing.T) {
 		return
 	}
 
-	var resStr []byte
+	var resStr string
 	vpc, err := client.CreateVPC(cloud.CreateVpcRequest{
 		VpcName:   "vpc1",
 		CidrBlock: "10.8.0.0/16",
@@ -270,8 +270,8 @@ func TestCreateVpc(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(vpc)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(vpc)
+	t.Log(resStr)
 }
 
 func TestCreateSubnet(t *testing.T) {
@@ -282,7 +282,7 @@ func TestCreateSubnet(t *testing.T) {
 	}
 
 	var res interface{}
-	var resStr []byte
+	var resStr string
 
 	vpcId := ""
 	res, err = client.CreateSwitch(cloud.CreateSwitchRequest{
@@ -296,8 +296,8 @@ func TestCreateSubnet(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 }
 
 func TestShowVpc(t *testing.T) {
@@ -308,7 +308,7 @@ func TestShowVpc(t *testing.T) {
 	}
 
 	var res interface{}
-	var resStr []byte
+	var resStr string
 	vpcId := ""
 	swId := ""
 	res, err = client.GetVPC(cloud.GetVpcRequest{
@@ -318,16 +318,16 @@ func TestShowVpc(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	res, err = client.DescribeVpcs(cloud.DescribeVpcsRequest{})
 	if err != nil {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	res, err = client.GetSwitch(cloud.GetSwitchRequest{
 		SwitchId: swId,
@@ -336,8 +336,8 @@ func TestShowVpc(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 
 	res, err = client.DescribeSwitches(cloud.DescribeSwitchesRequest{
 		VpcId: vpcId,
@@ -346,6 +346,6 @@ func TestShowVpc(t *testing.T) {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.Marshal(res)
-	t.Log(string(resStr))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
 }

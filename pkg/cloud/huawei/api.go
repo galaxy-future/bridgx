@@ -121,12 +121,12 @@ func (p *HuaweiCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.Des
 	if req.ImageType == cloud.ImageGlobal {
 		protected := true
 		request.Protected = &protected
+		if req.InsType != "" {
+			request.FlavorId = &req.InsType
+		}
 	}
 	statusRequest := imsModel.GetListImagesRequestStatusEnum().ACTIVE
 	request.Status = &statusRequest
-	if req.InsType != "" {
-		request.FlavorId = &req.InsType
-	}
 	limitRequest := int32(pageSize)
 	request.Limit = &limitRequest
 	markerRequest := ""

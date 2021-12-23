@@ -701,7 +701,7 @@ func (p *AlibabaCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.De
 		PageSize:        tea.Int32(50),
 		ImageOwnerAlias: tea.String(_imageType[req.ImageType]),
 	}
-	if req.InsType != "" {
+	if req.ImageType == cloud.ImageGlobal && req.InsType != "" {
 		request.InstanceType = tea.String(req.InsType)
 	}
 	for {
