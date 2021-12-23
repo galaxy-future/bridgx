@@ -119,12 +119,14 @@ func CreateSwitch(ctx *gin.Context) {
 func DescribeSwitch(ctx *gin.Context) {
 	vpcId := ctx.Query("vpc_id")
 	switchName := ctx.Query("switch_name")
+	zoneId := ctx.Query("zone_id")
 	pageNumber, pageSize := getPager(ctx)
 	logs.Logger.Infof("vpcId:[%s] switchName[:%s] pageNumber[%d]  pageSize[%d]", vpcId, switchName, pageNumber, pageSize)
 
 	resp, err := service.GetSwitch(ctx, service.GetSwitchRequest{
 		SwitchName: switchName,
 		VpcId:      vpcId,
+		ZoneId:     zoneId,
 		PageNumber: pageNumber,
 		PageSize:   pageSize,
 	})

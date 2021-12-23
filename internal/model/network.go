@@ -174,6 +174,7 @@ func UpdateVpc(ctx context.Context, vpcId, cidrBlock, vStatus string, switchIds 
 
 type FindSwitchesConditions struct {
 	VpcId      string
+	ZoneId      string
 	SwitchId   string
 	SwitchName string
 	PageNumber int
@@ -181,7 +182,7 @@ type FindSwitchesConditions struct {
 }
 
 func FindSwitchesWithPage(ctx context.Context, cond FindSwitchesConditions) (result []Switch, total int64, err error) {
-	query := clients.ReadDBCli.WithContext(ctx).Table(Switch{}.TableName()).Where("vpc_id = ? and is_del = 0", cond.VpcId)
+	query := clients.ReadDBCli.WithContext(ctx).Table(Switch{}.TableName()).Where("vpc_id = ? and zone_id = ? and is_del = 0", cond.VpcId,cond.VpcId)
 	if cond.SwitchId != "" {
 		query.Where("switch_id = ?", cond.SwitchId)
 	}

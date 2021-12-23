@@ -722,6 +722,7 @@ func CreateSwitch(ctx context.Context, req CreateSwitchRequest) (switchId string
 type GetSwitchRequest struct {
 	SwitchName string
 	VpcId      string
+	ZoneId     string
 	PageNumber int
 	PageSize   int
 }
@@ -786,6 +787,7 @@ func GetSwitch(ctx context.Context, req GetSwitchRequest) (resp SwitchResponse, 
 	vpcId := vpc.VpcId
 	s, total, err := model.FindSwitchesWithPage(ctx, model.FindSwitchesConditions{
 		VpcId:      vpcId,
+		ZoneId:     req.ZoneId,
 		SwitchName: req.SwitchName,
 		PageNumber: req.PageNumber,
 		PageSize:   req.PageSize,
