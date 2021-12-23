@@ -290,7 +290,7 @@ yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/d
 
 yum -y makecache
 
-yum -y install docker-ce
+yum -y install docker-ce-20.10.12-3.el7.x86_64
 
 mkdir /etc/docker
 touch /etc/docker/daemon.json
@@ -316,7 +316,7 @@ EOF
 systemctl enable docker
 systemctl enable  --now docker
 
-yum install -y kubelet kubeadm kubectl
+yum install -y kubelet-1.23.1-0.x86_64 kubeadm-1.23.1-0.x86_64 kubectl-1.23.1-0.x86_64
 systemctl enable kubelet
 __EOF__
 `

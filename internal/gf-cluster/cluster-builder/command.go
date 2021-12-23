@@ -14,7 +14,7 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 	updateInstallStep(params.KubernetesId, gf_cluster.KubernetesStepInitializeCluster)
 	machineList := params.MachineList
 	master, machineList := Pop(machineList)
-	defer taintMaster(master, master.Hostname)
+	defer taintMaster(master)
 
 	updateStatus(params.KubernetesId, gf_cluster.KubernetesStatusInitializing)
 
@@ -71,7 +71,6 @@ func CreateCluster(params gf_cluster.ClusterBuilderParams) {
 				if err != nil {
 					failed(params.KubernetesId, "add master err:"+err.Error())
 				}
-				taintMaster(master, masterMachine.Hostname)
 			}(masterNode)
 		}
 	}

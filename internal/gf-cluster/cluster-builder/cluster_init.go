@@ -120,10 +120,10 @@ func resetMachine(machine gf_cluster.ClusterBuildMachine) {
 	resetFlannel(machine)
 }
 
-func taintMaster(master gf_cluster.ClusterBuildMachine, node string) {
-	cmd := fmt.Sprintf("kubectl taint nodes %s node-role.kubernetes.io/master:NoSchedule-",
-		convertHostName(node))
-	_, _ = sshRun(master, cmd)
+func taintMaster(master gf_cluster.ClusterBuildMachine) {
+	//cmd := fmt.Sprintf("kubectl taint nodes %s node-role.kubernetes.io/master:NoSchedule-",
+	//	convertHostName(node))
+	_, _ = sshRun(master, "kubectl get node | grep master|awk '{print $1}' | xargs -i -n 1  kubectl taint nodes '{}' node-role.kubernetes.io/master:NoSchedule-")
 }
 
 func initMachine(machine gf_cluster.ClusterBuildMachine) {
