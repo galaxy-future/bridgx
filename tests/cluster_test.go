@@ -171,3 +171,8 @@ func TestListClustersByCond(t *testing.T) {
 	t.Logf("res:%v", res)
 	t.Logf("total:%v", total)
 }
+
+func TestDeleteClusters(t *testing.T) {
+	err := service.DeleteClusters(context.Background(), []int64{1355}, 0)
+	assert.Nil(t, err)
+}
