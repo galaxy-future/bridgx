@@ -267,6 +267,10 @@ func cloud2ModelVpc(vpcs []cloud.VPC, ak, provider string) []model.Vpc {
 	res := make([]model.Vpc, 0, len(vpcs))
 	for _, vpc := range vpcs {
 		createAt, _ := time.Parse("2006-01-02T15:04:05Z", vpc.CreateAt)
+		var sw string
+		if len(vpc.SwitchIds) > 0 {
+			sw = strings.Join(vpc.SwitchIds, ",")
+		}
 		now := time.Now()
 		res = append(res, model.Vpc{
 			Base: model.Base{
@@ -278,7 +282,7 @@ func cloud2ModelVpc(vpcs []cloud.VPC, ak, provider string) []model.Vpc {
 			VpcId:     vpc.VpcId,
 			Name:      vpc.VpcName,
 			CidrBlock: vpc.CidrBlock,
-			SwitchIds: strings.Join(vpc.SwitchIds, ","),
+			SwitchIds: sw,
 			Provider:  provider,
 			VStatus:   vpc.Status,
 		})
