@@ -152,7 +152,7 @@ func GetAllCustomInstanceInCluster(ctx context.Context, user *authorization.Cust
 	return instances, nil
 }
 
-// IsNeedAkSk 标准类型集群｜存在AK的自定义类型集群，需要获取AKSK信息
+// IsNeedAkSk 标准类型集群存在AK的自定义类型集群，需要获取AKSK信息；自定义类型集群不区分是否配置aksk
 func IsNeedAkSk(clusterInfo *types.ClusterInfo) bool {
-	return clusterInfo.ClusterType == constants.ClusterTypeStandard || (clusterInfo.ClusterType == constants.ClusterTypeCustom && clusterInfo.AccountKey != "")
+	return clusterInfo.ClusterType == constants.ClusterTypeStandard
 }
