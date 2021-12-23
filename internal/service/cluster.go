@@ -266,29 +266,29 @@ func ConvertToClusterInfo(m *model.Cluster, tags []model.ClusterTag) (*types.Clu
 	return clusterInfo, nil
 }
 
-func ExpandCluster(c *types.ClusterInfo, num int, taskId int64) (instanceIds []cloud.Instance, err error) {
+func ExpandCluster(c *types.ClusterInfo, num int, taskId int64) ([]string, []string, error) {
 	//调用云厂商接口进行扩容
-	expandInstanceIds, err := ExpandAndRepair(c, num, taskId)
-	if len(expandInstanceIds) == 0 && err != nil {
-		return nil, err
+	expandInstanceIds, expandErr := ExpandInDeed(c, num, taskId)
+	if len(expandInstanceIds) == 0 && expandErr != nil {
+		return nil, nil, expandErr
 	}
 
 	//将扩容的Instance信息保存到DB
-	err = saveExpandInstancesToDB(c, expandInstanceIds, taskId)
+	err := saveExpandInstancesToDB(c, expandInstanceIds, taskId)
 	if err != nil {
-		logs.Logger.Errorf("[ExpandCluster] Expand error. cluster name: %s, error: %v", c.Name, err)
-		return nil, err
+		logs.Logger.Errorf("[ExpandCluster] saveExpandInstancesToDB error. cluster name: %s, error: %v", c.Name, err)
+		return nil, nil, err
 	}
 
 	//查询扩容的Instance的IP并保存
-	expandIPs, expandInstances, err := queryAndSaveExpandIPs(c, taskId, len(expandInstanceIds))
+	expandIPs, availableIds, err := queryAndSaveExpandIPs(c, taskId, len(expandInstanceIds))
 	if err != nil {
 		logs.Logger.Errorf("[ExpandCluster] queryAndSaveExpandIPs error. cluster name: %s, error: %v", c.Name, err)
-		return expandInstances, err
+		return availableIds, expandInstanceIds, err
 	}
 	//发布扩容信息到配置中心
 	_ = publishExpandConfig(c.Name, expandInstanceIds, expandIPs)
-	return expandInstances, nil
+	return availableIds, expandInstanceIds, expandErr
 }
 
 func ShrinkClusterBySpecificIps(c *types.ClusterInfo, deletingIPs string, count int, taskId int64) (err error) {
@@ -426,35 +426,36 @@ func getDelayFactor(n int) int {
 	}
 }
 
-func queryAndSaveExpandIPs(c *types.ClusterInfo, taskId int64, idNum int) ([]string, []cloud.Instance, error) {
+func queryAndSaveExpandIPs(c *types.ClusterInfo, taskId int64, idNum int) ([]string, []string, error) {
 	var err error
-	expandIps := make([]string, 0, idNum)
-	expandInstances := make([]cloud.Instance, 0, idNum)
+	var instances []cloud.Instance
+	var insNum int
 	tags := []cloud.Tag{{
 		Key:   cloud.TaskId,
 		Value: strconv.FormatInt(taskId, 10),
 	}}
 	// TODO scheduler
 	for k := 0; k < constants.Interval; k++ {
-		expandInstances, err = GetInstanceByTag(c, tags)
-		insNum := len(expandInstances)
+		instances, err = GetInstanceByTag(c, tags)
+		insNum = len(instances)
 		logs.Logger.Infof("[queryAndSaveExpandIPs] insNum: %d, idNum: %d, err: %v", insNum, idNum, err)
-		if err == nil && insNum == idNum && judgeInstancesIsReady(expandInstances, c.NetworkConfig) {
+		if err == nil && insNum == idNum && judgeInstancesIsReady(instances, c.NetworkConfig) {
 			logs.Logger.Infof("[queryAndSaveExpandIPs] is ready, %d", insNum)
 			break
 		}
 		time.Sleep(time.Duration(getDelayFactor(k)) * time.Second)
 	}
 	if err != nil {
-		logs.Logger.Errorf("[ExpandCluster] GetInstances error. cluster name: %s, error: %s", c.Name, err.Error())
 		return nil, nil, err
 	}
-	for _, instance := range expandInstances {
+
+	expandIps := make([]string, 0, insNum)
+	expandIds := make([]string, 0, insNum)
+	for _, instance := range instances {
 		if instance.IpInner == "" {
 			logs.Logger.Errorf("[syncDbAndConfig] InstanceId:%v, GOT NO IP", instance.Id)
 			continue
 		}
-		expandIps = append(expandIps, instance.IpInner)
 		update := func(attempt uint) error {
 			now := time.Now()
 			var expireAt *time.Time
@@ -476,8 +477,11 @@ func queryAndSaveExpandIPs(c *types.ClusterInfo, taskId int64, idNum int) ([]str
 			logs.Logger.Errorf("[syncDbAndConfig] UpdateByInstanceId Error IP:%v, instanceId:%v", instance.IpInner, instance.Id)
 			continue
 		}
+
+		expandIps = append(expandIps, instance.IpInner)
+		expandIds = append(expandIds, instance.Id)
 	}
-	return expandIps, expandInstances, nil
+	return expandIps, expandIds, nil
 }
 
 func saveExpandInstancesToDB(c *types.ClusterInfo, expandInstanceIds []string, taskId int64) error {

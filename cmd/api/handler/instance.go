@@ -225,7 +225,7 @@ func ListRegions(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-	logs.Logger.Infof("provider:[%s], %v", provider, account)
+	logs.Logger.Infof("provider:[%s], %v", provider, account.OrgId)
 	regions, err := service.GetRegions(ctx, service.GetRegionsRequest{
 		Provider: provider,
 		Account:  account,

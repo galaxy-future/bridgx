@@ -408,11 +408,13 @@ func convertCustomClusterInstances(instanceList []model.CustomClusterInstance, c
 			return nil, err
 		}
 		m := model.Instance{
+			Base: model.Base{
+				CreateAt: &now,
+			},
 			Status:      constants.Running,
 			IpInner:     instance.InstanceIp,
 			ClusterName: clusterName,
 			Attrs:       &attr,
-			CreateAt:    &now,
 			RunningAt:   &now,
 		}
 		ret = append(ret, m)

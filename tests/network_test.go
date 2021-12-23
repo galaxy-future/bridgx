@@ -7,7 +7,6 @@ import (
 
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
-	"github.com/galaxy-future/BridgX/internal/types"
 )
 
 func TestCreateVPC(t *testing.T) {
@@ -238,16 +237,7 @@ func TestGetVPC(t *testing.T) {
 					VpcName:    "测试一键创建",
 					PageNumber: 0,
 					PageSize:   20,
-					Account: &types.OrgKeys{
-						OrgId: 0,
-						//Info: []types.Info{
-						//	{
-						//		AK:       "",
-						//		SK:       "",
-						//		Provider: "",
-						//	},
-						//},
-					},
+					AccountKey: "",
 				},
 			},
 			wantVpcs: nil,

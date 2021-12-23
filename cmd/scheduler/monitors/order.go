@@ -29,7 +29,6 @@ func (p *QueryOrderJobs) Run() {
 		logs.Logger.Error("getQueryTimeRange,", err)
 		return
 	}
-	logs.Logger.Debug("start,", startTime, endTime)
 	for _, row := range accounts {
 		region, err := model.GetOneRegionByAccKey(row.AccountKey)
 		if err != nil {
@@ -44,7 +43,6 @@ func (p *QueryOrderJobs) Run() {
 	}
 
 	updateQueryStartTime(endTime)
-	logs.Logger.Debug("end,", endTime)
 }
 
 func getQueryTimeRange() (time.Time, time.Time, error) {
@@ -53,7 +51,6 @@ func getQueryTimeRange() (time.Time, time.Time, error) {
 	if err != nil {
 		return startTime, endTime, err
 	}
-	logs.Logger.Debug("getConfig:", startTimeStr)
 	if startTimeStr == "" {
 		endTime = time.Now().UTC()
 		duration, _ := time.ParseDuration("-" + cast.ToString(constants.DefaultQueryOrderInterval) + "s")
