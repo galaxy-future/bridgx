@@ -23,6 +23,7 @@ import (
 	"github.com/galaxy-future/BridgX/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func CreateClusterWithTagsAndInstances(ctx context.Context, cluster *model.Cluster, tags []*model.ClusterTag, instances []model.Instance, username string, uid int64) error {
@@ -84,15 +85,25 @@ func DeleteClusters(ctx context.Context, ids []int64, orgId int64) error {
 	if len(clusters) == 0 {
 		return nil
 	}
-	for _, cluster := range clusters {
-		c := cluster
-		c.DeleteUniqKey = c.Id
-		err = model.Save(&c)
+	return clients.WriteDBCli.Transaction(func(tx *gorm.DB) error {
+		for _, cluster := range clusters {
+			err = tx.Delete(model.ClusterTag{}, model.ClusterTag{ClusterName: cluster.ClusterName}).Error
+			if err != nil {
+				return err
+			}
+			c := cluster
+			c.DeleteUniqKey = c.Id
+			err = tx.Save(&c).Error
+			if err != nil {
+				return err
+			}
+		}
+		err = tx.Delete(clusters).Error
 		if err != nil {
 			return err
 		}
-	}
-	return model.Delete(clusters)
+		return nil
+	})
 }
 
 func CreateCluster4Test(clusterName string) error {

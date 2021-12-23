@@ -70,7 +70,7 @@ func GetBySpecifyClusterTag(clusterName string, tagKey string) (*ClusterTag, err
 	return &ret, nil
 }
 
-//GetClusterNamesByTags list cluster names by tags:
+//GetClusterNamesByTags list cluster names(contains deleted cluster) by tags:
 // e.g.
 // {
 //		"k1": "v1",
