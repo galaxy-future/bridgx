@@ -11,7 +11,7 @@ const (
 	//ClusterUnknown 未知
 	ClusterUnknown
 
-	AliCloudNetMode = "alicloud"
+	AliCloudNetMode = "alibabacloud"
 	VxLanNetMode    = "vxlan"
 )
 

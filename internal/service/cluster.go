@@ -592,9 +592,13 @@ func CheckInstanceConnectable(instances []model.CustomClusterInstance) response.
 		}(req)
 	}
 	wg.Wait()
+	close(ch)
 	isAllPass := true
 	for i := 0; i < len(instances); i++ {
-		machine := <-ch
+		machine, ok := <-ch
+		if !ok {
+			continue
+		}
 		if !machine.IsPass {
 			isAllPass = false
 		}

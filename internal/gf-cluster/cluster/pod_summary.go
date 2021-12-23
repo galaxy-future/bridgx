@@ -90,7 +90,10 @@ func getClusterPodInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.PodSummar
 		if pod.Status.StartTime != nil {
 			runningTime = formatHumanReadableDuration(time.Now().Sub(pod.Status.StartTime.Time))
 		}
-
+		var startTime int64
+		if pod.Status.StartTime != nil {
+			startTime = pod.Status.StartTime.Time.Unix()
+		}
 		podInfos = append(podInfos, &gf_cluster.PodSummary{
 			NodeName:          pod.Spec.NodeName,
 			NodeIp:            pod.Status.HostIP,
@@ -103,7 +106,7 @@ func getClusterPodInfo(info *gf_cluster.KubernetesInfo) ([]*gf_cluster.PodSummar
 			RunningTime:       runningTime,
 			Status:            string(status),
 			GroupId:           groupId,
-			StartTime:         pod.Status.StartTime.Time.Unix(),
+			StartTime:         startTime,
 		})
 	}
 
