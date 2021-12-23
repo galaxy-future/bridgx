@@ -32,6 +32,7 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 			IpOuter:            instance.IpOuter,
 			Provider:           provider,
 			ClusterName:        instance.ClusterName,
+			ClusterType:        getClusterType(instance.ClusterName, clusterMap),
 			InstanceType:       instanceTypeDesc,
 			LoginName:          getLoginName(instance.ClusterName, clusterMap),
 			LoginPassword:      getLoginPassword(instance.ClusterName, clusterMap),
@@ -47,6 +48,9 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 }
 
 func getComputingPowerType(instanceTypeDesc string, provider string) string {
+	if instanceTypeDesc == "" {
+		return ""
+	}
 	if service.CheckIsGpuComputingPowerType(instanceTypeDesc, provider) {
 		return constants.GPU
 	} else {
@@ -66,6 +70,14 @@ func getLoginName(clusterName string, m map[string]model.Cluster) string {
 	return "root"
 }
 
+func getClusterType(clusterName string, m map[string]model.Cluster) string {
+	cluster, ok := m[clusterName]
+	if ok {
+		return cluster.ClusterType
+	}
+	return ""
+}
+
 func getLoginPassword(clusterName string, m map[string]model.Cluster) string {
 	cluster, ok := m[clusterName]
 	if ok {
@@ -81,9 +93,13 @@ func getInstanceType(clusterName string, m map[string]model.Cluster) string {
 	}
 	return ""
 }
+
 func getInstanceTypeDesc(clusterName string, m map[string]model.Cluster) string {
 	cluster, ok := m[clusterName]
 	if ok {
+		if cluster.ClusterType == constants.ClusterTypeCustom {
+			return ""
+		}
 		instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
 		return instanceType.GetDesc()
 	}
