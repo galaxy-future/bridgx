@@ -130,7 +130,7 @@ data:
     {
       "Network": "{{.PodCidr}}",
       "Backend": {
-        {{if .NetMode "vxlan"}}
+        {{if eq .NetMode "vxlan"}}
         "Type": "vxlan"
         {{else}}
         "Type": "ali-vpc"
