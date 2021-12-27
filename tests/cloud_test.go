@@ -1,16 +1,29 @@
 package tests
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/galaxy-future/BridgX/pkg/cloud"
+	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 	"github.com/galaxy-future/BridgX/pkg/cloud/huawei"
+	"github.com/galaxy-future/BridgX/pkg/cloud/tencent"
 	jsoniter "github.com/json-iterator/go"
 )
 
-func getHuaweiClient() (*huawei.HuaweiCloud, error) {
-	client, err := huawei.New("ak", "sk", "cn-north-4")
+func getCloudClient() (client cloud.Provider, err error) {
+	provider := cloud.TencentCloud
+	switch provider {
+	case cloud.AlibabaCloud:
+		client, err = alibaba.New("ak", "sk", "regionId")
+	case cloud.HuaweiCloud:
+		client, err = huawei.New("ak", "sk", "regionId")
+	case cloud.TencentCloud:
+		client, err = tencent.New("ak", "sk", "regionId")
+	default:
+		return nil, errors.New("invalid provider")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -18,7 +31,7 @@ func getHuaweiClient() (*huawei.HuaweiCloud, error) {
 }
 
 func TestCreateIns(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -66,7 +79,7 @@ func TestCreateIns(t *testing.T) {
 }
 
 func TestShowIns(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -94,7 +107,7 @@ func TestShowIns(t *testing.T) {
 }
 
 func TestCtlIns(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -121,7 +134,7 @@ func TestCtlIns(t *testing.T) {
 }
 
 func TestGetResource(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -171,7 +184,7 @@ func TestGetResource(t *testing.T) {
 }
 
 func TestCreateSecGrp(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -191,7 +204,7 @@ func TestCreateSecGrp(t *testing.T) {
 }
 
 func TestAddSecGrpRule(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -225,7 +238,7 @@ func TestAddSecGrpRule(t *testing.T) {
 }
 
 func TestShowSecGrp(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -255,7 +268,7 @@ func TestShowSecGrp(t *testing.T) {
 }
 
 func TestCreateVpc(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -275,7 +288,7 @@ func TestCreateVpc(t *testing.T) {
 }
 
 func TestCreateSubnet(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -301,7 +314,7 @@ func TestCreateSubnet(t *testing.T) {
 }
 
 func TestShowVpc(t *testing.T) {
-	client, err := getHuaweiClient()
+	client, err := getCloudClient()
 	if err != nil {
 		t.Log(err)
 		return
@@ -348,4 +361,44 @@ func TestShowVpc(t *testing.T) {
 	}
 	resStr, _ = jsoniter.MarshalToString(res)
 	t.Log(resStr)
+}
+
+func TestQueryOrders(t *testing.T) {
+	cli, err := getCloudClient()
+	if err != nil {
+		t.Log(err.Error())
+		return
+	}
+
+	//endTime := time.Now().UTC()
+	//duration, _ := time.ParseDuration("-5h")
+	//startTime := endTime.Add(duration)
+	startTime, _ := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:40:02")
+	endTime, _ := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:45:02")
+	pageNum := 1
+	pageSize := 100
+	for {
+		res, err := cli.GetOrders(cloud.GetOrdersRequest{StartTime: startTime, EndTime: endTime,
+			PageNum: pageNum, PageSize: pageSize})
+		if err != nil {
+			t.Log(err.Error())
+			return
+		}
+		cnt := 0
+		t.Log("len:", len(res.Orders))
+		for _, row := range res.Orders {
+			cnt += 1
+			if cnt > 3 {
+				t.Log("---------------")
+				break
+			}
+			rowStr, _ := jsoniter.MarshalToString(row)
+			t.Log(rowStr)
+		}
+		if len(res.Orders) < pageSize {
+			break
+		}
+		pageNum += 1
+	}
+	t.Log(pageNum)
 }

@@ -51,6 +51,11 @@ var _insTypeStat = map[string]string{
 	"ClosedWithoutStock": cloud.InsTypeSellOut,
 }
 
+var _bandwidthChargeType = map[string]string{
+	"PayByBandwidth": cloud.BandwidthPayByFix,
+	"PayByTraffic":   cloud.BandwidthPayByTraffic,
+}
+
 var _secGrpRuleDirection = map[string]string{
 	"ingress": cloud.SecGroupRuleIn,
 	"egress":  cloud.SecGroupRuleOut,

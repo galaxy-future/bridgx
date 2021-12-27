@@ -94,7 +94,7 @@ func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance
 				VpcId:                   instance.VpcAttributes.VpcId,
 				SubnetId:                instance.VpcAttributes.VSwitchId,
 				SecurityGroup:           strings.Join(instance.SecurityGroupIds.SecurityGroupId, ","),
-				InternetChargeType:      instance.InternetChargeType,
+				InternetChargeType:      _bandwidthChargeType[instance.InternetChargeType],
 				InternetMaxBandwidthOut: instance.InternetMaxBandwidthOut,
 			},
 			Status: _ecsStatus[instance.Status],
@@ -190,7 +190,7 @@ func (p *AlibabaCloud) BatchCreate(m cloud.Params, num int) (instanceIds []strin
 
 func (p *AlibabaCloud) GetInstances(ids []string) (instances []cloud.Instance, err error) {
 	batchIds := utils.StringSliceSplit(ids, 50)
-	cloudInstance := make([]ecs.Instance, 0)
+	cloudInstance := make([]ecs.Instance, 0, len(ids))
 	for _, onceIds := range batchIds {
 		request := ecs.CreateDescribeInstancesRequest()
 		request.Scheme = "https"

@@ -10,12 +10,17 @@ require (
 	github.com/allegro/bigcache v1.2.1
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-gonic/gin v1.7.6
+	github.com/google/go-cmp v0.5.5
 	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.0.71
 	github.com/json-iterator/go v1.1.12
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/sony/sonyflake v1.0.0
 	github.com/spf13/cast v1.4.1
 	github.com/stretchr/testify v1.7.0
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/api v1.0.321
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.320
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.320
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc v1.0.320
 	github.com/tovenja/cron/v3 v3.0.2
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/wxnacy/wgo v1.0.4
@@ -40,7 +45,6 @@ require (
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/go-logr/logr v1.2.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/imdario/mergo v0.3.5 // indirect
