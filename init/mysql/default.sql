@@ -115,7 +115,7 @@ CREATE TABLE `b_vpc`
     `region_id`  varchar(255) NOT NULL DEFAULT '',
     `name`       varchar(255) NOT NULL,
     `cidr_block` varchar(255) NOT NULL DEFAULT '',
-    `switch_ids` text NOT NULL DEFAULT '[]',
+    `switch_ids` text NOT NULL,
     `provider`   varchar(255) NOT NULL,
     `v_status`   varchar(20)  NOT NULL DEFAULT 'Pending',
     `is_del`     tinyint(3) NOT NULL DEFAULT '0',
