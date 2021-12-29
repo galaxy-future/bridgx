@@ -377,6 +377,29 @@ func HandleListClusterPodsSummary(c *gin.Context) {
 	}))
 }
 
+//HandleListClusterLogsSummary 获取集群log概述信息
+func HandleListClusterLogsSummary(c *gin.Context) {
+	clusterId, err := strconv.ParseInt(c.Param("clusterId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("should assign cluster id"))
+		return
+	}
+
+	installStepLogs, err := model.ListClusterInstallStep(clusterId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gf_cluster.NewFailedResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, struct {
+		*gf_cluster.ResponseBase
+		Logs []gf_cluster.KubernetesInstallStep `json:"logs"`
+	}{
+		gf_cluster.NewSuccessResponse(),
+		installStepLogs,
+	})
+}
+
 // HandleGetClusterConfigInfoByName 查询单个集群配置信息
 func HandleGetClusterConfigInfoByName(c *gin.Context) {
 	clusterName := c.Query("cluster_name")

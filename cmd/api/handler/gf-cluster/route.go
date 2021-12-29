@@ -59,6 +59,7 @@ func RegisterHandler(route *gin.RouterGroup) {
 		clusterRoute.GET("/summary/:clusterId", cluster.HandleGetClusterSummary)
 		clusterRoute.GET("/nodes/:clusterId", cluster.HandleListNodesSummary)
 		clusterRoute.GET("/pods/:clusterId", cluster.HandleListClusterPodsSummary)
+		clusterRoute.GET("/logs/:clusterId", cluster.HandleListClusterLogsSummary)
 	}
 
 }
