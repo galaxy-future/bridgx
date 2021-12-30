@@ -12,15 +12,21 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
+const (
+	_provider = cloud.TencentCloud
+	_region   = ""
+	_zone     = ""
+	_insType  = ""
+)
+
 func getCloudClient() (client cloud.Provider, err error) {
-	provider := cloud.TencentCloud
-	switch provider {
+	switch _provider {
 	case cloud.AlibabaCloud:
-		client, err = alibaba.New("ak", "sk", "regionId")
+		client, err = alibaba.New("ak", "sk", _region)
 	case cloud.HuaweiCloud:
-		client, err = huawei.New("ak", "sk", "regionId")
+		client, err = huawei.New("ak", "sk", _region)
 	case cloud.TencentCloud:
-		client, err = tencent.New("ak", "sk", "regionId")
+		client, err = tencent.New("ak", "sk", _region)
 	default:
 		return nil, errors.New("invalid provider")
 	}
@@ -38,7 +44,7 @@ func TestCreateIns(t *testing.T) {
 	}
 
 	param := cloud.Params{
-		InstanceType: "c6s.large.2",
+		InstanceType: _insType,
 		ImageId:      "",
 		Network: &cloud.Network{
 			VpcId:                   "",
@@ -48,8 +54,9 @@ func TestCreateIns(t *testing.T) {
 			InternetMaxBandwidthOut: 0,
 			InternetIpType:          "5_bgp",
 		},
+		Zone: _zone,
 		Disks: &cloud.Disks{
-			SystemDisk: cloud.DiskConf{Size: 40, Category: "SSD"},
+			SystemDisk: cloud.DiskConf{Size: 50, Category: "CLOUD_PREMIUM"},
 			DataDisk:   []cloud.DiskConf{},
 		},
 		Charge: &cloud.Charge{
@@ -65,7 +72,7 @@ func TestCreateIns(t *testing.T) {
 			},
 			{
 				Key:   cloud.ClusterName,
-				Value: "cluster2",
+				Value: "cluster",
 			},
 		},
 		DryRun: true,
@@ -126,7 +133,7 @@ func TestCtlIns(t *testing.T) {
 		t.Log(err.Error())
 	}
 
-	time.Sleep(time.Duration(60) * time.Second)
+	time.Sleep(time.Duration(30) * time.Second)
 	err = client.BatchDelete(ids, "")
 	if err != nil {
 		t.Log(err.Error())
@@ -150,7 +157,9 @@ func TestGetResource(t *testing.T) {
 	resStr, _ = jsoniter.MarshalToString(res)
 	t.Log(resStr)
 
-	res, err = client.GetZones(cloud.GetZonesRequest{})
+	res, err = client.GetZones(cloud.GetZonesRequest{
+		RegionId: _region,
+	})
 	if err != nil {
 		t.Log(err.Error())
 		return
@@ -158,7 +167,20 @@ func TestGetResource(t *testing.T) {
 	resStr, _ = jsoniter.MarshalToString(res)
 	t.Log(resStr)
 
-	res, err = client.DescribeAvailableResource(cloud.DescribeAvailableResourceRequest{})
+	begin := time.Now()
+	res, err = client.DescribeAvailableResource(cloud.DescribeAvailableResourceRequest{
+		RegionId: _region,
+		ZoneId:   _zone,
+	})
+	if err != nil {
+		t.Log(err.Error())
+		return
+	}
+	t.Log(time.Since(begin))
+	resStr, _ = jsoniter.MarshalToString(res)
+	t.Log(resStr)
+
+	res, err = client.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: []string{_insType}})
 	if err != nil {
 		t.Log(err.Error())
 		return
@@ -166,19 +188,17 @@ func TestGetResource(t *testing.T) {
 	resStr, _ = jsoniter.MarshalToString(res)
 	t.Log(resStr)
 
-	res, err = client.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: []string{"1"}})
+	begin = time.Now()
+	res, err = client.DescribeImages(cloud.DescribeImagesRequest{
+		RegionId:  _region,
+		InsType:   _insType,
+		ImageType: cloud.ImageGlobal,
+	})
 	if err != nil {
 		t.Log(err.Error())
 		return
 	}
-	resStr, _ = jsoniter.MarshalToString(res)
-	t.Log(resStr)
-
-	res, err = client.DescribeImages(cloud.DescribeImagesRequest{InsType: "c6s.large.2"})
-	if err != nil {
-		t.Log(err.Error())
-		return
-	}
+	t.Log(time.Since(begin))
 	resStr, _ = jsoniter.MarshalToString(res)
 	t.Log(resStr)
 }

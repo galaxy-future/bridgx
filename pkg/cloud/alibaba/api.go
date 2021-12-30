@@ -37,72 +37,6 @@ type AlibabaCloud struct {
 	lock      sync.Mutex
 }
 
-func (p *AlibabaCloud) GetInstancesByTags(region string, tags []cloud.Tag) (instances []cloud.Instance, err error) {
-	request := ecs.CreateDescribeInstancesRequest()
-	request.Scheme = "https"
-
-	eTag := make([]ecs.DescribeInstancesTag, 0)
-	for _, tag := range tags {
-		eTag = append(eTag, ecs.DescribeInstancesTag{
-			Key:   tag.Key,
-			Value: tag.Value,
-		})
-	}
-	request.Tag = &eTag
-	pageNumber := 1
-	request.PageSize = requests.NewInteger(50)
-	cloudInstance := make([]ecs.Instance, 0)
-	response, err := p.client.DescribeInstances(request)
-	if err != nil {
-		return nil, err
-	}
-	cloudInstance = append(cloudInstance, response.Instances.Instance...)
-	maxPage := math.Ceil(float64(response.TotalCount) / 50)
-	for pageNumber < int(maxPage) {
-		pageNumber++
-		request.PageNumber = requests.NewInteger(pageNumber)
-		response, err = p.client.DescribeInstances(request)
-		if err != nil {
-			return nil, err
-		}
-		cloudInstance = append(cloudInstance, response.Instances.Instance...)
-	}
-	instances = generateInstances(cloudInstance)
-	return
-}
-
-func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance) {
-	for _, instance := range cloudInstance {
-		ipOuter := ""
-		if len(instance.PublicIpAddress.IpAddress) > 0 {
-			ipOuter = instance.PublicIpAddress.IpAddress[0]
-		}
-		expireAt, err := time.Parse("2006-01-02T15:04Z", instance.ExpiredTime)
-		var expireAtPtr *time.Time
-		if err == nil {
-			expireAtPtr = &expireAt
-		}
-		instances = append(instances, cloud.Instance{
-			Id:       instance.InstanceId,
-			CostWay:  instance.InstanceChargeType,
-			Provider: cloud.AlibabaCloud,
-			IpInner:  strings.Join(instance.VpcAttributes.PrivateIpAddress.IpAddress, ","),
-			IpOuter:  ipOuter,
-			ImageId:  instance.ImageId,
-			ExpireAt: expireAtPtr,
-			Network: &cloud.Network{
-				VpcId:                   instance.VpcAttributes.VpcId,
-				SubnetId:                instance.VpcAttributes.VSwitchId,
-				SecurityGroup:           strings.Join(instance.SecurityGroupIds.SecurityGroupId, ","),
-				InternetChargeType:      _bandwidthChargeType[instance.InternetChargeType],
-				InternetMaxBandwidthOut: instance.InternetMaxBandwidthOut,
-			},
-			Status: _ecsStatus[instance.Status],
-		})
-	}
-	return
-}
-
 func New(AK, SK, region string) (*AlibabaCloud, error) {
 	client, err := ecs.NewClientWithAccessKey(region, AK, SK)
 	if err != nil {
@@ -155,7 +89,7 @@ func (p *AlibabaCloud) BatchCreate(m cloud.Params, num int) (instanceIds []strin
 	request.Amount = requests.NewInteger(num)
 	request.MinAmount = requests.NewInteger(num)
 	if m.Charge.ChargeType == cloud.InstanceChargeTypePrePaid {
-		request.InstanceChargeType = m.Charge.ChargeType
+		request.InstanceChargeType = _inEcsChargeType[m.Charge.ChargeType]
 		request.PeriodUnit = m.Charge.PeriodUnit
 		request.Period = requests.NewInteger(m.Charge.Period)
 	}
@@ -252,6 +186,72 @@ func (p *AlibabaCloud) StopInstances(ids []string) error {
 		logs.Logger.Debug(res)
 	}
 	return nil
+}
+
+func (p *AlibabaCloud) GetInstancesByTags(region string, tags []cloud.Tag) (instances []cloud.Instance, err error) {
+	request := ecs.CreateDescribeInstancesRequest()
+	request.Scheme = "https"
+
+	eTag := make([]ecs.DescribeInstancesTag, 0)
+	for _, tag := range tags {
+		eTag = append(eTag, ecs.DescribeInstancesTag{
+			Key:   tag.Key,
+			Value: tag.Value,
+		})
+	}
+	request.Tag = &eTag
+	pageNumber := 1
+	request.PageSize = requests.NewInteger(50)
+	cloudInstance := make([]ecs.Instance, 0)
+	response, err := p.client.DescribeInstances(request)
+	if err != nil {
+		return nil, err
+	}
+	cloudInstance = append(cloudInstance, response.Instances.Instance...)
+	maxPage := math.Ceil(float64(response.TotalCount) / 50)
+	for pageNumber < int(maxPage) {
+		pageNumber++
+		request.PageNumber = requests.NewInteger(pageNumber)
+		response, err = p.client.DescribeInstances(request)
+		if err != nil {
+			return nil, err
+		}
+		cloudInstance = append(cloudInstance, response.Instances.Instance...)
+	}
+	instances = generateInstances(cloudInstance)
+	return
+}
+
+func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance) {
+	for _, instance := range cloudInstance {
+		ipOuter := ""
+		if len(instance.PublicIpAddress.IpAddress) > 0 {
+			ipOuter = instance.PublicIpAddress.IpAddress[0]
+		}
+		expireAt, err := time.Parse("2006-01-02T15:04Z", instance.ExpiredTime)
+		var expireAtPtr *time.Time
+		if err == nil {
+			expireAtPtr = &expireAt
+		}
+		instances = append(instances, cloud.Instance{
+			Id:       instance.InstanceId,
+			CostWay:  instance.InstanceChargeType,
+			Provider: cloud.AlibabaCloud,
+			IpInner:  strings.Join(instance.VpcAttributes.PrivateIpAddress.IpAddress, ","),
+			IpOuter:  ipOuter,
+			ImageId:  instance.ImageId,
+			ExpireAt: expireAtPtr,
+			Network: &cloud.Network{
+				VpcId:                   instance.VpcAttributes.VpcId,
+				SubnetId:                instance.VpcAttributes.VSwitchId,
+				SecurityGroup:           strings.Join(instance.SecurityGroupIds.SecurityGroupId, ","),
+				InternetChargeType:      _bandwidthChargeType[instance.InternetChargeType],
+				InternetMaxBandwidthOut: instance.InternetMaxBandwidthOut,
+			},
+			Status: _ecsStatus[instance.Status],
+		})
+	}
+	return
 }
 
 func (p *AlibabaCloud) GetInstancesByCluster(regionId, clusterName string) (instances []cloud.Instance, err error) {

@@ -10,6 +10,11 @@ const (
 )
 
 //in
+var _inEcsChargeType = map[string]string{
+	cloud.InstanceChargeTypePrePaid:  "PrePaid",
+	cloud.InstanceChargeTypePostPaid: "PostPaid",
+}
+
 var _imageType = map[string]string{
 	cloud.ImageGlobal:  "system",
 	cloud.ImageShared:  "others",

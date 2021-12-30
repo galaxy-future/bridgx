@@ -1,7 +1,6 @@
 package tencent
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 )
 
+// BatchCreate AsVpcGateway
 func (p *TencentCloud) BatchCreate(m cloud.Params, num int) ([]string, error) {
 	request := cvm.NewRunInstancesRequest()
 	request.InstanceChargeType = common.StringPtr(_inEcsChargeType[m.Charge.ChargeType])
@@ -66,14 +66,13 @@ func (p *TencentCloud) BatchCreate(m cloud.Params, num int) ([]string, error) {
 			Value: common.StringPtr(tag.Value),
 		})
 	}
-	request.DryRun = common.BoolPtr(true)
+	request.DryRun = common.BoolPtr(m.DryRun)
 
 	response, err := p.cvmClient.RunInstances(request)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%s", response.ToJsonString())
-	return nil, nil
+	return tea.StringSliceValue(response.Response.InstanceIdSet), nil
 }
 
 func (p *TencentCloud) GetInstances(ids []string) (instances []cloud.Instance, err error) {
@@ -96,7 +95,31 @@ func (p *TencentCloud) GetInstances(ids []string) (instances []cloud.Instance, e
 }
 
 func (p *TencentCloud) GetInstancesByTags(regionId string, tags []cloud.Tag) (instances []cloud.Instance, err error) {
-	return nil, nil
+	request := cvm.NewDescribeInstancesRequest()
+	request.Filters = make([]*cvm.Filter, 0, len(tags))
+	for _, tag := range tags {
+		request.Filters = append(request.Filters, &cvm.Filter{
+			Name:   common.StringPtr("tag:" + tag.Key),
+			Values: common.StringPtrs([]string{tag.Value}),
+		})
+	}
+	request.Limit = common.Int64Ptr(_pageSize)
+	cvmInstances := make([]*cvm.Instance, 0, _pageSize)
+	var offset int64 = 0
+	for {
+		request.Offset = common.Int64Ptr(offset)
+		response, err := p.cvmClient.DescribeInstances(request)
+		if err != nil {
+			return nil, err
+		}
+		cvmInstances = append(cvmInstances, response.Response.InstanceSet...)
+
+		if offset+_pageSize > *response.Response.TotalCount {
+			break
+		}
+		offset += _pageSize
+	}
+	return cvmIns2CloudIns(cvmInstances), nil
 }
 
 func (p *TencentCloud) GetInstancesByCluster(regionId, clusterName string) (instances []cloud.Instance, err error) {
@@ -106,6 +129,7 @@ func (p *TencentCloud) GetInstancesByCluster(regionId, clusterName string) (inst
 	}})
 }
 
+// BatchDelete 非后付费机器，子机销毁时，无法自动删除数据盘
 func (p *TencentCloud) BatchDelete(ids []string, regionId string) error {
 	batchIds := utils.StringSliceSplit(ids, _maxNumEcsPerOperation)
 	for _, onceIds := range batchIds {
@@ -120,10 +144,30 @@ func (p *TencentCloud) BatchDelete(ids []string, regionId string) error {
 }
 
 func (p *TencentCloud) StartInstances(ids []string) error {
+	batchIds := utils.StringSliceSplit(ids, _maxNumEcsPerOperation)
+	request := cvm.NewStartInstancesRequest()
+	for _, onceIds := range batchIds {
+		request.InstanceIds = common.StringPtrs(onceIds)
+		_, err := p.cvmClient.StartInstances(request)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (p *TencentCloud) StopInstances(ids []string) error {
+	batchIds := utils.StringSliceSplit(ids, _maxNumEcsPerOperation)
+	request := cvm.NewStopInstancesRequest()
+	for _, onceIds := range batchIds {
+		request.InstanceIds = common.StringPtrs(onceIds)
+		request.StopType = common.StringPtr("SOFT_FIRST")
+		request.StoppedMode = common.StringPtr("STOP_CHARGING")
+		_, err := p.cvmClient.StopInstances(request)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -163,7 +207,31 @@ func (p *TencentCloud) DescribeAvailableResource(req cloud.DescribeAvailableReso
 }
 
 func (p *TencentCloud) DescribeInstanceTypes(req cloud.DescribeInstanceTypesRequest) (cloud.DescribeInstanceTypesResponse, error) {
-	return cloud.DescribeInstanceTypesResponse{}, nil
+	batchIds := utils.StringSliceSplit(req.TypeName, _maxNumEcsPerOperation)
+	request := cvm.NewDescribeZoneInstanceConfigInfosRequest()
+	instances := make([]cloud.InstanceInfo, 0, len(req.TypeName))
+	for _, onceIds := range batchIds {
+		request.Filters = []*cvm.Filter{
+			{
+				Name:   common.StringPtr("instance-type"),
+				Values: common.StringPtrs(onceIds),
+			},
+		}
+		response, err := p.cvmClient.DescribeZoneInstanceConfigInfos(request)
+		if err != nil {
+			return cloud.DescribeInstanceTypesResponse{}, err
+		}
+
+		for _, insType := range response.Response.InstanceTypeQuotaSet {
+			instances = append(instances, cloud.InstanceInfo{
+				Core:        int(*insType.Cpu),
+				Memory:      int(*insType.Memory),
+				Family:      *insType.InstanceFamily,
+				InsTypeName: *insType.InstanceType,
+			})
+		}
+	}
+	return cloud.DescribeInstanceTypesResponse{Infos: instances}, nil
 }
 
 func (p *TencentCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.DescribeImagesResponse, error) {
@@ -212,9 +280,15 @@ func cvmIns2CloudIns(cvmInstances []*cvm.Instance) []cloud.Instance {
 			ipOut = *info.PublicIpAddresses[0]
 		}
 		securityGroup := tea.StringSliceValue(info.SecurityGroupIds)
+		bandwidthChargeType := ""
+		bandwidthOut := 0
+		if info.InternetAccessible.InternetChargeType != nil {
+			bandwidthChargeType = _bandwidthChargeType[*info.InternetAccessible.InternetChargeType]
+			bandwidthOut = int(*info.InternetAccessible.InternetMaxBandwidthOut)
+		}
 		var expireAt *time.Time
 		if info.ExpiredTime != nil {
-			expireTime, _ := time.Parse("2006-01-02T15:04Z", *info.ExpiredTime)
+			expireTime, _ := time.Parse("2006-01-02T15:04:05Z", *info.ExpiredTime)
 			expireAt = &expireTime
 		}
 
@@ -229,8 +303,8 @@ func cvmIns2CloudIns(cvmInstances []*cvm.Instance) []cloud.Instance {
 				VpcId:                   *info.VirtualPrivateCloud.VpcId,
 				SubnetId:                *info.VirtualPrivateCloud.SubnetId,
 				SecurityGroup:           strings.Join(securityGroup, ","),
-				InternetChargeType:      _bandwidthChargeType[*info.InternetAccessible.InternetChargeType],
-				InternetMaxBandwidthOut: int(*info.InternetAccessible.InternetMaxBandwidthOut),
+				InternetChargeType:      bandwidthChargeType,
+				InternetMaxBandwidthOut: bandwidthOut,
 			},
 			Status:   _ecsStatus[*info.InstanceState],
 			ExpireAt: expireAt,

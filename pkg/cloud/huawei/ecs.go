@@ -55,17 +55,18 @@ func (p *HuaweiCloud) BatchCreate(m cloud.Params, num int) ([]string, error) {
 	}
 
 	serverbody := &model.PrePaidServer{
-		ImageRef:    m.ImageId,
-		FlavorRef:   m.InstanceType,
-		Name:        fmt.Sprintf("ins%v", time.Now().UnixNano()),
-		AdminPass:   &adminPassServerPrePaidServer,
-		Vpcid:       m.Network.VpcId,
-		Nics:        listNicsServer,
-		Count:       &countServerPrePaidServer,
-		RootVolume:  rootVolumeServer,
-		DataVolumes: &listDataVolumesServer,
-		ServerTags:  &listServerTagsServer,
-		Extendparam: extendParam,
+		ImageRef:         m.ImageId,
+		FlavorRef:        m.InstanceType,
+		Name:             fmt.Sprintf("ins%v", time.Now().UnixNano()),
+		AdminPass:        &adminPassServerPrePaidServer,
+		Vpcid:            m.Network.VpcId,
+		Nics:             listNicsServer,
+		Count:            &countServerPrePaidServer,
+		RootVolume:       rootVolumeServer,
+		DataVolumes:      &listDataVolumesServer,
+		AvailabilityZone: &m.Zone,
+		ServerTags:       &listServerTagsServer,
+		Extendparam:      extendParam,
 	}
 	if m.Network.InternetMaxBandwidthOut > 0 {
 		sizeBandwith := int32(m.Network.InternetMaxBandwidthOut)

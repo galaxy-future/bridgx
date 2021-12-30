@@ -214,13 +214,13 @@ func subnetInfo2CloudSwitch(subnetInfo []model.Subnet, UsedIpNum map[string]int)
 	switchs := make([]cloud.Switch, 0, len(subnetInfo))
 	for _, subnet := range subnetInfo {
 		stat, _ := subnet.Status.MarshalJSON()
-		totalIpNum := getSubnetTotalIpNum(subnet.Cidr)
+		totalHostNum := getSubnetTotalHostNum(subnet.Cidr)
 
 		switchs = append(switchs, cloud.Switch{
 			VpcId:                   subnet.VpcId,
 			SwitchId:                subnet.Id,
 			Name:                    subnet.Name,
-			AvailableIpAddressCount: totalIpNum - 3 - UsedIpNum[subnet.Id],
+			AvailableIpAddressCount: totalHostNum - 1 - UsedIpNum[subnet.Id],
 			VStatus:                 _subnetStatus[string(stat)],
 			ZoneId:                  subnet.AvailabilityZone,
 			CidrBlock:               subnet.Cidr,
@@ -250,7 +250,7 @@ func (p *HuaweiCloud) getUsedIpNum(switchIds []string) (map[string]int, error) {
 	return resMap, nil
 }
 
-func getSubnetTotalIpNum(cidr string) int {
+func getSubnetTotalHostNum(cidr string) int {
 	index := strings.Index(cidr, "/")
 	if index < 0 {
 		return 0
@@ -260,5 +260,5 @@ func getSubnetTotalIpNum(cidr string) int {
 		return 0
 	}
 
-	return 1 << (32 - num)
+	return 1<<(32-num) - 2
 }
