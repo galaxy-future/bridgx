@@ -6,7 +6,7 @@ import (
 )
 
 func ListClusterInstallStep(clusterId int64) (result []gf_cluster.KubernetesInstallStep, err error) {
-	err = clients.ReadDBCli.Model(gf_cluster.KubernetesInstallStep{}).Where("cluster_id = ?", clusterId).
+	err = clients.ReadDBCli.Model(gf_cluster.KubernetesInstallStep{}).Where("kubernetes_id = ?", clusterId).
 		Find(&result).Error
 	return
 }
