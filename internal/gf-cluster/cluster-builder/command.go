@@ -118,6 +118,22 @@ func AddMachine(master gf_cluster.ClusterBuildMachine, machine gf_cluster.Cluste
 	return nil
 }
 
+func DelMachine(master gf_cluster.ClusterBuildMachine, machine gf_cluster.ClusterBuildMachine) error {
+	resetMachine(machine)
+
+	_, err := sshRun(master, "kubectl delete node "+machine.Hostname)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RestartKubelet(machine gf_cluster.ClusterBuildMachine) error {
+	_, err := sshRun(machine, "systemctl restart kubelet")
+	return err
+}
+
 func sshRun(machine gf_cluster.ClusterBuildMachine, cmd string) (string, error) {
 	fmt.Println(cmd)
 	client, err := ssh.Dial("tcp", machine.IP+":22", &ssh.ClientConfig{
