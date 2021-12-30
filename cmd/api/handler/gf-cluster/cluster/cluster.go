@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/spf13/cast"
 	"net/http"
 	"runtime/debug"
 	"sort"
@@ -379,8 +380,8 @@ func HandleListClusterPodsSummary(c *gin.Context) {
 
 //HandleListClusterLogsSummary 获取集群log概述信息
 func HandleListClusterLogsSummary(c *gin.Context) {
-	clusterId, err := strconv.ParseInt(c.Param("clusterId"), 10, 64)
-	if err != nil {
+	clusterId := cast.ToInt64(c.Param("clusterId"))
+	if clusterId == 0 {
 		c.JSON(http.StatusBadRequest, gf_cluster.NewFailedResponse("should assign cluster id"))
 		return
 	}
@@ -391,12 +392,9 @@ func HandleListClusterLogsSummary(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, struct {
-		*gf_cluster.ResponseBase
-		Logs []gf_cluster.KubernetesInstallStep `json:"logs"`
-	}{
-		gf_cluster.NewSuccessResponse(),
-		installStepLogs,
+	c.JSON(http.StatusOK, gf_cluster.ListClusterLogsResponse{
+		ResponseBase: gf_cluster.NewSuccessResponse(),
+		Logs:         installStepLogs,
 	})
 }
 
