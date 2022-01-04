@@ -249,9 +249,10 @@ type DescribeImagesResponse struct {
 }
 
 type Image struct {
-	OsType  string
-	OsName  string
-	ImageId string
+	OsType    string
+	OsName    string
+	ImageId   string
+	ImageName string
 }
 
 type DescribeVpcsRequest struct {

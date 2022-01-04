@@ -713,9 +713,10 @@ func (p *AlibabaCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.De
 		if response != nil && response.Body != nil && response.Body.Images != nil {
 			for _, img := range response.Body.Images.Image {
 				images = append(images, cloud.Image{
-					OsType:  _osType[*img.OSType],
-					OsName:  *img.OSName,
-					ImageId: *img.ImageId,
+					OsType:    _osType[*img.OSType],
+					OsName:    *img.OSName,
+					ImageId:   *img.ImageId,
+					ImageName: *img.ImageName,
 				})
 			}
 

@@ -145,9 +145,10 @@ func (p *HuaweiCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.Des
 		for _, img := range *response.Images {
 			osType, _ := img.OsType.MarshalJSON()
 			images = append(images, cloud.Image{
-				ImageId: img.Id,
-				OsType:  _osType[string(osType)],
-				OsName:  img.Name,
+				ImageId:   img.Id,
+				ImageName: img.Name,
+				OsType:    _osType[string(osType)],
+				OsName:    img.Name,
 			})
 		}
 
