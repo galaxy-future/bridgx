@@ -19,6 +19,7 @@ import (
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/cloud/alibaba"
 	"github.com/galaxy-future/BridgX/pkg/cloud/huawei"
+	"github.com/galaxy-future/BridgX/pkg/cloud/tencent"
 )
 
 var clientMap sync.Map
@@ -248,6 +249,8 @@ func getProvider(provider, ak, regionId string) (cloud.Provider, error) {
 		client, err = alibaba.New(ak, sk, regionId)
 	case cloud.HuaweiCloud:
 		client, err = huawei.New(ak, sk, regionId)
+	case cloud.TencentCloud:
+		client, err = tencent.New(ak, sk, regionId)
 	default:
 		return nil, errors.New("invalid provider")
 	}

@@ -83,7 +83,6 @@ type CreateVpcResponse struct {
 	VpcId     string
 	RequestId string
 	//ResourceGroupId *string `json:"ResourceGroupId,omitempty" xml:"ResourceGroupId,omitempty"`
-
 }
 
 type GetVpcRequest struct {
