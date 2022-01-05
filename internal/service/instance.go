@@ -338,6 +338,8 @@ func CheckIsGpuComputingPowerType(instanceType string, provider string) bool {
 		return strings.Contains(instanceType, constants.IsAlibabaCloudGpuType)
 	case cloud.HuaweiCloud:
 		return strings.HasPrefix(instanceType, constants.IsHuaweiCloudGpuType) || strings.HasPrefix(instanceType, constants.IsHuaweiCloudGpuTypeTwo)
+	case cloud.TencentCloud:
+		return strings.HasPrefix(instanceType, constants.IsTencentCloudGpuType) || strings.HasPrefix(instanceType, constants.IsTencentCloudGpuTypeTwo)
 	default:
 		return false
 	}

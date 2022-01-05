@@ -42,11 +42,12 @@ var _bandwidthChargeMode = map[string]string{
 }
 
 var _protocol = map[string]string{
-	cloud.ProtocolIcmp:   "icmp",
-	cloud.ProtocolIcmpV6: "icmpv6",
-	cloud.ProtocolTcp:    "tcp",
-	cloud.ProtocolUdp:    "udp",
-	cloud.ProtocolAll:    "",
+	cloud.ProtocolIcmp:   "ICMP",
+	cloud.ProtocolIcmpV6: "ICMPV6",
+	cloud.ProtocolTcp:    "TCP",
+	cloud.ProtocolUdp:    "UDP",
+	cloud.ProtocolGre:    "GRE",
+	cloud.ProtocolAll:    "ALL",
 }
 
 //out
@@ -80,21 +81,4 @@ var _insTypeStat = map[string]string{
 var _bandwidthChargeType = map[string]string{
 	"BANDWIDTH_PREPAID":        cloud.BandwidthPayByFix,
 	"TRAFFIC_POSTPAID_BY_HOUR": cloud.BandwidthPayByTraffic,
-}
-
-var _secGrpRuleDirection = map[string]string{
-	"ingress": cloud.SecGroupRuleIn,
-	"egress":  cloud.SecGroupRuleOut,
-}
-
-var _vpcStatus = map[string]string{
-	"\"CREATING\"\n": cloud.VPCStatusPending,
-	"\"OK\"\n":       cloud.VPCStatusAvailable,
-	"\"ERROR\"\n":    cloud.VPCStatusAbnormal,
-}
-
-var _subnetStatus = map[string]string{
-	"\"UNKNOWN\"\n": cloud.SubnetPending,
-	"\"ACTIVE\"\n":  cloud.SubnetAvailable,
-	"\"ERROR\"\n":   cloud.SubnetAbnormal,
 }

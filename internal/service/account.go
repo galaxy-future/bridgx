@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/galaxy-future/BridgX/pkg/cloud/tencent"
 	"strings"
 	"time"
 
@@ -114,6 +115,8 @@ func CheckAccountValid(ak, sk, provider string) error {
 		cli, err = alibaba.New(ak, sk, DefaultRegion)
 	case cloud.HuaweiCloud:
 		cli, err = huawei.New(ak, sk, DefaultRegionHuaWei)
+	case cloud.TencentCloud:
+		cli, err = tencent.New(ak, sk, DefaultRegionTencent)
 	default:
 		return errors.New("invalid provider")
 	}

@@ -28,8 +28,9 @@ const (
 	TargetTypeAccount
 	TargetTypeInstanceType
 
-	DefaultRegion       = "cn-qingdao"
-	DefaultRegionHuaWei = "cn-north-4"
+	DefaultRegion        = "cn-qingdao"
+	DefaultRegionHuaWei  = "cn-north-4"
+	DefaultRegionTencent = "ap-beijing"
 )
 
 var H *SimpleTaskHandler
@@ -1078,6 +1079,8 @@ func getDefaultRegion(provider string) string {
 		regionId = DefaultRegion
 	case cloud.HuaweiCloud:
 		regionId = DefaultRegionHuaWei
+	case cloud.TencentCloud:
+		regionId = DefaultRegionTencent
 	}
 	return regionId
 }
