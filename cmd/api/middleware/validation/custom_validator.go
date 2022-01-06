@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/galaxy-future/BridgX/internal/logs"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 )
@@ -24,6 +23,8 @@ const (
 	lowercaseOrNumeric       = "lowercaseOrNumeric"
 	lowercaseOrNumericRegStr = "^[a-z0-9]+$"
 )
+
+var lowercaseOrNumericRegStrRegexp = regexp.MustCompile(lowercaseOrNumericRegStr)
 
 var (
 	numberMap      = map[byte]struct{}{'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}, '8': {}, '9': {}, '0': {}}
@@ -126,7 +127,7 @@ func getMustInErrMsg(param string) string {
 	mustInErrMsgCacheRWLock.RUnlock()
 	if !ok {
 		mustInErrMsgCacheRWLock.Lock()
-		members := make([]string, 0)
+		members := make([]string, 0, len(mustInMembers[param]))
 		for mem := range mustInMembers[param] {
 			members = append(members, mem)
 		}
@@ -142,10 +143,5 @@ func getMustInErrMsg(param string) string {
 
 func validateLowercaseOrNumeric(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
-	bool, err := regexp.MatchString(lowercaseOrNumericRegStr, field)
-	if err != nil {
-		logs.Logger.Errorf("validateLowercaseOrNumeric err:%v ", err)
-		return false
-	}
-	return bool
+	return lowercaseOrNumericRegStrRegexp.MatchString(field)
 }
