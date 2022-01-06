@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alibabacloud-go/tea/tea"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/utils"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -54,17 +53,18 @@ func (p *TencentCloud) BatchCreate(m cloud.Params, num int) ([]string, error) {
 	request.LoginSettings = &cvm.LoginSettings{
 		Password: common.StringPtr(m.Password),
 	}
-
-	request.TagSpecification = []*cvm.TagSpecification{
-		{
-			ResourceType: common.StringPtr("instance"),
-		},
-	}
-	for _, tag := range m.Tags {
-		request.TagSpecification[0].Tags = append(request.TagSpecification[0].Tags, &cvm.Tag{
-			Key:   common.StringPtr(tag.Key),
-			Value: common.StringPtr(tag.Value),
-		})
+	if len(m.Tags) > 0 {
+		request.TagSpecification = []*cvm.TagSpecification{
+			{
+				ResourceType: common.StringPtr("instance"),
+			},
+		}
+		for _, tag := range m.Tags {
+			request.TagSpecification[0].Tags = append(request.TagSpecification[0].Tags, &cvm.Tag{
+				Key:   common.StringPtr(tag.Key),
+				Value: common.StringPtr(tag.Value),
+			})
+		}
 	}
 	request.DryRun = common.BoolPtr(m.DryRun)
 
@@ -72,7 +72,7 @@ func (p *TencentCloud) BatchCreate(m cloud.Params, num int) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return tea.StringSliceValue(response.Response.InstanceIdSet), nil
+	return common.StringValues(response.Response.InstanceIdSet), nil
 }
 
 func (p *TencentCloud) GetInstances(ids []string) (instances []cloud.Instance, err error) {
@@ -187,21 +187,17 @@ func (p *TencentCloud) DescribeAvailableResource(req cloud.DescribeAvailableReso
 	}
 
 	zoneInsType := make(map[string][]cloud.InstanceType, 8)
+	zoneCvmInsType := make(map[string][]*cvm.InstanceTypeQuotaItem, 8)
 	for _, insType := range response.Response.InstanceTypeQuotaSet {
-		_, ok := zoneInsType[*insType.Zone]
+		_, ok := zoneCvmInsType[*insType.Zone]
 		if !ok {
-			zoneInsType[*insType.Zone] = make([]cloud.InstanceType, 0, 400)
+			zoneCvmInsType[*insType.Zone] = make([]*cvm.InstanceTypeQuotaItem, 0, _pageSize)
 		}
 
-		zoneInsType[*insType.Zone] = append(zoneInsType[*insType.Zone], cloud.InstanceType{
-			InstanceInfo: cloud.InstanceInfo{
-				Core:        int(*insType.Cpu),
-				Memory:      int(*insType.Memory),
-				Family:      *insType.InstanceFamily,
-				InsTypeName: *insType.InstanceType,
-			},
-			Status: _insTypeStat[*insType.Status],
-		})
+		zoneCvmInsType[*insType.Zone] = append(zoneCvmInsType[*insType.Zone], insType)
+	}
+	for k, v := range zoneCvmInsType {
+		zoneInsType[k] = cvmInsType2CloudInsType(v)
 	}
 	return cloud.DescribeAvailableResourceResponse{InstanceTypes: zoneInsType}, nil
 }
@@ -209,7 +205,7 @@ func (p *TencentCloud) DescribeAvailableResource(req cloud.DescribeAvailableReso
 func (p *TencentCloud) DescribeInstanceTypes(req cloud.DescribeInstanceTypesRequest) (cloud.DescribeInstanceTypesResponse, error) {
 	batchIds := utils.StringSliceSplit(req.TypeName, _maxNumEcsPerOperation)
 	request := cvm.NewDescribeZoneInstanceConfigInfosRequest()
-	instances := make([]cloud.InstanceInfo, 0, len(req.TypeName))
+	cvmInsType := make([]*cvm.InstanceTypeQuotaItem, 0, len(req.TypeName))
 	for _, onceIds := range batchIds {
 		request.Filters = []*cvm.Filter{
 			{
@@ -223,17 +219,14 @@ func (p *TencentCloud) DescribeInstanceTypes(req cloud.DescribeInstanceTypesRequ
 		}
 
 		for _, insType := range response.Response.InstanceTypeQuotaSet {
-			instances = append(instances, cloud.InstanceInfo{
-				Core:        int(*insType.Cpu),
-				Memory:      int(*insType.Memory),
-				Family:      *insType.InstanceFamily,
-				InsTypeName: *insType.InstanceType,
-			})
+			cvmInsType = append(cvmInsType, insType)
 		}
 	}
-	return cloud.DescribeInstanceTypesResponse{Infos: instances}, nil
+	insType := cvmInsType2CloudInsType(cvmInsType)
+	return cloud.DescribeInstanceTypesResponse{Infos: insType}, nil
 }
 
+// DescribeImages miss OsType
 func (p *TencentCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.DescribeImagesResponse, error) {
 	request := cvm.NewDescribeImagesRequest()
 	request.Filters = []*cvm.Filter{
@@ -258,9 +251,9 @@ func (p *TencentCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.De
 
 		for _, img := range response.Response.ImageSet {
 			images = append(images, cloud.Image{
-				OsType:  *img.Platform,
-				OsName:  *img.OsName,
-				ImageId: *img.ImageId,
+				Platform: *img.Platform,
+				OsName:   *img.OsName,
+				ImageId:  *img.ImageId,
 			})
 		}
 		if offset+_pageSize > uint64(*response.Response.TotalCount) {
@@ -274,12 +267,12 @@ func (p *TencentCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.De
 func cvmIns2CloudIns(cvmInstances []*cvm.Instance) []cloud.Instance {
 	instances := make([]cloud.Instance, 0, len(cvmInstances))
 	for _, info := range cvmInstances {
-		ipInner := tea.StringSliceValue(info.PrivateIpAddresses)
+		ipInner := common.StringValues(info.PrivateIpAddresses)
 		ipOut := ""
 		if len(info.PublicIpAddresses) > 0 {
 			ipOut = *info.PublicIpAddresses[0]
 		}
-		securityGroup := tea.StringSliceValue(info.SecurityGroupIds)
+		securityGroup := common.StringValues(info.SecurityGroupIds)
 		bandwidthChargeType := ""
 		bandwidthOut := 0
 		if info.InternetAccessible.InternetChargeType != nil {
@@ -306,9 +299,33 @@ func cvmIns2CloudIns(cvmInstances []*cvm.Instance) []cloud.Instance {
 				InternetChargeType:      bandwidthChargeType,
 				InternetMaxBandwidthOut: bandwidthOut,
 			},
-			Status:   _ecsStatus[*info.InstanceState],
+			Status:   _ecsStatus[utils.StringValue(info.InstanceState)],
 			ExpireAt: expireAt,
 		})
 	}
 	return instances
+}
+
+func cvmInsType2CloudInsType(cvmInsType []*cvm.InstanceTypeQuotaItem) []cloud.InstanceType {
+	insType := make([]cloud.InstanceType, 0, len(cvmInsType))
+	for _, info := range cvmInsType {
+		chargeType := _insTypeChargeType[utils.StringValue(info.InstanceChargeType)]
+		if chargeType == "" {
+			continue
+		}
+		isGpu := false
+		if utils.Int64Value(info.Gpu) > 0 {
+			isGpu = true
+		}
+		insType = append(insType, cloud.InstanceType{
+			ChargeType:  chargeType,
+			IsGpu:       isGpu,
+			Core:        int(utils.Int64Value(info.Cpu)),
+			Memory:      int(utils.Int64Value(info.Memory)),
+			Family:      utils.StringValue(info.InstanceFamily),
+			InsTypeName: utils.StringValue(info.InstanceType),
+			Status:      _insTypeStat[utils.StringValue(info.Status)],
+		})
+	}
+	return insType
 }

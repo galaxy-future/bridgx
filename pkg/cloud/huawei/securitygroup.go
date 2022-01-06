@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/alibabacloud-go/tea/tea"
+	"github.com/galaxy-future/BridgX/pkg/utils"
+
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v3/model"
 	"github.com/spf13/cast"
@@ -116,7 +117,7 @@ func (p *HuaweiCloud) addSecGrpRule(req cloud.AddSecurityGroupRuleRequest, direc
 		Direction:       direction,
 	}
 	if req.IpProtocol != "" {
-		secGrpRuleOpt.Protocol = tea.String(_protocol[req.IpProtocol])
+		secGrpRuleOpt.Protocol = utils.String(_protocol[req.IpProtocol])
 	}
 	if req.PortFrom > 0 {
 		portRange := cast.ToString(req.PortFrom)

@@ -30,9 +30,9 @@ var _protocol = map[string]string{
 }
 
 //out
-var _chargeType = map[string]string{
-	"Subscription": cloud.PrePaid,
-	"PayAsYouGo":   cloud.PostPaid,
+var _orderChargeType = map[string]string{
+	"Subscription": cloud.OrderPrePaid,
+	"PayAsYouGo":   cloud.OrderPostPaid,
 }
 
 var _payStatus = map[string]int8{
@@ -47,6 +47,11 @@ var _ecsStatus = map[string]string{
 	"Starting": cloud.EcsStarting,
 	"Stopping": cloud.EcsStopping,
 	"Stopped":  cloud.EcsStopped,
+}
+
+var _insTypeChargeType = map[string]string{
+	"PrePaid":  cloud.InsTypeChargeTypePrePaid,
+	"PostPaid": cloud.InsTypeChargeTypePostPaid,
 }
 
 var _insTypeStat = map[string]string{

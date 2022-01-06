@@ -92,6 +92,11 @@ var _ecsStatus = map[string]string{
 	"DELETED":       cloud.EcsDeleted,
 }
 
+var _insTypeChargeType = map[string]string{
+	"period": cloud.InsTypeChargeTypePrePaid,
+	"demand": cloud.InsTypeChargeTypePostPaid,
+}
+
 var _insTypeStat = map[string]string{
 	"normal":    cloud.InsTypeAvailable,
 	"promotion": cloud.InsTypeAvailable,

@@ -67,6 +67,11 @@ var _ecsStatus = map[string]string{
 	"TERMINATING":   cloud.EcsDeleted,
 }
 
+var _insTypeChargeType = map[string]string{
+	"PREPAID":          cloud.InsTypeChargeTypePrePaid,
+	"POSTPAID_BY_HOUR": cloud.InsTypeChargeTypePostPaid,
+}
+
 var _insTypeStat = map[string]string{
 	"SELL":     cloud.InsTypeAvailable,
 	"SOLD_OUT": cloud.InsTypeSellOut,

@@ -360,19 +360,14 @@ func (p *HuaweiCloud) DescribeAvailableResource(req cloud.DescribeAvailableResou
 			return cloud.DescribeAvailableResourceResponse{}, fmt.Errorf("httpcode %d", response.HttpStatusCode)
 		}
 
-		insType := make([]cloud.InstanceType, 0, len(*response.Flavors))
+		flavors := make([]model.Flavor, 0, len(*response.Flavors))
 		for _, flavor := range *response.Flavors {
-			insType = append(insType, cloud.InstanceType{
-				InstanceInfo: cloud.InstanceInfo{
-					Core:        cast.ToInt(flavor.Vcpus),
-					Memory:      cast.ToInt(flavor.Ram / 1024),
-					Family:      *flavor.OsExtraSpecs.Ecsperformancetype,
-					InsTypeName: flavor.Id,
-				},
-				Status: getFlavorStatus(flavor.OsExtraSpecs, zoneId),
-			})
+			if flavor.OSFLVDISABLEDdisabled {
+				continue
+			}
+			flavors = append(flavors, flavor)
 		}
-		zoneInsType[zoneId] = insType
+		zoneInsType[zoneId] = flavor2CloudInsType(flavors, zoneId)
 	}
 
 	return cloud.DescribeAvailableResourceResponse{InstanceTypes: zoneInsType}, nil
@@ -422,26 +417,51 @@ func ecsInfo2CloudIns(ecsInfos []model.ServerDetail, resources map[string]prePai
 	return instances
 }
 
+func flavor2CloudInsType(flavors []model.Flavor, zoneId string) []cloud.InstanceType {
+	insType := make([]cloud.InstanceType, 0, len(flavors))
+	for _, flavor := range flavors {
+		extra := flavor.OsExtraSpecs
+		chargeType := cloud.InsTypeChargeTypeAll
+		if extra.Condoperationcharge != nil {
+			chargeType = _insTypeChargeType[*extra.Condoperationcharge]
+		}
+		isGpu := false
+		if utils.StringValue(extra.Ecsperformancetype) == "gpu" {
+			isGpu = true
+		}
+
+		insType = append(insType, cloud.InstanceType{
+			ChargeType:  chargeType,
+			IsGpu:       isGpu,
+			Core:        cast.ToInt(flavor.Vcpus),
+			Memory:      cast.ToInt(flavor.Ram / 1024),
+			Family:      utils.StringValue(extra.Ecsperformancetype),
+			InsTypeName: flavor.Id,
+			Status:      getFlavorStatus(extra, zoneId),
+		})
+	}
+	return insType
+}
+
 func getFlavorStatus(flavor *model.FlavorExtraSpec, zoneId string) string {
-	status := *flavor.Condoperationaz
-	if status == "" {
+	if flavor.Condoperationaz == nil {
 		return _insTypeStat[*flavor.Condoperationstatus]
 	}
 
-	staStr := status
+	statStr := *flavor.Condoperationaz
 	for {
-		begin := strings.Index(staStr, zoneId)
+		begin := strings.Index(statStr, zoneId)
 		if begin == -1 {
 			return _insTypeStat[*flavor.Condoperationstatus]
 		}
-		staStr = staStr[begin:]
-		zoneIdx := strings.Index(staStr, "(")
-		if staStr[:zoneIdx] != zoneId {
-			staStr = staStr[zoneIdx:]
+		statStr = statStr[begin:]
+		zoneIdx := strings.Index(statStr, "(")
+		if statStr[:zoneIdx] != zoneId {
+			statStr = statStr[zoneIdx:]
 			continue
 		}
 
-		end := strings.Index(staStr, ")")
-		return _insTypeStat[staStr[zoneIdx+1:end]]
+		end := strings.Index(statStr, ")")
+		return _insTypeStat[statStr[zoneIdx+1:end]]
 	}
 }

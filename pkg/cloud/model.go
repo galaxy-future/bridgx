@@ -4,16 +4,6 @@ import (
 	"time"
 )
 
-const (
-	InstanceChargeTypePrePaid  = "PrePaid"
-	InstanceChargeTypePostPaid = "PostPaid"
-)
-
-const (
-	InternetChargeTypePayByTraffic   = "PayByTraffic"
-	InternetChargeTypePayByBandwidth = "PayByBandwidth"
-)
-
 type Params struct {
 	Provider     string
 	InstanceType string
@@ -206,8 +196,13 @@ type Zone struct {
 }
 
 type InstanceType struct {
-	InstanceInfo
-	Status string
+	ChargeType  string
+	IsGpu       bool
+	Core        int
+	Memory      int
+	Family      string
+	InsTypeName string
+	Status      string
 }
 
 type InstanceInfo struct {
@@ -235,7 +230,7 @@ type DescribeInstanceTypesRequest struct {
 	TypeName []string
 }
 type DescribeInstanceTypesResponse struct {
-	Infos []InstanceInfo
+	Infos []InstanceType
 }
 type DescribeImagesRequest struct {
 	RegionId  string
@@ -248,9 +243,10 @@ type DescribeImagesResponse struct {
 }
 
 type Image struct {
-	OsType    string
-	OsName    string
-	ImageId   string
+	Platform string
+	OsType   string
+	OsName   string
+	ImageId  string
 	ImageName string
 }
 

@@ -580,16 +580,15 @@ func publishShrinkConfig(clusterName string) error {
 }
 
 func judgeInstancesIsReady(instances []cloud.Instance, chargeConfig *types.NetworkConfig) bool {
-	var internetChargeType string
+	bandwithOut := 0
 	if chargeConfig != nil {
-		internetChargeType = chargeConfig.InternetChargeType
+		bandwithOut = chargeConfig.InternetMaxBandwidthOut
 	}
-	needCheckIpOuter := internetChargeType == cloud.InternetChargeTypePayByTraffic || internetChargeType == cloud.InternetChargeTypePayByBandwidth
 	for _, instance := range instances {
 		if instance.Status == cloud.EcsBuilding || instance.IpInner == "" {
 			return false
 		}
-		if needCheckIpOuter && instance.IpOuter == "" {
+		if bandwithOut > 0 && instance.IpOuter == "" {
 			return false
 		}
 	}
