@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/alibabacloud-go/tea/tea"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/galaxy-future/BridgX/pkg/utils"
@@ -14,9 +13,9 @@ import (
 
 func (p *TencentCloud) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest) (cloud.CreateSecurityGroupResponse, error) {
 	request := vpc.NewCreateSecurityGroupRequest()
-	request.GroupName = tea.String(req.SecurityGroupName)
-	request.GroupDescription = tea.String(req.RegionId)
-	// The tags are a filter for DescribeSecurityGroups
+	request.GroupName = common.StringPtr(req.SecurityGroupName)
+	request.GroupDescription = common.StringPtr(req.RegionId)
+	// The tags are a filter for DescribeSecurityGroups`
 	request.Tags = []*vpc.Tag{
 		&vpc.Tag{
 			Key:   common.StringPtr("VpcId"),
@@ -45,7 +44,7 @@ func (p *TencentCloud) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest)
 func (p *TencentCloud) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
 	portRange := fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
 	request := vpc.NewCreateSecurityGroupPoliciesRequest()
-	securityGroupId := tea.String(req.SecurityGroupId)
+	securityGroupId := common.StringPtr(req.SecurityGroupId)
 	request.SecurityGroupId = securityGroupId
 	request.SecurityGroupPolicySet = &vpc.SecurityGroupPolicySet{
 		Ingress: []*vpc.SecurityGroupPolicy{
@@ -71,7 +70,7 @@ func (p *TencentCloud) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRul
 func (p *TencentCloud) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
 	portRange := fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
 	request := vpc.NewCreateSecurityGroupPoliciesRequest()
-	securityGroupId := tea.String(req.SecurityGroupId)
+	securityGroupId := common.StringPtr(req.SecurityGroupId)
 	request.SecurityGroupId = securityGroupId
 	request.SecurityGroupPolicySet = &vpc.SecurityGroupPolicySet{
 		Egress: []*vpc.SecurityGroupPolicy{
