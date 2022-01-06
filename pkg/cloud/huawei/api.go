@@ -150,6 +150,7 @@ func (p *HuaweiCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.Des
 				Platform: platform[1 : len(platform)-2],
 				ImageId:  img.Id,
 				OsType:   _osType[string(osType)],
+				Size:     int(img.MinDisk),
 				OsName:   img.Name,
 				ImageName: img.Name,
 			})

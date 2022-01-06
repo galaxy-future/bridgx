@@ -7,7 +7,6 @@ import (
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
-	"github.com/galaxy-future/BridgX/internal/service"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
 )
@@ -15,7 +14,7 @@ import (
 func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int64, tagMap map[string]map[string]string) []response.ClusterThumb {
 	res := make([]response.ClusterThumb, 0)
 	for _, cluster := range clusters {
-		instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
+		insTypeDesc := GetInstanceTypeDesc(&cluster)
 		tags := tagMap[cluster.ClusterName]
 		var usage string
 		if len(tags) > 0 {
@@ -25,7 +24,7 @@ func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int
 			ClusterId:     cast.ToString(cluster.Id),
 			ClusterName:   cluster.ClusterName,
 			InstanceCount: countMap[cluster.ClusterName],
-			InstanceType:  instanceType.GetDesc(),
+			InstanceType:  insTypeDesc,
 			ChargeType:    cluster.GetChargeType(),
 			Provider:      cluster.Provider,
 			Account:       cluster.AccountKey,
@@ -69,13 +68,6 @@ func ConvertToClusterTags(tags []model.ClusterTag) map[string]map[string]string 
 		res[tag.ClusterName] = clusterTags
 	}
 	return res
-}
-
-func ConvertToInstanceStat(instanceType service.InstanceTypeByZone, count int64) response.InstanceStatResponse {
-	return response.InstanceStatResponse{
-		InstanceTypeDesc: instanceType.GetDesc(),
-		InstanceCount:    count,
-	}
 }
 
 func ConvertToTaskThumbList(tasks []model.Task) []response.TaskThumb {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/types"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
 	jsoniter "github.com/json-iterator/go"
@@ -34,12 +35,44 @@ type Cluster struct {
 	NetworkConfig string
 	StorageConfig string
 	ChargeConfig  string
+	ExtendConfig  string
 	AccountKey    string
 
 	CreateBy      string
 	UpdateBy      string
 	DeleteUniqKey int64
 	DeletedAt     gorm.DeletedAt
+}
+
+func (c *Cluster) GetInstanceTypeDesc() string {
+	cfg, err := c.UnmarshalExtendConfig()
+	if err != nil {
+		logs.Logger.Errorf("UnmarshalExtendConfig failed, %v", err)
+		return ""
+	}
+	return fmt.Sprintf("%d核%dG(%s)", cfg.Core, cfg.Memory, c.InstanceType)
+}
+
+func (c *Cluster) GetCpuType() string {
+	cfg, err := c.UnmarshalExtendConfig()
+	if err != nil {
+		logs.Logger.Errorf("UnmarshalExtendConfig failed, %v", err)
+		return ""
+	}
+	return cfg.CpuType
+}
+
+func (c *Cluster) UnmarshalExtendConfig() (*types.ExtendConfig, error) {
+	if c.ExtendConfig == "" {
+		return nil, fmt.Errorf("ExtendConfig is empty")
+	}
+
+	extendCfg := types.ExtendConfig{}
+	err := jsoniter.UnmarshalFromString(c.ExtendConfig, &extendCfg)
+	if err != nil {
+		return nil, err
+	}
+	return &extendCfg, nil
 }
 
 func (c *Cluster) GetChargeType() string {

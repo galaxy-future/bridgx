@@ -59,13 +59,17 @@ func GetInstanceStat(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
+
+	insTypeDesc := helper.GetInstanceTypeDesc(cluster)
 	instanceCount, err := service.GetInstanceCount(ctx, nil, clusterName)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	response.MkResponse(ctx, http.StatusOK, response.Success, helper.ConvertToInstanceStat(instanceType, instanceCount))
+	response.MkResponse(ctx, http.StatusOK, response.Success, response.InstanceStatResponse{
+		InstanceTypeDesc: insTypeDesc,
+		InstanceCount:    instanceCount,
+	})
 	return
 }
 
@@ -427,6 +431,10 @@ func convertToClusterModel(clusterInput *types.ClusterInfo) (*model.Cluster, err
 	if clusterInput.ImageConfig != nil {
 		ic, _ = jsoniter.MarshalToString(clusterInput.ImageConfig)
 	}
+	ec := ""
+	if clusterInput.ExtendConfig != nil {
+		ec, _ = jsoniter.MarshalToString(clusterInput.ExtendConfig)
+	}
 	if clusterInput.NetworkConfig == nil {
 		return nil, errors.New("missing network config")
 	}
@@ -455,6 +463,7 @@ func convertToClusterModel(clusterInput *types.ClusterInfo) (*model.Cluster, err
 		NetworkConfig: nc,
 		StorageConfig: sc,
 		ChargeConfig:  cc,
+		ExtendConfig:  ec,
 	}
 	return &m, nil
 }

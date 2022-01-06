@@ -635,10 +635,10 @@ func (p *AlibabaCloud) DescribeAvailableResource(req cloud.DescribeAvailableReso
 					continue
 				}
 				for _, ins := range resource.SupportedResources.SupportedResource {
-					if ins == nil {
+					if ins == nil || _insTypeStat[tea.StringValue(ins.StatusCategory)] != cloud.InsTypeAvailable {
 						continue
 					}
-					insTypeStat[*ins.Value] = _insTypeStat[*ins.StatusCategory]
+					insTypeStat[*ins.Value] = _insTypeStat[tea.StringValue(ins.StatusCategory)]
 					insTypeIds = append(insTypeIds, *ins.Value)
 				}
 			}
@@ -647,11 +647,12 @@ func (p *AlibabaCloud) DescribeAvailableResource(req cloud.DescribeAvailableReso
 			if err != nil {
 				return cloud.DescribeAvailableResourceResponse{}, err
 			}
+
 			for i, info := range res.Infos {
 				res.Infos[i].ChargeType = _insTypeChargeType[chargeType]
 				res.Infos[i].Status = insTypeStat[info.InsTypeName]
 			}
-			zoneInsType[*zone.ZoneId] = res.Infos
+			zoneInsType[*zone.ZoneId] = append(zoneInsType[*zone.ZoneId], res.Infos...)
 		}
 	}
 	return cloud.DescribeAvailableResourceResponse{InstanceTypes: zoneInsType}, nil
@@ -706,6 +707,7 @@ func (p *AlibabaCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.De
 					Platform: *img.Platform,
 					OsType:   _osType[*img.OSType],
 					OsName:   *img.OSName,
+					Size:     int(tea.Int32Value(img.Size)),
 					ImageId:  *img.ImageId,
 					ImageName: *img.ImageName,
 				})

@@ -418,29 +418,33 @@ func ecsInfo2CloudIns(ecsInfos []model.ServerDetail, resources map[string]prePai
 }
 
 func flavor2CloudInsType(flavors []model.Flavor, zoneId string) []cloud.InstanceType {
-	insType := make([]cloud.InstanceType, 0, len(flavors))
+	insTypes := make([]cloud.InstanceType, 0, len(flavors))
 	for _, flavor := range flavors {
 		extra := flavor.OsExtraSpecs
+		stat := getFlavorStatus(extra, zoneId)
 		chargeType := cloud.InsTypeChargeTypeAll
 		if extra.Condoperationcharge != nil {
 			chargeType = _insTypeChargeType[*extra.Condoperationcharge]
+		}
+		if stat != cloud.InsTypeAvailable || chargeType == "" {
+			continue
 		}
 		isGpu := false
 		if utils.StringValue(extra.Ecsperformancetype) == "gpu" {
 			isGpu = true
 		}
 
-		insType = append(insType, cloud.InstanceType{
+		insTypes = append(insTypes, cloud.InstanceType{
 			ChargeType:  chargeType,
 			IsGpu:       isGpu,
 			Core:        cast.ToInt(flavor.Vcpus),
 			Memory:      cast.ToInt(flavor.Ram / 1024),
 			Family:      utils.StringValue(extra.Ecsperformancetype),
 			InsTypeName: flavor.Id,
-			Status:      getFlavorStatus(extra, zoneId),
+			Status:      stat,
 		})
 	}
-	return insType
+	return insTypes
 }
 
 func getFlavorStatus(flavor *model.FlavorExtraSpec, zoneId string) string {

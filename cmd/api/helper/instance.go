@@ -20,11 +20,16 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 	clusterMap := genClusterMap(clusters)
 	ret := make([]response.InstanceThumb, 0)
 	for _, instance := range instances {
+		cluster, ok := clusterMap[instance.ClusterName]
+		if !ok {
+			continue
+		}
 		startupTime := 0
 		if instance.RunningAt != nil {
 			startupTime = int(instance.RunningAt.Sub(*instance.CreateAt).Seconds())
 		}
-		instanceTypeDesc := getInstanceTypeDesc(instance.ClusterName, clusterMap)
+		instanceTypeDesc := GetInstanceTypeDesc(&cluster)
+		cpuType := cluster.GetCpuType()
 		provider := getProvider(instance.ClusterName, clusterMap)
 		r := response.InstanceThumb{
 			InstanceId:         instance.InstanceId,
@@ -40,22 +45,11 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 			Status:             getStringStatus(instance.Status),
 			StartupTime:        startupTime,
 			ChargeType:         instance.ChargeType,
-			ComputingPowerType: getComputingPowerType(instanceTypeDesc, provider),
+			ComputingPowerType: cpuType,
 		}
 		ret = append(ret, r)
 	}
 	return ret
-}
-
-func getComputingPowerType(instanceTypeDesc string, provider string) string {
-	if instanceTypeDesc == "" {
-		return ""
-	}
-	if service.CheckIsGpuComputingPowerType(instanceTypeDesc, provider) {
-		return constants.GPU
-	} else {
-		return constants.CPU
-	}
 }
 
 func getProvider(clusterName string, m map[string]model.Cluster) string {
@@ -86,24 +80,18 @@ func getLoginPassword(clusterName string, m map[string]model.Cluster) string {
 	return ""
 }
 
-func getInstanceType(clusterName string, m map[string]model.Cluster) string {
-	cluster, ok := m[clusterName]
-	if ok {
-		return cluster.InstanceType
+func GetInstanceTypeDesc(cluster *model.Cluster) string {
+	if cluster == nil || cluster.ClusterType == constants.ClusterTypeCustom {
+		return ""
 	}
-	return ""
-}
 
-func getInstanceTypeDesc(clusterName string, m map[string]model.Cluster) string {
-	cluster, ok := m[clusterName]
-	if ok {
-		if cluster.ClusterType == constants.ClusterTypeCustom {
-			return ""
-		}
-		instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
-		return instanceType.GetDesc()
+	desc := cluster.GetInstanceTypeDesc()
+	if desc != "" {
+		return desc
 	}
-	return ""
+
+	instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
+	return instanceType.GetDesc()
 }
 
 func genClusterMap(clusters []model.Cluster) map[string]model.Cluster {

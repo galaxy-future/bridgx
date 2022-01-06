@@ -253,6 +253,7 @@ func (p *TencentCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.De
 			images = append(images, cloud.Image{
 				Platform: *img.Platform,
 				OsName:   *img.OsName,
+				Size:     int(utils.Int64Value(img.ImageSize)),
 				ImageId:  *img.ImageId,
 			})
 		}
@@ -309,8 +310,9 @@ func cvmIns2CloudIns(cvmInstances []*cvm.Instance) []cloud.Instance {
 func cvmInsType2CloudInsType(cvmInsType []*cvm.InstanceTypeQuotaItem) []cloud.InstanceType {
 	insType := make([]cloud.InstanceType, 0, len(cvmInsType))
 	for _, info := range cvmInsType {
+		stat := _insTypeStat[utils.StringValue(info.Status)]
 		chargeType := _insTypeChargeType[utils.StringValue(info.InstanceChargeType)]
-		if chargeType == "" {
+		if stat != cloud.InsTypeAvailable || chargeType == "" {
 			continue
 		}
 		isGpu := false
@@ -324,7 +326,7 @@ func cvmInsType2CloudInsType(cvmInsType []*cvm.InstanceTypeQuotaItem) []cloud.In
 			Memory:      int(utils.Int64Value(info.Memory)),
 			Family:      utils.StringValue(info.InstanceFamily),
 			InsTypeName: utils.StringValue(info.InstanceType),
-			Status:      _insTypeStat[utils.StringValue(info.Status)],
+			Status:      stat,
 		})
 	}
 	return insType

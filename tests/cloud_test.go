@@ -56,7 +56,7 @@ func TestCreateIns(t *testing.T) {
 		},
 		Zone: _zone,
 		Disks: &cloud.Disks{
-			SystemDisk: cloud.DiskConf{Size: 50, Category: "CLOUD_PREMIUM"},
+			SystemDisk: cloud.DiskConf{Size: 50, Category: "CLOUD_SSD"},
 			DataDisk:   []cloud.DiskConf{},
 		},
 		Charge: &cloud.Charge{
@@ -180,13 +180,15 @@ func TestGetResource(t *testing.T) {
 	resStr, _ = jsoniter.MarshalToString(res)
 	t.Log(resStr)
 
-	res, err = client.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: []string{_insType}})
-	if err != nil {
-		t.Log(err.Error())
-		return
+	if _insType != "" {
+		res, err = client.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: []string{_insType}})
+		if err != nil {
+			t.Log(err.Error())
+			return
+		}
+		resStr, _ = jsoniter.MarshalToString(res)
+		t.Log(resStr)
 	}
-	resStr, _ = jsoniter.MarshalToString(res)
-	t.Log(resStr)
 
 	begin = time.Now()
 	res, err = client.DescribeImages(cloud.DescribeImagesRequest{
@@ -393,7 +395,11 @@ func TestQueryOrders(t *testing.T) {
 	//endTime := time.Now().UTC()
 	//duration, _ := time.ParseDuration("-5h")
 	//startTime := endTime.Add(duration)
-	startTime, _ := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:40:02")
+	startTime, err := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:40:02")
+	if err != nil {
+		t.Log(startTime, err)
+		return
+	}
 	endTime, _ := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:45:02")
 	pageNum := 1
 	pageSize := 100

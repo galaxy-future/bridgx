@@ -6,31 +6,28 @@ import (
 
 type ClusterInfo struct {
 	//Base Config
-	Id                 int64  `json:"id"`
-	Name               string `json:"name" binding:"required,max=20"`
-	Desc               string `json:"desc"`
-	RegionId           string `json:"region_id" binding:"required"`
-	ZoneId             string `json:"zone_id" binding:"required"`
-	ClusterType        string `json:"cluster_type"`
-	InstanceType       string `json:"instance_type" binding:"required"`
-	Image              string `json:"image"`
-	Provider           string `json:"provider" binding:"required,mustIn=cloud"`
-	Username           string `json:"username"`
-	Password           string `json:"password" binding:"required,min=8,max=30,charTypeGT3"`
-	AccountKey         string `json:"account_key" binding:"required"` //阿里云ak
-	ComputingPowerType string `json:"computing_power_type"`
+	Id           int64  `json:"id"`
+	Name         string `json:"name" binding:"required,max=20"`
+	Desc         string `json:"desc"`
+	RegionId     string `json:"region_id" binding:"required"`
+	ZoneId       string `json:"zone_id" binding:"required"`
+	ClusterType  string `json:"cluster_type"`
+	InstanceType string `json:"instance_type" binding:"required"`
+	Image        string `json:"image"`
+	Provider     string `json:"provider" binding:"required,mustIn=cloud"`
+	Username     string `json:"username"`
+	Password     string `json:"password" binding:"required,min=8,max=30,charTypeGT3"`
+	AccountKey   string `json:"account_key" binding:"required"` //阿里云ak
 
 	//Advanced Config
 	ImageConfig   *ImageConfig   `json:"image_config"`
 	NetworkConfig *NetworkConfig `json:"network_config"`
 	StorageConfig *StorageConfig `json:"storage_config"`
 	ChargeConfig  *ChargeConfig  `json:"charge_config"`
+	ExtendConfig  *ExtendConfig  `json:"extend_config"`
 
 	//Custom Config
 	Tags map[string]string `json:"tags"`
-
-	InstanceCore   int `json:"instance_core"`   // 核心数量,单位 核
-	InstanceMemory int `json:"instance_memory"` // 内存大小,单位 G
 }
 
 type ImageConfig struct {
@@ -58,6 +55,12 @@ type ChargeConfig struct {
 	ChargeType string `json:"charge_type"`
 	Period     int    `json:"period"`
 	PeriodUnit string `json:"period_unit"`
+}
+
+type ExtendConfig struct {
+	Core    int    `json:"core"`
+	Memory  int    `json:"memory"`
+	CpuType string `json:"cpu_type"`
 }
 
 type OrgKeys struct {

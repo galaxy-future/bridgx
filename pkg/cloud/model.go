@@ -196,13 +196,13 @@ type Zone struct {
 }
 
 type InstanceType struct {
-	ChargeType  string
-	IsGpu       bool
-	Core        int
-	Memory      int
-	Family      string
-	InsTypeName string
-	Status      string
+	ChargeType  string `json:"charge_type"`
+	IsGpu       bool   `json:"is_gpu"`
+	Core        int    `json:"core"`
+	Memory      int    `json:"memory"`
+	Family      string `json:"instance_type_family"`
+	InsTypeName string `json:"instance_type"`
+	Status      string `json:"status"`
 }
 
 type InstanceInfo struct {
@@ -243,11 +243,12 @@ type DescribeImagesResponse struct {
 }
 
 type Image struct {
-	Platform string
-	OsType   string
-	OsName   string
-	ImageId  string
-	ImageName string
+	Platform string `json:"platform"`
+	OsType   string `json:"os_type"`
+	OsName   string `json:"os_name"`
+	Size     int    `json:"size"` //GB
+	ImageId  string `json:"image_id"`
+	ImageName string `json:"image_name"`
 }
 
 type DescribeVpcsRequest struct {
