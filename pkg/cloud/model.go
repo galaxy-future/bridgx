@@ -243,11 +243,11 @@ type DescribeImagesResponse struct {
 }
 
 type Image struct {
-	Platform string `json:"platform"`
-	OsType   string `json:"os_type"`
-	OsName   string `json:"os_name"`
-	Size     int    `json:"size"` //GB
-	ImageId  string `json:"image_id"`
+	Platform  string `json:"platform"`
+	OsType    string `json:"os_type"`
+	OsName    string `json:"os_name"`
+	Size      int    `json:"size"` //GB
+	ImageId   string `json:"image_id"`
 	ImageName string `json:"image_name"`
 }
 
