@@ -66,6 +66,7 @@ func Int64Value(a *int64) int64 {
 	return *a
 }
 
+/*
 func Bool(a bool) *bool {
 	return &a
 }
@@ -488,4 +489,4 @@ func BoolSliceValue(a []*bool) []bool {
 		}
 	}
 	return res
-}
+} */

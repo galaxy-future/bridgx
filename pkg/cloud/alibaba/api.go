@@ -625,34 +625,19 @@ func (p *AlibabaCloud) DescribeAvailableResource(req cloud.DescribeAvailableReso
 		}
 
 		for _, zone := range response.Body.AvailableZones.AvailableZone {
-			if zone.AvailableResources == nil || tea.StringValue(zone.StatusCategory) != "WithStock" {
+			if zone.AvailableResources == nil || len(zone.AvailableResources.AvailableResource) < 1 ||
+				tea.StringValue(zone.StatusCategory) != "WithStock" {
 				continue
 			}
-			insTypeStat := make(map[string]string, 100)
-			insTypeIds := make([]string, 0, 100)
-			for _, resource := range zone.AvailableResources.AvailableResource {
-				if resource.SupportedResources == nil {
-					continue
-				}
-				for _, ins := range resource.SupportedResources.SupportedResource {
-					if ins == nil || _insTypeStat[tea.StringValue(ins.StatusCategory)] != cloud.InsTypeAvailable {
-						continue
-					}
-					insTypeStat[*ins.Value] = _insTypeStat[tea.StringValue(ins.StatusCategory)]
-					insTypeIds = append(insTypeIds, *ins.Value)
-				}
-			}
 
-			res, err := p.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: insTypeIds})
+			zoneId := *zone.ZoneId
+			insTypes, err := p.getResourceDetail(zone.AvailableResources.AvailableResource, chargeType)
 			if err != nil {
-				return cloud.DescribeAvailableResourceResponse{}, err
+				logs.Logger.Errorf("zoneId[%v] getResourceDetail failed: [%v]", zoneId, err)
+				continue
 			}
 
-			for i, info := range res.Infos {
-				res.Infos[i].ChargeType = _insTypeChargeType[chargeType]
-				res.Infos[i].Status = insTypeStat[info.InsTypeName]
-			}
-			zoneInsType[*zone.ZoneId] = append(zoneInsType[*zone.ZoneId], res.Infos...)
+			zoneInsType[zoneId] = append(zoneInsType[zoneId], insTypes...)
 		}
 	}
 	return cloud.DescribeAvailableResourceResponse{InstanceTypes: zoneInsType}, nil
@@ -861,4 +846,32 @@ func ecsInsType2CloudInsType(ecsInsType []*ecsClient.DescribeInstanceTypesRespon
 		})
 	}
 	return insType
+}
+
+func (p *AlibabaCloud) getResourceDetail(availableResource []*ecsClient.DescribeAvailableResourceResponseBodyAvailableZonesAvailableZoneAvailableResourcesAvailableResource,
+	chargeType string) ([]cloud.InstanceType, error) {
+	insTypeStat := make(map[string]string, 100)
+	insTypeIds := make([]string, 0, 100)
+	for _, resource := range availableResource {
+		if resource.SupportedResources == nil {
+			continue
+		}
+		for _, ins := range resource.SupportedResources.SupportedResource {
+			if ins == nil || _insTypeStat[tea.StringValue(ins.StatusCategory)] != cloud.InsTypeAvailable {
+				continue
+			}
+			insTypeStat[*ins.Value] = _insTypeStat[tea.StringValue(ins.StatusCategory)]
+			insTypeIds = append(insTypeIds, *ins.Value)
+		}
+	}
+
+	res, err := p.DescribeInstanceTypes(cloud.DescribeInstanceTypesRequest{TypeName: insTypeIds})
+	if err != nil {
+		return nil, err
+	}
+	for i, info := range res.Infos {
+		res.Infos[i].ChargeType = _insTypeChargeType[chargeType]
+		res.Infos[i].Status = insTypeStat[info.InsTypeName]
+	}
+	return res.Infos, nil
 }
