@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm/clause"
-
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
+	"github.com/galaxy-future/BridgX/pkg/cloud"
+	"gorm.io/gorm/clause"
 )
 
 type Network struct {
@@ -120,7 +120,7 @@ func FindVpcById(ctx context.Context, cond FindVpcConditions) (result Vpc, err e
 		Where("vpc_id = ? and is_del = 0", cond.VpcId).
 		First(&result).
 		Error
-	return result, nil
+	return result, err
 }
 
 func FindVpcsWithPage(ctx context.Context, cond FindVpcConditions) (result []Vpc, total int64, err error) {
@@ -219,6 +219,15 @@ func FindSwitchId(ctx context.Context, cond FindSwitchesConditions) (result Swit
 	return result, nil
 }
 
+func FindSwitchById(ctx context.Context, vpcId, switchId string) (result Switch, err error) {
+	err = clients.ReadDBCli.WithContext(ctx).
+		Model(Switch{}).
+		Where("vpc_id =? and switch_id = ? and is_del = 0", vpcId, switchId).
+		Scan(&result).
+		Error
+	return result, err
+}
+
 func CreateSwitch(ctx context.Context, s Switch) error {
 	return clients.WriteDBCli.WithContext(ctx).Create(&s).Error
 }
@@ -252,7 +261,7 @@ type FindSecurityGroupConditions struct {
 func FindSecurityGroupWithPage(ctx context.Context, cond FindSecurityGroupConditions) (result []SecurityGroup, total int64, err error) {
 	query := clients.ReadDBCli.WithContext(ctx).Table(SecurityGroup{}.TableName()).Where("vpc_id = ? and is_del = 0", cond.VpcId)
 	if cond.SecurityGroupId != "" {
-		query.Where("switch_id = ?", cond.SecurityGroupId)
+		query.Where("security_group_id = ?", cond.SecurityGroupId)
 	}
 	if cond.SecurityGroupName != "" {
 		query.Where("name = ?", cond.SecurityGroupName)
@@ -286,6 +295,22 @@ func FindSecurityId(ctx context.Context, cond FindSecurityGroupConditions) (resu
 		Scan(&result).
 		Error
 	return result, nil
+}
+
+func FindSecurityGroupById(ctx context.Context, vpcId, securityGroupId, provider string) (result SecurityGroup, err error) {
+	sql := clients.ReadDBCli.WithContext(ctx).
+		Model(SecurityGroup{}).
+		Where("security_group_id = ? and is_del = 0", vpcId, securityGroupId)
+	if securityGroupBindVpc(provider) {
+		sql.Where("vpc_id = ?", vpcId)
+	}
+	err = sql.Scan(&result).Error
+
+	return result, err
+}
+
+func securityGroupBindVpc(provider string) bool {
+	return provider == cloud.AlibabaCloud
 }
 
 func CreateSecurityGroup(ctx context.Context, s SecurityGroup) error {
@@ -334,4 +359,16 @@ func ReplaceRules(ctx context.Context, vpcID, groupId string, rules []SecurityGr
 	}
 	tx.Commit()
 	return err
+}
+
+func FindSecurityGroupRulesById(ctx context.Context, vpcId, securityGroupId, provider string) (result []SecurityGroupRule, err error) {
+	sql := clients.ReadDBCli.WithContext(ctx).
+		Model(SecurityGroupRule{}).
+		Where("security_group_id = ? and is_del = 0", vpcId, securityGroupId)
+	if securityGroupBindVpc(provider) {
+		sql.Where("vpc_id = ?", vpcId)
+	}
+	err = sql.Scan(&result).Error
+
+	return result, err
 }
