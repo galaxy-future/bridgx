@@ -153,8 +153,8 @@ CREATE TABLE `cluster`
     `storage_config`  varchar(2048) COLLATE utf8mb4_bin         DEFAULT '',
     `charge_config`   varchar(256) COLLATE utf8mb4_bin          DEFAULT '',
     `extend_config`   varchar(4096) COLLATE utf8mb4_bin         DEFAULT '',
-    `create_at`       timestamp                        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_at`       timestamp                        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `create_at`       timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_at`       timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `create_by`       varchar(32) COLLATE utf8mb4_bin           DEFAULT '',
     `update_by`       varchar(32) COLLATE utf8mb4_bin           DEFAULT '',
     `deleted_at`      timestamp NULL DEFAULT NULL,
@@ -276,9 +276,9 @@ CREATE TABLE `task`
     `task_result`    text COLLATE utf8mb4_bin,
     `err_msg`        text COLLATE utf8mb4_bin,
     `support_cancel` tinyint(1) DEFAULT NULL,
-    `finish_time`    timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    `create_at`      timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `update_at`      timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `finish_time`    timestamp NULL,
+    `create_at`      timestamp DEFAULT CURRENT_TIMESTAMP,
+    `update_at`      timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY              `task_task_filter_index` (`task_filter`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

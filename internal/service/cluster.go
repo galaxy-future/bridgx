@@ -590,7 +590,7 @@ func judgeInstancesIsReady(instances []cloud.Instance, chargeConfig *types.Netwo
 		bandwithOut = chargeConfig.InternetMaxBandwidthOut
 	}
 	for _, instance := range instances {
-		if instance.Status == cloud.EcsBuilding || instance.IpInner == "" {
+		if instance.Status != cloud.EcsRunning || instance.IpInner == "" {
 			return false
 		}
 		if bandwithOut > 0 && instance.IpOuter == "" {

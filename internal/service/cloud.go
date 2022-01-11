@@ -60,14 +60,14 @@ func RepairCluster(c *types.ClusterInfo, taskId int64, availableIds []string, al
 	if err != nil {
 		return
 	}
-	logs.Logger.Infof("[RepairCluster] GetInstanceByTag length %d", len(cloudInstances))
-
-	cloudIds := make([]string, 0)
+	cloudInsNum := len(cloudInstances)
+	logs.Logger.Infof("[RepairCluster] GetInstanceByTag length %d, available num %d, all num %d", cloudInsNum, len(availableIds), len(allIds))
+	cloudIds := make([]string, 0, cloudInsNum)
 	for _, instance := range cloudInstances {
 		cloudIds = append(cloudIds, instance.Id)
 	}
 	onlyCouldIds, onlyMemoryIds := cloudDiff(cloudIds, availableIds)
-	logs.Logger.Infof("[RepairCluster] taskId: %d, ClusterName: %s, Shrink InstanceIds: %v", taskId, c.Name, onlyCouldIds)
+	logs.Logger.Infof("[RepairCluster] taskId: %d, ClusterName: %s, Shrink InstanceIds num: %v", taskId, c.Name, len(onlyCouldIds))
 	shrink := func(attempt uint) error {
 		return Shrink(c, onlyCouldIds)
 	}
@@ -77,21 +77,21 @@ func RepairCluster(c *types.ClusterInfo, taskId int64, availableIds []string, al
 	}
 
 	deleteIds, _ := cloudDiff(allIds, availableIds)
-	onlyMemoryIds = append(onlyMemoryIds, deleteIds...)
-	logs.Logger.Infof("[RepairCluster] taskId: %d, ClusterName: %s, UpdateDB InstanceIds: %v", taskId, c.Name, onlyMemoryIds)
+	deleteIds = append(deleteIds, onlyMemoryIds...)
+	logs.Logger.Infof("[RepairCluster] taskId: %d, ClusterName: %s, delete InstanceIds num: %v", taskId, c.Name, len(deleteIds))
 	update := func(attempt uint) error {
-		if len(onlyMemoryIds) == 0 {
+		if len(deleteIds) == 0 {
 			return nil
 		}
 		now := time.Now()
-		return model.BatchUpdateByInstanceIds(onlyMemoryIds, model.Instance{
+		return model.BatchUpdateByInstanceIds(deleteIds, model.Instance{
 			DeleteAt: &now,
 			Status:   constants.Deleted,
 		})
 	}
 	err = retry.Retry(update, strategy.Limit(3), strategy.Backoff(backoff.BinaryExponential(10*time.Millisecond)))
 	if err != nil {
-		logs.Logger.Errorf("[RepairCluster] taskId: %d, ClusterName: %s, UpdateDB InstanceIds error: %s", taskId, c.Name, err.Error())
+		logs.Logger.Errorf("[RepairCluster] taskId: %d, ClusterName: %s, delete InstanceIds error: %s", taskId, c.Name, err.Error())
 	}
 
 	return nil

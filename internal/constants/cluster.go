@@ -9,7 +9,7 @@ const (
 	HasNoneIP       = "-"
 	HasNoneInstance = "-"
 
-	Interval = 15
+	Interval = 18
 	Retry    = 3
 
 	BatchMax = 100

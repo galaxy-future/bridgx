@@ -3,7 +3,6 @@ package alibaba
 import (
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -189,37 +188,37 @@ func (p *AlibabaCloud) StopInstances(ids []string) error {
 }
 
 func (p *AlibabaCloud) GetInstancesByTags(region string, tags []cloud.Tag) (instances []cloud.Instance, err error) {
-	request := ecs.CreateDescribeInstancesRequest()
-	request.Scheme = "https"
-
-	eTag := make([]ecs.DescribeInstancesTag, 0)
+	eTag := make([]*ecsClient.ListTagResourcesRequestTag, 0, len(tags))
 	for _, tag := range tags {
-		eTag = append(eTag, ecs.DescribeInstancesTag{
-			Key:   tag.Key,
-			Value: tag.Value,
+		eTag = append(eTag, &ecsClient.ListTagResourcesRequestTag{
+			Key:   tea.String(tag.Key),
+			Value: tea.String(tag.Value),
 		})
 	}
-	request.Tag = &eTag
-	pageNumber := 1
-	request.PageSize = requests.NewInteger(50)
-	cloudInstance := make([]ecs.Instance, 0)
-	response, err := p.client.DescribeInstances(request)
-	if err != nil {
-		return nil, err
+	request := &ecsClient.ListTagResourcesRequest{
+		RegionId:     tea.String(region),
+		ResourceType: tea.String("instance"),
+		Tag:          eTag,
 	}
-	cloudInstance = append(cloudInstance, response.Instances.Instance...)
-	maxPage := math.Ceil(float64(response.TotalCount) / 50)
-	for pageNumber < int(maxPage) {
-		pageNumber++
-		request.PageNumber = requests.NewInteger(pageNumber)
-		response, err = p.client.DescribeInstances(request)
+
+	instanceIds := make([]string, 0, _pageSize)
+	for {
+		response, err := p.ecsClient.ListTagResources(request)
 		if err != nil {
 			return nil, err
 		}
-		cloudInstance = append(cloudInstance, response.Instances.Instance...)
+
+		for _, resource := range response.Body.TagResources.TagResource {
+			instanceIds = append(instanceIds, tea.StringValue(resource.ResourceId))
+		}
+		nextToken := tea.StringValue(response.Body.NextToken)
+		if nextToken == "" {
+			break
+		}
+		request.NextToken = tea.String(nextToken)
 	}
-	instances = generateInstances(cloudInstance)
-	return
+
+	return p.GetInstances(instanceIds)
 }
 
 func generateInstances(cloudInstance []ecs.Instance) (instances []cloud.Instance) {

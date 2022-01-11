@@ -104,13 +104,13 @@ func TestShowIns(t *testing.T) {
 	t.Log(resStr)
 
 	tags := []cloud.Tag{{Key: cloud.TaskId, Value: "12345"}}
-	res, err = client.GetInstancesByTags("", tags)
+	res, err = client.GetInstancesByTags(_region, tags)
 	if err != nil {
 		t.Log(err)
 		return
 	}
 	resStr, _ = jsoniter.MarshalToString(res)
-	t.Log(resStr)
+	t.Log(len(res.([]cloud.Instance)), resStr)
 }
 
 func TestCtlIns(t *testing.T) {
