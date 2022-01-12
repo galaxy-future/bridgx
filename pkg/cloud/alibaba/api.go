@@ -293,19 +293,14 @@ func (p *AlibabaCloud) GetVPC(req cloud.GetVpcRequest) (cloud.GetVpcResponse, er
 		return cloud.GetVpcResponse{}, err
 	}
 	if response != nil && response.Body != nil {
-		switchIds := make([]string, 0, 64)
-		if response.Body.VSwitchIds != nil {
-			for _, switchId := range response.Body.VSwitchIds.VSwitchId {
-				switchIds = append(switchIds, *switchId)
-			}
-		}
 		res := cloud.GetVpcResponse{
 			Vpc: cloud.VPC{
 				VpcId:     *response.Body.VpcId,
 				VpcName:   *response.Body.VpcName,
 				CidrBlock: *response.Body.CidrBlock,
+				RegionId:  req.RegionId,
 				Status:    _vpcStatus[*response.Body.Status],
-				SwitchIds: switchIds,
+				CreateAt:  *response.Body.CreationTime,
 			},
 		}
 		return res, nil
@@ -334,7 +329,6 @@ func (p *AlibabaCloud) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.Descri
 					VpcId:     *vpc.VpcId,
 					VpcName:   *vpc.VpcName,
 					CidrBlock: *vpc.CidrBlock,
-					SwitchIds: tea.StringSliceValue(vpc.VSwitchIds.VSwitchId),
 					RegionId:  *vpc.RegionId,
 					Status:    *vpc.Status,
 					CreateAt:  *vpc.CreationTime,
@@ -474,7 +468,10 @@ func (p *AlibabaCloud) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest)
 }
 
 func (p *AlibabaCloud) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
-	portRange := fmt.Sprintf("%d/%d", req.PortFrom, req.PortTo)
+	portRange := getPortRange(req.PortFrom, req.PortTo, req.IpProtocol)
+	if req.GroupId == "" && req.CidrIp == "" {
+		req.CidrIp = "0.0.0.0/0"
+	}
 	request := &ecsClient.AuthorizeSecurityGroupRequest{
 		RegionId:           tea.String(req.RegionId),
 		SecurityGroupId:    tea.String(req.SecurityGroupId),
@@ -494,11 +491,14 @@ func (p *AlibabaCloud) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRul
 }
 
 func (p *AlibabaCloud) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
-	portRange := fmt.Sprintf("%d/%d", req.PortFrom, req.PortTo)
+	portRange := getPortRange(req.PortFrom, req.PortTo, req.IpProtocol)
+	if req.GroupId == "" && req.CidrIp == "" {
+		req.CidrIp = "0.0.0.0/0"
+	}
 	request := &ecsClient.AuthorizeSecurityGroupEgressRequest{
 		RegionId:         tea.String(req.RegionId),
 		SecurityGroupId:  tea.String(req.SecurityGroupId),
-		IpProtocol:       tea.String(req.IpProtocol),
+		IpProtocol:       tea.String(_protocol[req.IpProtocol]),
 		PortRange:        tea.String(portRange),
 		DestGroupId:      tea.String(req.GroupId),
 		DestCidrIp:       tea.String(req.CidrIp),
@@ -728,17 +728,26 @@ func (p *AlibabaCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (
 			case cloud.SecGroupRuleIn:
 				otherGroupId = *rule.SourceGroupId
 				cidrIp = *rule.SourceCidrIp
+				if cidrIp == "" {
+					cidrIp = tea.StringValue(rule.Ipv6SourceCidrIp)
+				}
 				prefixListId = *rule.SourcePrefixListId
 			case cloud.SecGroupRuleOut:
 				otherGroupId = *rule.DestGroupId
 				cidrIp = *rule.DestCidrIp
+				if cidrIp == "" {
+					cidrIp = tea.StringValue(rule.Ipv6DestCidrIp)
+				}
 				prefixListId = *rule.DestPrefixListId
 			}
+
+			from, to := portRange2Int(*rule.PortRange)
 			rules = append(rules, cloud.SecurityGroupRule{
 				VpcId:           *response.Body.VpcId,
 				SecurityGroupId: *response.Body.SecurityGroupId,
-				PortRange:       *rule.PortRange,
-				Protocol:        *rule.IpProtocol,
+				PortFrom:        from,
+				PortTo:          to,
+				Protocol:        _outProtocol[*rule.IpProtocol],
 				Direction:       _secGrpRuleDirection[*rule.Direction],
 				GroupId:         otherGroupId,
 				CidrIp:          cidrIp,
@@ -746,7 +755,6 @@ func (p *AlibabaCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (
 				CreateAt:        *rule.CreateTime,
 			})
 		}
-
 	}
 	if err != nil {
 		logs.Logger.Errorf("DescribeGroupRules failed,error: %v groupId:%s", err, req.SecurityGroupId)
@@ -873,4 +881,28 @@ func (p *AlibabaCloud) getResourceDetail(availableResource []*ecsClient.Describe
 		res.Infos[i].Status = insTypeStat[info.InsTypeName]
 	}
 	return res.Infos, nil
+}
+
+func getPortRange(from, to int, protocol string) (portRange string) {
+	if from < 1 || !(protocol == cloud.ProtocolUdp || protocol == cloud.ProtocolTcp) {
+		return "-1/-1"
+	}
+
+	return fmt.Sprintf("%d/%d", from, to)
+}
+
+func portRange2Int(portRange string) (from, to int) {
+	if portRange == "-1/-1" {
+		return 0, 0
+	}
+
+	idx := strings.Index(portRange, "/")
+	if idx == -1 {
+		from = cast.ToInt(portRange)
+		to = from
+	} else {
+		from = cast.ToInt(portRange[:idx])
+		to = cast.ToInt(portRange[idx+1:])
+	}
+	return
 }

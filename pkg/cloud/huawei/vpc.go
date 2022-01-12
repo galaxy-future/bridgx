@@ -48,24 +48,12 @@ func (p *HuaweiCloud) GetVPC(req cloud.GetVpcRequest) (cloud.GetVpcResponse, err
 		return cloud.GetVpcResponse{}, fmt.Errorf("httpcode %d", response.HttpStatusCode)
 	}
 
-	switchs, err := p.DescribeSwitches(cloud.DescribeSwitchesRequest{
-		VpcId: req.VpcId,
-	})
-	if err != nil {
-		return cloud.GetVpcResponse{}, err
-	}
-	swIds := make([]string, 0, len(switchs.Switches))
-	for _, row := range switchs.Switches {
-		swIds = append(swIds, row.SwitchId)
-	}
-
-	vpc := vpcInfo2CloudVpc([]model.Vpc{*response.Vpc}, map[string][]string{req.VpcId: swIds}, req.RegionId)
+	vpc := vpcInfo2CloudVpc([]model.Vpc{*response.Vpc}, req.RegionId)
 	return cloud.GetVpcResponse{Vpc: vpc[0]}, nil
 }
 
 func (p *HuaweiCloud) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.DescribeVpcsResponse, error) {
 	vpcs := make([]model.Vpc, 0, 16)
-	swIdMap := make(map[string][]string, 16)
 	request := &model.ListVpcsRequest{}
 	limitRequest := int32(_pageSize)
 	request.Limit = &limitRequest
@@ -83,20 +71,6 @@ func (p *HuaweiCloud) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.Describ
 		}
 
 		vpcs = append(vpcs, *response.Vpcs...)
-		for _, vpc := range *response.Vpcs {
-			switchs, err := p.DescribeSwitches(cloud.DescribeSwitchesRequest{
-				VpcId: vpc.Id,
-			})
-			if err != nil {
-				logs.Logger.Errorf("%s, DescribeSwitches failed %s", vpc.Id, err.Error())
-				continue
-			}
-			swIds := make([]string, 0, len(switchs.Switches))
-			for _, row := range switchs.Switches {
-				swIds = append(swIds, row.SwitchId)
-			}
-			swIdMap[vpc.Id] = swIds
-		}
 		vpcNum := len(*response.Vpcs)
 		if vpcNum < _pageSize {
 			break
@@ -104,7 +78,7 @@ func (p *HuaweiCloud) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.Describ
 		markerRequest = (*response.Vpcs)[vpcNum-1].Id
 	}
 
-	return cloud.DescribeVpcsResponse{Vpcs: vpcInfo2CloudVpc(vpcs, swIdMap, req.RegionId)}, nil
+	return cloud.DescribeVpcsResponse{Vpcs: vpcInfo2CloudVpc(vpcs, req.RegionId)}, nil
 }
 
 // CreateSwitch add GatewayIp,miss RequestId
@@ -193,7 +167,7 @@ func (p *HuaweiCloud) DescribeSwitches(req cloud.DescribeSwitchesRequest) (cloud
 }
 
 //miss CreateAt
-func vpcInfo2CloudVpc(vpcInfo []model.Vpc, swIdMap map[string][]string, regionId string) []cloud.VPC {
+func vpcInfo2CloudVpc(vpcInfo []model.Vpc, regionId string) []cloud.VPC {
 	vpcs := make([]cloud.VPC, 0, len(vpcInfo))
 	for _, vpc := range vpcInfo {
 		stat, _ := vpc.Status.MarshalJSON()
@@ -201,7 +175,6 @@ func vpcInfo2CloudVpc(vpcInfo []model.Vpc, swIdMap map[string][]string, regionId
 			VpcId:     vpc.Id,
 			VpcName:   vpc.Name,
 			CidrBlock: vpc.Cidr,
-			SwitchIds: swIdMap[vpc.Id],
 			RegionId:  regionId,
 			Status:    _vpcStatus[string(stat)],
 		})

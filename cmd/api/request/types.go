@@ -45,7 +45,7 @@ type CreateVpcRequest struct {
 	RegionId  string `json:"region_id"`
 	VpcName   string `json:"vpc_name"`
 	CidrBlock string `json:"cidr_block"`
-	Ak        string `json:"ak"`
+	Ak        string `json:"ak" binding:"required"`
 }
 
 func (c *CreateVpcRequest) Check() bool {
@@ -66,6 +66,7 @@ type CreateSwitchRequest struct {
 	CidrBlock  string `json:"cidr_block"`
 	GatewayIp  string `json:"gateway_ip"`
 	ZoneId     string `json:"zone_id"`
+	Ak         string `json:"account_key" binding:"required"`
 }
 
 func (c *CreateSwitchRequest) Check() bool {
@@ -73,6 +74,7 @@ func (c *CreateSwitchRequest) Check() bool {
 }
 
 type CreateSecurityGroupRequest struct {
+	Ak                string `json:"account_key" binding:"required"`
 	VpcId             string `json:"vpc_id"`
 	RegionId          string `json:"region_id"`
 	SecurityGroupName string `json:"security_group_name"`
@@ -84,6 +86,7 @@ func (c *CreateSecurityGroupRequest) Check() bool {
 }
 
 type AddSecurityGroupRuleRequest struct {
+	Ak              string              `json:"account_key" binding:"required"`
 	VpcId           string              `json:"vpc_id"`
 	RegionId        string              `json:"region_id"`
 	SecurityGroupId string              `json:"security_group_id"`
@@ -96,6 +99,7 @@ func (c *AddSecurityGroupRuleRequest) Check() bool {
 }
 
 type CreateSecurityGroupWithRuleRequest struct {
+	Ak                string              `json:"account_key" binding:"required"`
 	VpcId             string              `json:"vpc_id"`
 	RegionId          string              `json:"region_id"`
 	SecurityGroupName string              `json:"security_group_name"`
@@ -108,16 +112,24 @@ func (c *CreateSecurityGroupWithRuleRequest) Check() bool {
 }
 
 type CreateNetworkRequest struct {
-	Provider          string `json:"provider" binding:"required,mustIn=cloud"`
-	RegionId          string `json:"region_id" binding:"required"`
-	CidrBlock         string `json:"cidr_block" binding:"required"`
-	VpcName           string `json:"vpc_name" binding:"required"`
-	ZoneId            string `json:"zone_id" binding:"required"`
-	SwitchCidrBlock   string `json:"switch_cidr_block" binding:"required"`
-	SwitchName        string `json:"switch_name" binding:"required"`
-	SecurityGroupName string `json:"security_group_name" binding:"required"`
-	SecurityGroupType string `json:"security_group_type"`
-	Ak                string `json:"ak" binding:"required"`
+	Provider          string              `json:"provider" binding:"required,mustIn=cloud"`
+	RegionId          string              `json:"region_id" binding:"required"`
+	CidrBlock         string              `json:"cidr_block" binding:"required"`
+	VpcName           string              `json:"vpc_name" binding:"required"`
+	ZoneId            string              `json:"zone_id" binding:"required"`
+	SwitchCidrBlock   string              `json:"switch_cidr_block" binding:"required"`
+	GatewayIp         string              `json:"gateway_ip" binding:"required"`
+	SwitchName        string              `json:"switch_name" binding:"required"`
+	SecurityGroupName string              `json:"security_group_name" binding:"required"`
+	SecurityGroupType string              `json:"security_group_type"`
+	Ak                string              `json:"ak" binding:"required"`
+	Rules             []service.GroupRule `json:"rules"`
+}
+
+type SyncNetworkRequest struct {
+	Provider   string `json:"provider" binding:"required"`
+	RegionId   string `json:"region_id" binding:"required"`
+	AccountKey string `json:"account_key" binding:"required"`
 }
 
 type LoginRequest struct {

@@ -23,11 +23,11 @@ var _imageType = map[string]string{
 }
 
 var _protocol = map[string]string{
-	cloud.ProtocolIcmp: "icmp",
-	cloud.ProtocolTcp:  "tcp",
-	cloud.ProtocolUdp:  "udp",
-	cloud.ProtocolGre:  "gre",
-	cloud.ProtocolAll:  "all",
+	cloud.ProtocolIcmp: "ICMP",
+	cloud.ProtocolTcp:  "TCP",
+	cloud.ProtocolUdp:  "UDP",
+	cloud.ProtocolGre:  "GRE",
+	cloud.ProtocolAll:  "ALL",
 }
 
 //out
@@ -70,6 +70,14 @@ var _bandwidthChargeType = map[string]string{
 var _secGrpRuleDirection = map[string]string{
 	"ingress": cloud.SecGroupRuleIn,
 	"egress":  cloud.SecGroupRuleOut,
+}
+
+var _outProtocol = map[string]string{
+	"ICMP": cloud.ProtocolIcmp,
+	"TCP":  cloud.ProtocolTcp,
+	"UDP":  cloud.ProtocolUdp,
+	"GRE":  cloud.ProtocolGre,
+	"ALL":  cloud.ProtocolAll,
 }
 
 var _osType = map[string]string{

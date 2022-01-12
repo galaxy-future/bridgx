@@ -48,17 +48,9 @@ func (p *TencentCloud) GetVPC(req cloud.GetVpcRequest) (cloud.GetVpcResponse, er
 		logs.Logger.Errorf("GetVPC TencentCloud failed, totalCount isn't one, req[%v]", req)
 		return cloud.GetVpcResponse{}, _errIsNotOne
 	}
-	vpc := response.Response.VpcSet[0]
-	switches, err := p.DescribeSwitches(cloud.DescribeSwitchesRequest{VpcId: *vpc.VpcId})
-	if err != nil {
-		return cloud.GetVpcResponse{}, err
-	}
-	switchIds := make([]string, 0, len(switches.Switches))
-	for _, row := range switches.Switches {
-		switchIds = append(switchIds, row.SwitchId)
-	}
+	vpcInfo := response.Response.VpcSet[0]
 	res := cloud.GetVpcResponse{
-		Vpc: vpcInfo2CloudVpc(switchIds, req.RegionId, vpc),
+		Vpc: vpcInfo2CloudVpc(req.RegionId, vpcInfo),
 	}
 	return res, nil
 }
@@ -86,26 +78,17 @@ func (p *TencentCloud) DescribeVpcs(req cloud.DescribeVpcsRequest) (cloud.Descri
 		offset = (offset - 1) * _pageSize
 	}
 	cloudVpcs := make([]cloud.VPC, 0, len(vpcs))
-	for _, vpc := range vpcs {
-		switches, err := p.DescribeSwitches(cloud.DescribeSwitchesRequest{VpcId: *vpc.VpcId})
-		if err != nil {
-			return cloud.DescribeVpcsResponse{}, err
-		}
-		switchIds := make([]string, 0, len(switches.Switches))
-		for _, row := range switches.Switches {
-			switchIds = append(switchIds, row.SwitchId)
-		}
-		cloudVpcs = append(cloudVpcs, vpcInfo2CloudVpc(switchIds, req.RegionId, vpc))
+	for _, vpcInfo := range vpcs {
+		cloudVpcs = append(cloudVpcs, vpcInfo2CloudVpc(req.RegionId, vpcInfo))
 	}
 	return cloud.DescribeVpcsResponse{Vpcs: cloudVpcs}, nil
 }
 
-func vpcInfo2CloudVpc(switchIds []string, regionId string, vpc *vpc.Vpc) cloud.VPC {
+func vpcInfo2CloudVpc(regionId string, vpc *vpc.Vpc) cloud.VPC {
 	return cloud.VPC{
 		VpcId:     *vpc.VpcId,
 		VpcName:   *vpc.VpcName,
 		CidrBlock: *vpc.CidrBlock,
-		SwitchIds: switchIds,
 		RegionId:  regionId,
 		Status:    cloud.VPCStatusAvailable,
 		CreateAt:  *vpc.CreatedTime,

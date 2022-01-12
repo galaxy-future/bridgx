@@ -339,3 +339,22 @@ func TestGetSecurityGroup(t *testing.T) {
 		})
 	}
 }
+
+func TestSyncNetwork(t *testing.T) {
+	accounts := make([]model.Account, 0)
+	if err := model.QueryAll(map[string]interface{}{}, &accounts, ""); err != nil {
+		t.Log("query account,", err)
+		return
+	}
+
+	for _, account := range accounts {
+		err := service.RefreshAccount(&service.SimpleTask{
+			ProviderName: account.Provider,
+			AccountKey:   account.AccountKey,
+		})
+		if err != nil {
+			t.Log(err)
+			return
+		}
+	}
+}

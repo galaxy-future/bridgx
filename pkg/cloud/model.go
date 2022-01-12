@@ -89,7 +89,6 @@ type VPC struct {
 	VpcId     string
 	VpcName   string
 	CidrBlock string
-	SwitchIds []string
 	RegionId  string
 	Status    string
 	CreateAt  string
@@ -205,13 +204,6 @@ type InstanceType struct {
 	Status      string `json:"status"`
 }
 
-type InstanceInfo struct {
-	Core        int
-	Memory      int
-	Family      string
-	InsTypeName string
-}
-
 type DescribeAvailableResourceRequest struct {
 	RegionId string
 	ZoneId   string
@@ -270,7 +262,8 @@ type DescribeSwitchesResponse struct {
 type SecurityGroupRule struct {
 	VpcId           string
 	SecurityGroupId string
-	PortRange       string
+	PortFrom        int
+	PortTo          int
 	Protocol        string
 	Direction       string
 	GroupId         string
