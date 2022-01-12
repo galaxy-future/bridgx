@@ -31,9 +31,11 @@ type ClusterInfo struct {
 }
 
 type ImageConfig struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Id       string `json:"id"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Platform string `json:"platform"`
+	Size     int    `json:"size"` //GB
 }
 
 type NetworkConfig struct {

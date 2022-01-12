@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/types"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
+	"github.com/spf13/cast"
 )
 
 type targetType int
@@ -126,7 +126,7 @@ func (s *SimpleTaskHandler) taskHandle(t *SimpleTask) {
 		}
 		err = refreshSwitch(t)
 	case TargetTypeAccount:
-		err = refreshAccount(t)
+		err = RefreshAccount(t)
 	case TargetTypeInstanceType:
 		err = refreshInstanceType(t)
 	}
@@ -149,7 +149,7 @@ func refreshInstanceType(t *SimpleTask) error {
 	return RefreshCache()
 }
 
-func refreshAccount(t *SimpleTask) error {
+func RefreshAccount(t *SimpleTask) error {
 	if t.AccountKey == "" {
 		return nil
 	}
@@ -163,49 +163,67 @@ func refreshAccount(t *SimpleTask) error {
 		return err
 	}
 
-	vpcs := updateOrCreateVpcs(ctx, regions, t)
-	updateOrCreateSwitch(ctx, vpcs, t)
-	groups := updateOrCreateSecurityGroups(ctx, vpcs, t)
-	updateOrCreateSecurityGroupRules(ctx, groups, t)
+	regionIds := make([]string, 0, len(regions))
+	for _, region := range regions {
+		regionIds = append(regionIds, region.RegionId)
+	}
+	err = syncNetworkConfig(ctx, regionIds, t.ProviderName, t.AccountKey)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func updateOrCreateVpcs(ctx context.Context, regions []cloud.Region, t *SimpleTask) []cloud.VPC {
+func syncNetworkConfig(ctx context.Context, regionIds []string, provider, ak string) error {
+	vpcs, err := updateOrCreateVpcs(ctx, regionIds, provider, ak)
+	if err != nil {
+		return err
+	}
+	updateOrCreateSwitch(ctx, vpcs, provider, ak)
+
+	groups, err := updateOrCreateSecurityGroups(ctx, regionIds, vpcs, provider, ak)
+	if err != nil {
+		return err
+	}
+	updateOrCreateSecurityGroupRules(ctx, groups, provider, ak)
+	return nil
+}
+
+func updateOrCreateVpcs(ctx context.Context, regionIds []string, provider, ak string) ([]cloud.VPC, error) {
 	vpcs := make([]cloud.VPC, 0, 64)
 	describeVpcReq := cloud.DescribeVpcsRequest{}
-	for _, region := range regions {
-		describeVpcReq.RegionId = region.RegionId
-		provider, err := getProvider(t.ProviderName, t.AccountKey, region.RegionId)
+	for _, regionId := range regionIds {
+		describeVpcReq.RegionId = regionId
+		cloudCli, err := getProvider(provider, ak, regionId)
 		if err != nil {
-			logs.Logger.Errorf("getProvider failed.err: %s", err.Error())
+			logs.Logger.Errorf("getProvider failed: %s", err.Error())
 			continue
 		}
-		vpcsRes, err := provider.DescribeVpcs(describeVpcReq)
+		vpcsRes, err := cloudCli.DescribeVpcs(describeVpcReq)
 		if err != nil {
+			logs.Logger.Errorf("DescribeVpcs failed: %s", err.Error())
 			continue
 		}
 		vpcs = append(vpcs, vpcsRes.Vpcs...)
 	}
-	vpcModels := cloud2ModelVpc(vpcs, t.AccountKey, t.ProviderName)
+	vpcModels := cloud2ModelVpc(vpcs, ak, provider)
 	err := model.UpdateOrCreateVpcs(ctx, vpcModels)
-	if err != nil {
-		logs.Logger.Errorf("updateOrCreateVpcs failed.err : [%s]", err.Error())
-	}
-	return vpcs
+	return vpcs, err
 }
 
-func updateOrCreateSwitch(ctx context.Context, vpcs []cloud.VPC, t *SimpleTask) {
+func updateOrCreateSwitch(ctx context.Context, vpcs []cloud.VPC, provider, ak string) {
 	switches := make([]cloud.Switch, 0, 64)
 	describeSwitchesReq := cloud.DescribeSwitchesRequest{}
 	for _, vpc := range vpcs {
 		describeSwitchesReq.VpcId = vpc.VpcId
-		provider, err := getProvider(t.ProviderName, t.AccountKey, vpc.RegionId)
+		cloudCli, err := getProvider(provider, ak, vpc.RegionId)
 		if err != nil {
 			logs.Logger.Errorf("getProvider failed.err: %s", err.Error())
 			continue
 		}
-		switchesRes, err := provider.DescribeSwitches(describeSwitchesReq)
+		switchesRes, err := cloudCli.DescribeSwitches(describeSwitchesReq)
 		if err != nil {
+			logs.Logger.Errorf("DescribeSwitches failed: %s", err.Error())
 			continue
 		}
 		switches = append(switches, switchesRes.Switches...)
@@ -217,43 +235,69 @@ func updateOrCreateSwitch(ctx context.Context, vpcs []cloud.VPC, t *SimpleTask) 
 	}
 }
 
-func updateOrCreateSecurityGroups(ctx context.Context, vpcs []cloud.VPC, t *SimpleTask) []cloud.SecurityGroup {
-	groups := make([]cloud.SecurityGroup, 0, 64)
+func DescribeSecurityGroups(provider, ak, regionId, vpcId string) ([]cloud.SecurityGroup, error) {
 	groupReq := cloud.DescribeSecurityGroupsRequest{}
-	for _, vpc := range vpcs {
-		groupReq.VpcId = vpc.VpcId
-		groupReq.RegionId = vpc.RegionId
-		provider, err := getProvider(t.ProviderName, t.AccountKey, vpc.RegionId)
-		if err != nil {
-			logs.Logger.Errorf("getProvider failed.err: %s", err.Error())
-			continue
-		}
-		groupRes, err := provider.DescribeSecurityGroups(groupReq)
-		if err != nil {
-			continue
-		}
-		groups = append(groups, groupRes.Groups...)
-	}
-	groupsModels := cloud2ModelGroups(groups)
-	err := model.UpdateOrCreateGroups(ctx, groupsModels)
+	groupReq.VpcId = vpcId
+	groupReq.RegionId = regionId
+	cloudCli, err := getProvider(provider, ak, regionId)
 	if err != nil {
-		logs.Logger.Errorf("updateOrCreateSecurityGroups failed.err : [%s]", err.Error())
+		return nil, err
 	}
-	return groups
+	groupRes, err := cloudCli.DescribeSecurityGroups(groupReq)
+	if err != nil {
+		return nil, err
+	}
+	return groupRes.Groups, nil
 }
 
-func updateOrCreateSecurityGroupRules(ctx context.Context, groups []cloud.SecurityGroup, t *SimpleTask) {
+func DoesSecurityGroupBelongsVpc(provider string) bool {
+	if provider == cloud.HuaweiCloud || provider == cloud.TencentCloud {
+		return false
+	}
+	return true
+}
+
+func updateOrCreateSecurityGroups(ctx context.Context, regionIds []string, vpcs []cloud.VPC, provider,
+	ak string) ([]cloud.SecurityGroup, error) {
+	groups := make([]cloud.SecurityGroup, 0, 64)
+	if DoesSecurityGroupBelongsVpc(provider) {
+		for _, vpc := range vpcs {
+			secGroups, err := DescribeSecurityGroups(provider, ak, vpc.RegionId, vpc.VpcId)
+			if err != nil {
+				logs.Logger.Errorf("DescribeSecurityGroups failed: %s", err.Error())
+				continue
+			}
+			groups = append(groups, secGroups...)
+		}
+	} else {
+		for _, regionId := range regionIds {
+			secGroups, err := DescribeSecurityGroups(provider, ak, regionId, "")
+			if err != nil {
+				logs.Logger.Errorf("DescribeSecurityGroups failed: %s", err.Error())
+				continue
+			}
+			groups = append(groups, secGroups...)
+		}
+	}
+
+	groupsModels := cloud2ModelGroups(groups, ak, provider)
+	err := model.UpdateOrCreateGroups(ctx, groupsModels)
+	return groups, err
+}
+
+func updateOrCreateSecurityGroupRules(ctx context.Context, groups []cloud.SecurityGroup, provider, ak string) {
 	rulesReq := cloud.DescribeGroupRulesRequest{}
 	for _, group := range groups {
 		rulesReq.RegionId = group.RegionId
 		rulesReq.SecurityGroupId = group.SecurityGroupId
-		provider, err := getProvider(t.ProviderName, t.AccountKey, group.RegionId)
+		cloudCli, err := getProvider(provider, ak, group.RegionId)
 		if err != nil {
 			logs.Logger.Errorf("getProvider failed.err: %s", err.Error())
 			continue
 		}
-		rulesRes, err := provider.DescribeGroupRules(rulesReq)
+		rulesRes, err := cloudCli.DescribeGroupRules(rulesReq)
 		if err != nil {
+			logs.Logger.Errorf("DescribeGroupRules failed.err: %s", err.Error())
 			continue
 		}
 		rulesModels := cloud2ModelRules(rulesRes.Rules)
@@ -267,15 +311,14 @@ func updateOrCreateSecurityGroupRules(ctx context.Context, groups []cloud.Securi
 func cloud2ModelVpc(vpcs []cloud.VPC, ak, provider string) []model.Vpc {
 	res := make([]model.Vpc, 0, len(vpcs))
 	for _, vpc := range vpcs {
+		now := time.Now()
 		createAt, err := time.Parse("2006-01-02T15:04:05Z", vpc.CreateAt)
 		if err != nil {
-			createAt = time.Now()
+			createAt = now
+		} else {
+			createAt = createAt.Local()
 		}
-		var sw string
-		if len(vpc.SwitchIds) > 0 {
-			sw = strings.Join(vpc.SwitchIds, ",")
-		}
-		now := time.Now()
+
 		res = append(res, model.Vpc{
 			Base: model.Base{
 				CreateAt: &createAt,
@@ -286,7 +329,6 @@ func cloud2ModelVpc(vpcs []cloud.VPC, ak, provider string) []model.Vpc {
 			VpcId:     vpc.VpcId,
 			Name:      vpc.VpcName,
 			CidrBlock: vpc.CidrBlock,
-			SwitchIds: sw,
 			Provider:  provider,
 			VStatus:   vpc.Status,
 		})
@@ -297,11 +339,14 @@ func cloud2ModelVpc(vpcs []cloud.VPC, ak, provider string) []model.Vpc {
 func cloud2ModelSwitches(switches []cloud.Switch) []model.Switch {
 	res := make([]model.Switch, 0, len(switches))
 	for _, sw := range switches {
+		now := time.Now()
 		createAt, err := time.Parse("2006-01-02T15:04:05Z", sw.CreateAt)
 		if err != nil {
-			createAt = time.Now()
+			createAt = now
+		} else {
+			createAt = createAt.Local()
 		}
-		now := time.Now()
+
 		res = append(res, model.Switch{
 			Base: model.Base{
 				CreateAt: &createAt,
@@ -312,6 +357,7 @@ func cloud2ModelSwitches(switches []cloud.Switch) []model.Switch {
 			ZoneId:                  sw.ZoneId,
 			Name:                    sw.Name,
 			CidrBlock:               sw.CidrBlock,
+			GatewayIp:               sw.GatewayIp,
 			IsDefault:               sw.IsDefault,
 			AvailableIpAddressCount: sw.AvailableIpAddressCount,
 			VStatus:                 sw.VStatus,
@@ -320,19 +366,25 @@ func cloud2ModelSwitches(switches []cloud.Switch) []model.Switch {
 	return res
 }
 
-func cloud2ModelGroups(groups []cloud.SecurityGroup) []model.SecurityGroup {
+func cloud2ModelGroups(groups []cloud.SecurityGroup, ak, provider string) []model.SecurityGroup {
 	res := make([]model.SecurityGroup, 0, len(groups))
 	for _, group := range groups {
+		now := time.Now()
 		createAt, err := time.Parse("2006-01-02T15:04:05Z", group.CreateAt)
 		if err != nil {
-			createAt = time.Now()
+			createAt = now
+		} else {
+			createAt = createAt.Local()
 		}
-		now := time.Now()
+
 		res = append(res, model.SecurityGroup{
 			Base: model.Base{
 				CreateAt: &createAt,
 				UpdateAt: &now,
 			},
+			Ak:                ak,
+			Provider:          provider,
+			RegionId:          group.RegionId,
 			VpcId:             group.VpcId,
 			SecurityGroupId:   group.SecurityGroupId,
 			Name:              group.SecurityGroupName,
@@ -345,11 +397,14 @@ func cloud2ModelGroups(groups []cloud.SecurityGroup) []model.SecurityGroup {
 func cloud2ModelRules(rules []cloud.SecurityGroupRule) []model.SecurityGroupRule {
 	res := make([]model.SecurityGroupRule, 0, len(rules))
 	for _, rule := range rules {
+		now := time.Now()
 		createAt, err := time.Parse("2006-01-02T15:04:05Z", rule.CreateAt)
 		if err != nil {
-			createAt = time.Now()
+			createAt = now
+		} else {
+			createAt = createAt.Local()
 		}
-		now := time.Now()
+
 		res = append(res, model.SecurityGroupRule{
 			Base: model.Base{
 				CreateAt: &createAt,
@@ -357,7 +412,7 @@ func cloud2ModelRules(rules []cloud.SecurityGroupRule) []model.SecurityGroupRule
 			},
 			VpcId:           rule.VpcId,
 			SecurityGroupId: rule.SecurityGroupId,
-			PortRange:       rule.PortRange,
+			PortRange:       getPortRange(rule.PortFrom, rule.PortTo),
 			Protocol:        rule.Protocol,
 			Direction:       rule.Direction,
 			GroupId:         rule.GroupId,
@@ -382,7 +437,7 @@ func refreshVpc(t *SimpleTask) error {
 		return err
 	}
 	vpc := res.Vpc
-	return model.UpdateVpc(context.Background(), vpc.VpcId, vpc.CidrBlock, vpc.Status, vpc.SwitchIds)
+	return model.UpdateVpc(context.Background(), vpc.VpcId, vpc.CidrBlock, vpc.Status)
 }
 
 func refreshSwitch(t *SimpleTask) error {
@@ -415,16 +470,24 @@ type CreateNetworkRequest struct {
 	VpcName           string
 	ZoneId            string
 	SwitchCidrBlock   string
+	GatewayIp         string
 	SwitchName        string
 	SecurityGroupName string
 	SecurityGroupType string
 	Ak                string
+	Rules             []GroupRule
 }
 
 type CreateNetworkResponse struct {
 	VpcId           string
 	SwitchId        string
 	SecurityGroupId string
+}
+
+type SyncNetworkRequest struct {
+	Provider   string
+	RegionId   string
+	AccountKey string
 }
 
 type CreateVPCRequest struct {
@@ -452,19 +515,36 @@ func CreateNetwork(ctx context.Context, req *CreateNetworkRequest) (vpcRes Creat
 		return CreateNetworkResponse{}, err
 	}
 	switchId, err := CreateSwitch(ctx, CreateSwitchRequest{
+		Ak:         req.Ak,
 		SwitchName: req.SwitchName,
 		ZoneId:     req.ZoneId,
 		VpcId:      vpcId,
 		CidrBlock:  req.SwitchCidrBlock,
+		GatewayIp:  req.GatewayIp,
 	})
 	if err != nil {
 		return CreateNetworkResponse{}, err
 	}
 
 	groupId, err := CreateSecurityGroup(ctx, CreateSecurityGroupRequest{
+		Ak:                req.Ak,
 		VpcId:             vpcId,
 		SecurityGroupName: req.SecurityGroupName,
 		SecurityGroupType: req.SecurityGroupType,
+	})
+	if err != nil {
+		return CreateNetworkResponse{}, err
+	}
+
+	if len(req.Rules) == 0 || req.Rules[0].Protocol == "" {
+		return CreateNetworkResponse{}, fmt.Errorf("miss rule")
+	}
+	_, err = AddSecurityGroupRule(ctx, AddSecurityGroupRuleRequest{
+		Ak:              req.Ak,
+		RegionId:        req.RegionId,
+		VpcId:           vpcId,
+		SecurityGroupId: groupId,
+		Rules:           req.Rules,
 	})
 	if err != nil {
 		return CreateNetworkResponse{}, err
@@ -474,6 +554,10 @@ func CreateNetwork(ctx context.Context, req *CreateNetworkRequest) (vpcRes Creat
 		SwitchId:        switchId,
 		SecurityGroupId: groupId,
 	}, nil
+}
+
+func SyncNetwork(ctx context.Context, req SyncNetworkRequest) error {
+	return syncNetworkConfig(ctx, []string{req.RegionId}, req.Provider, req.AccountKey)
 }
 
 func waitForVpcStatus(ctx context.Context, req *CreateNetworkRequest, vpcId string) error {
@@ -574,25 +658,30 @@ type Vpc struct {
 	VpcId     string
 	VpcName   string
 	CidrBlock string
-	SwitchIds string
 	Provider  string
 	Status    string
 	CreateAt  string
 }
 
+func model2Vpc(v model.Vpc) Vpc {
+	return Vpc{
+		VpcId:     v.VpcId,
+		VpcName:   v.Name,
+		CidrBlock: v.CidrBlock,
+		Provider:  v.Provider,
+		Status:    v.VStatus,
+		CreateAt:  v.CreateAt.String()}
+}
+
 func model2VpcResponse(vpcs []model.Vpc, pageNumber, pageSize, total int) VPCResponse {
 	vs := make([]Vpc, 0, len(vpcs))
 	for _, v := range vpcs {
-		vs = append(vs, Vpc{
-			VpcId:     v.VpcId,
-			VpcName:   v.Name,
-			CidrBlock: v.CidrBlock,
-			SwitchIds: v.SwitchIds,
-			Provider:  v.Provider,
-			Status:    v.VStatus,
-			CreateAt:  v.CreateAt.String()})
-
+		if v.VStatus != cloud.VPCStatusAvailable {
+			continue
+		}
+		vs = append(vs, model2Vpc(v))
 	}
+
 	return VPCResponse{
 		Vpcs: vs,
 		Pager: types.Pager{
@@ -601,6 +690,17 @@ func model2VpcResponse(vpcs []model.Vpc, pageNumber, pageSize, total int) VPCRes
 			Total:      total,
 		},
 	}
+}
+
+func GetVpcById(ctx context.Context, vpcId string) (Vpc, error) {
+	vpc, err := model.FindVpcById(ctx, model.FindVpcConditions{
+		VpcId: vpcId,
+	})
+	if err != nil {
+		return Vpc{}, err
+	}
+
+	return model2Vpc(vpc), nil
 }
 
 func GetVPC(ctx context.Context, req GetVPCRequest) (resp VPCResponse, err error) {
@@ -643,6 +743,7 @@ func GetVPCFromCloud(ctx context.Context, req GetVPCFromCloudRequest) (vpc cloud
 }
 
 type CreateSwitchRequest struct {
+	Ak         string
 	SwitchName string
 	ZoneId     string
 	VpcId      string
@@ -673,7 +774,7 @@ func CreateSwitch(ctx context.Context, req CreateSwitchRequest) (switchId string
 
 	*/
 
-	p, err := getProvider(vpc.Provider, vpc.Ak, vpc.RegionId)
+	p, err := getProvider(vpc.Provider, req.Ak, vpc.RegionId)
 	if err != nil {
 		return "", err
 	}
@@ -735,6 +836,7 @@ type Switch struct {
 	ZoneId                  string
 	SwitchName              string
 	CidrBlock               string
+	GatewayIp               string
 	VStatus                 string
 	CreateAt                string
 	IsDefault               string
@@ -746,24 +848,32 @@ type SwitchResponse struct {
 	Pager    types.Pager
 }
 
+func model2Switch(v model.Switch) Switch {
+	isDefault := "N"
+	if v.IsDefault == 1 {
+		isDefault = "Y"
+	}
+	return Switch{
+		VpcId:                   v.VpcId,
+		SwitchId:                v.SwitchId,
+		ZoneId:                  v.ZoneId,
+		SwitchName:              v.Name,
+		CidrBlock:               v.CidrBlock,
+		GatewayIp:               v.GatewayIp,
+		VStatus:                 v.VStatus,
+		CreateAt:                v.CreateAt.String(),
+		IsDefault:               isDefault,
+		AvailableIpAddressCount: v.AvailableIpAddressCount,
+	}
+}
+
 func model2SwitchResponse(switches []model.Switch, pageNumber, pageSize, total int) SwitchResponse {
 	vs := make([]Switch, 0, len(switches))
 	for _, v := range switches {
-		isDefault := "Y"
-		if v.IsDefault == 0 {
-			isDefault = "N"
+		if v.VStatus != cloud.SubnetAvailable {
+			continue
 		}
-		vs = append(vs, Switch{
-			VpcId:                   v.VpcId,
-			SwitchId:                v.SwitchId,
-			ZoneId:                  v.ZoneId,
-			SwitchName:              v.Name,
-			CidrBlock:               v.CidrBlock,
-			VStatus:                 v.VStatus,
-			CreateAt:                v.CreateAt.String(),
-			IsDefault:               isDefault,
-			AvailableIpAddressCount: v.AvailableIpAddressCount,
-		})
+		vs = append(vs, model2Switch(v))
 	}
 	return SwitchResponse{
 		Switches: vs,
@@ -773,6 +883,15 @@ func model2SwitchResponse(switches []model.Switch, pageNumber, pageSize, total i
 			Total:      total,
 		},
 	}
+}
+
+func GetSwitchById(ctx context.Context, vpcId, switchId string) (Switch, error) {
+	sw, err := model.FindSwitchById(ctx, vpcId, switchId)
+	if err != nil {
+		return Switch{}, err
+	}
+
+	return model2Switch(sw), nil
 }
 
 func GetSwitch(ctx context.Context, req GetSwitchRequest) (resp SwitchResponse, err error) {
@@ -803,6 +922,7 @@ func GetSwitch(ctx context.Context, req GetSwitchRequest) (resp SwitchResponse, 
 }
 
 type CreateSecurityGroupRequest struct {
+	Ak                string
 	VpcId             string
 	SecurityGroupName string
 	SecurityGroupType string
@@ -820,7 +940,10 @@ func CreateSecurityGroup(ctx context.Context, req CreateSecurityGroupRequest) (s
 	if vpc.VpcId == "" {
 		return "", errs.ErrVpcNotExist
 	}
-	vpcId := vpc.VpcId
+	vpcId := ""
+	if DoesSecurityGroupBelongsVpc(vpc.Provider) {
+		vpcId = vpc.VpcId
+	}
 	/* name 如果限制了再打开这部分
 	groupIdStruct, err := model.FindSecurityId(ctx, model.FindSecurityGroupConditions{VpcId: vpcId, SecurityGroupName: req.SecurityGroupName})
 	if err != nil {
@@ -832,7 +955,7 @@ func CreateSecurityGroup(ctx context.Context, req CreateSecurityGroupRequest) (s
 
 	*/
 
-	p, err := getProvider(vpc.Provider, vpc.Ak, vpc.RegionId)
+	p, err := getProvider(vpc.Provider, req.Ak, vpc.RegionId)
 	if err != nil {
 		return "", err
 	}
@@ -857,6 +980,9 @@ func CreateSecurityGroup(ctx context.Context, req CreateSecurityGroupRequest) (s
 			CreateAt: &now,
 			UpdateAt: &now,
 		},
+		Ak:                req.Ak,
+		Provider:          vpc.Provider,
+		RegionId:          vpc.RegionId,
 		VpcId:             vpcId,
 		SecurityGroupId:   res.SecurityGroupId,
 		Name:              req.SecurityGroupName,
@@ -871,6 +997,7 @@ func CreateSecurityGroup(ctx context.Context, req CreateSecurityGroupRequest) (s
 }
 
 type GetSecurityGroupRequest struct {
+	Ak                string
 	SecurityGroupName string
 	VpcId             string
 	PageNumber        int
@@ -923,8 +1050,14 @@ func GetSecurityGroup(ctx context.Context, req GetSecurityGroupRequest) (Securit
 	if vpc.VpcId == "" {
 		return SecurityGroupResponse{}, errs.ErrVpcNotExist
 	}
-	vpcId := vpc.VpcId
+	vpcId := ""
+	if DoesSecurityGroupBelongsVpc(vpc.Provider) {
+		vpcId = vpc.VpcId
+	}
 	groups, total, err := model.FindSecurityGroupWithPage(ctx, model.FindSecurityGroupConditions{
+		Ak:                req.Ak,
+		Provider:          vpc.Provider,
+		RegionId:          vpc.RegionId,
 		VpcId:             vpcId,
 		SecurityGroupName: req.SecurityGroupName,
 		PageNumber:        req.PageNumber,
@@ -938,6 +1071,7 @@ func GetSecurityGroup(ctx context.Context, req GetSecurityGroupRequest) (Securit
 }
 
 type AddSecurityGroupRuleRequest struct {
+	Ak              string
 	RegionId        string
 	VpcId           string
 	SecurityGroupId string
@@ -954,10 +1088,25 @@ type GroupRule struct {
 	PrefixListId string `json:"prefix_list_id"`
 }
 
+type SecurityGroupWithRule struct {
+	SgId   string         `json:"security_group_id"`
+	SgName string         `json:"security_group_name"`
+	SgType string         `json:"security_group_type"`
+	Rules  []GroupRuleRsp `json:"rules"`
+}
+
+type GroupRuleRsp struct {
+	Protocol     string `json:"protocol"`
+	PortRange    string `json:"port_range"`
+	Direction    string `json:"direction"`
+	GroupId      string `json:"group_id"`
+	CidrIp       string `json:"cidr_ip"`
+	PrefixListId string `json:"prefix_list_id"`
+}
+
 func AddSecurityGroupRule(ctx context.Context, req AddSecurityGroupRuleRequest) (string, error) {
 	vpc, err := model.FindVpcById(ctx, model.FindVpcConditions{
-		VpcId:    req.VpcId,
-		RegionId: req.RegionId,
+		VpcId: req.VpcId,
 	})
 	if err != nil {
 		logs.Logger.Errorf("FindVpcById failed.err: [%v] req[%v]", err, req)
@@ -967,9 +1116,18 @@ func AddSecurityGroupRule(ctx context.Context, req AddSecurityGroupRuleRequest) 
 	if vpc.VpcId == "" {
 		return "", errs.ErrVpcNotExist
 	}
-	vpcId := vpc.VpcId
-	groupIdStruct, err := model.FindSecurityId(ctx, model.FindSecurityGroupConditions{
-		VpcId: vpcId, SecurityGroupId: req.SecurityGroupId})
+	vpcId := ""
+	if DoesSecurityGroupBelongsVpc(vpc.Provider) {
+		vpcId = vpc.VpcId
+	}
+	cond := model.FindSecurityGroupConditions{
+		Ak:              req.Ak,
+		Provider:        vpc.Provider,
+		RegionId:        vpc.RegionId,
+		VpcId:           vpcId,
+		SecurityGroupId: req.SecurityGroupId,
+	}
+	groupIdStruct, err := model.FindSecurityId(ctx, cond)
 	if err != nil {
 		logs.Logger.Errorf("FindSecurityId failed.err: [%v] req[%v]", err, req)
 		return "", errs.ErrDBQueryFailed
@@ -978,7 +1136,7 @@ func AddSecurityGroupRule(ctx context.Context, req AddSecurityGroupRuleRequest) 
 		return "", errs.ErrSecurityGroupNotExist
 	}
 
-	p, err := getProvider(vpc.Provider, vpc.Ak, req.RegionId)
+	p, err := getProvider(vpc.Provider, req.Ak, req.RegionId)
 	if err != nil {
 		return "", err
 	}
@@ -1017,7 +1175,7 @@ func AddSecurityGroupRule(ctx context.Context, req AddSecurityGroupRuleRequest) 
 			},
 			VpcId:           vpcId,
 			SecurityGroupId: groupIdStruct.SecurityGroupId,
-			PortRange:       fmt.Sprintf("%d-%d", rule.PortFrom, rule.PortTo),
+			PortRange:       getPortRange(rule.PortFrom, rule.PortTo),
 			Protocol:        rule.Protocol,
 			Direction:       rule.Direction,
 			GroupId:         rule.GroupId,
@@ -1032,6 +1190,37 @@ func AddSecurityGroupRule(ctx context.Context, req AddSecurityGroupRuleRequest) 
 		return "", nil
 	}
 	return "", nil
+}
+
+func GetSecurityGroupWithRules(ctx context.Context, securityGroupId string) (SecurityGroupWithRule, error) {
+	sg, err := model.FindSecurityGroupById(ctx, securityGroupId)
+	if err != nil {
+		return SecurityGroupWithRule{}, err
+	}
+
+	rules, err := model.FindSecurityGroupRulesById(ctx, securityGroupId)
+	if err != nil {
+		return SecurityGroupWithRule{}, err
+	}
+
+	sgRules := make([]GroupRuleRsp, 0, len(rules))
+	for _, rule := range rules {
+		sgRules = append(sgRules, GroupRuleRsp{
+			Protocol:     rule.Protocol,
+			PortRange:    rule.PortRange,
+			Direction:    rule.Direction,
+			GroupId:      rule.GroupId,
+			CidrIp:       rule.CidrIp,
+			PrefixListId: rule.PrefixListId,
+		})
+	}
+	sgWithRule := SecurityGroupWithRule{
+		SgId:   sg.SecurityGroupId,
+		SgName: sg.Name,
+		SgType: sg.SecurityGroupType,
+		Rules:  sgRules,
+	}
+	return sgWithRule, nil
 }
 
 type GetRegionsRequest struct {
@@ -1095,4 +1284,16 @@ func getDefaultRegion(provider string) string {
 		regionId = DefaultRegionTencent
 	}
 	return regionId
+}
+
+func getPortRange(from, to int) string {
+	if from < 1 {
+		return ""
+	}
+
+	portRange := cast.ToString(from)
+	if from != to {
+		portRange = fmt.Sprintf("%d-%d", from, to)
+	}
+	return portRange
 }

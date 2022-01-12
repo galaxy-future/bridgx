@@ -2,9 +2,11 @@ package tencent
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
+	"github.com/galaxy-future/BridgX/pkg/utils"
 	"github.com/spf13/cast"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
@@ -14,17 +16,6 @@ func (p *TencentCloud) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest)
 	request := vpc.NewCreateSecurityGroupRequest()
 	request.GroupName = common.StringPtr(req.SecurityGroupName)
 	request.GroupDescription = common.StringPtr(req.RegionId)
-	// The tags are a filter for DescribeSecurityGroups`
-	request.Tags = []*vpc.Tag{
-		{
-			Key:   common.StringPtr("VpcId"),
-			Value: common.StringPtr(req.VpcId),
-		},
-		{
-			Key:   common.StringPtr("SecurityGroupType"),
-			Value: common.StringPtr(req.SecurityGroupType),
-		},
-	}
 	response, err := p.vpcClient.CreateSecurityGroup(request)
 	if err != nil {
 		logs.Logger.Errorf("CreateSecurityGroup TencentCloud failed.err: [%v], req[%v]", err, req)
@@ -54,11 +45,7 @@ func (p *TencentCloud) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRul
 		},
 	}
 	if (req.IpProtocol == cloud.ProtocolTcp || req.IpProtocol == cloud.ProtocolUdp) && req.PortFrom > 0 {
-		portRange := cast.ToString(req.PortFrom)
-		if req.PortFrom != req.PortTo {
-			portRange = fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
-		}
-		request.SecurityGroupPolicySet.Ingress[0].Port = &portRange
+		request.SecurityGroupPolicySet.Ingress[0].Port = common.StringPtr(getPortRange(req.PortFrom, req.PortTo))
 	}
 	if req.CidrIp != "" {
 		request.SecurityGroupPolicySet.Ingress[0].CidrBlock = common.StringPtr(req.CidrIp)
@@ -89,11 +76,7 @@ func (p *TencentCloud) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRule
 		},
 	}
 	if (req.IpProtocol == cloud.ProtocolTcp || req.IpProtocol == cloud.ProtocolUdp) && req.PortFrom > 0 {
-		portRange := cast.ToString(req.PortFrom)
-		if req.PortFrom != req.PortTo {
-			portRange = fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
-		}
-		request.SecurityGroupPolicySet.Egress[0].Port = common.StringPtr(portRange)
+		request.SecurityGroupPolicySet.Egress[0].Port = common.StringPtr(getPortRange(req.PortFrom, req.PortTo))
 	}
 	if req.CidrIp != "" {
 		request.SecurityGroupPolicySet.Egress[0].CidrBlock = common.StringPtr(req.CidrIp)
@@ -116,12 +99,6 @@ func (p *TencentCloud) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRe
 	groups := make([]cloud.SecurityGroup, 0, 128)
 
 	request := vpc.NewDescribeSecurityGroupsRequest()
-	request.Filters = []*vpc.Filter{
-		{
-			Name:   common.StringPtr("tag:VpcId"),
-			Values: common.StringPtrs([]string{req.VpcId}),
-		},
-	}
 	request.Limit = common.StringPtr(cast.ToString(pageSize))
 	for {
 		request.Offset = common.StringPtr(cast.ToString((page - 1) * pageSize))
@@ -131,20 +108,11 @@ func (p *TencentCloud) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRe
 		}
 		if response != nil && response.Response != nil && response.Response.SecurityGroupSet != nil {
 			for _, group := range response.Response.SecurityGroupSet {
-				var vpcId, SecurityGroupType *string
-				for _, tag := range group.TagSet {
-					if *tag.Key == "VpcId" {
-						vpcId = tag.Value
-					} else if *tag.Key == "SecurityGroupType" {
-						SecurityGroupType = tag.Value
-					}
-				}
 				groups = append(groups, cloud.SecurityGroup{
 					SecurityGroupId:   *group.SecurityGroupId,
-					SecurityGroupType: *SecurityGroupType,
+					SecurityGroupType: "normal",
 					SecurityGroupName: *group.SecurityGroupName,
 					CreateAt:          *group.CreatedTime,
-					VpcId:             *vpcId,
 					RegionId:          req.RegionId,
 				})
 			}
@@ -174,14 +142,19 @@ func (p *TencentCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (
 		egress := policySet.Egress
 		if egress != nil {
 			for _, policy := range egress {
+				from, to := portRange2Int(utils.StringValue(policy.Port))
+				ipCidr := utils.StringValue(policy.CidrBlock)
+				if ipCidr == "" {
+					ipCidr = utils.StringValue(policy.Ipv6CidrBlock)
+				}
 				rules = append(rules, cloud.SecurityGroupRule{
-					VpcId:           *policy.PolicyDescription,
-					SecurityGroupId: *policy.SecurityGroupId,
-					PortRange:       *policy.Port,
-					Protocol:        *policy.Protocol,
+					SecurityGroupId: req.SecurityGroupId,
+					PortFrom:        from,
+					PortTo:          to,
+					Protocol:        _outProtocol[*policy.Protocol],
 					Direction:       cloud.SecGroupRuleOut,
-					GroupId:         "",
-					CidrIp:          *policy.CidrBlock,
+					GroupId:         *policy.SecurityGroupId,
+					CidrIp:          ipCidr,
 					PrefixListId:    "",
 				})
 			}
@@ -189,18 +162,51 @@ func (p *TencentCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (
 		ingress := policySet.Ingress
 		if ingress != nil {
 			for _, policy := range ingress {
+				from, to := portRange2Int(utils.StringValue(policy.Port))
+				ipCidr := utils.StringValue(policy.CidrBlock)
+				if ipCidr == "" {
+					ipCidr = utils.StringValue(policy.Ipv6CidrBlock)
+				}
 				rules = append(rules, cloud.SecurityGroupRule{
-					VpcId:           *policy.PolicyDescription,
-					SecurityGroupId: *policy.SecurityGroupId,
-					PortRange:       *policy.Port,
-					Protocol:        *policy.Protocol,
+					SecurityGroupId: req.SecurityGroupId,
+					PortFrom:        from,
+					PortTo:          to,
+					Protocol:        _outProtocol[*policy.Protocol],
 					Direction:       cloud.SecGroupRuleIn,
-					GroupId:         "",
-					CidrIp:          *policy.CidrBlock,
+					GroupId:         *policy.SecurityGroupId,
+					CidrIp:          ipCidr,
 					PrefixListId:    "",
 				})
 			}
 		}
 	}
 	return cloud.DescribeGroupRulesResponse{Rules: rules}, nil
+}
+
+func getPortRange(from, to int) (portRange string) {
+	if from < 1 {
+		return
+	}
+	if from == to {
+		portRange = cast.ToString(from)
+	} else {
+		portRange = fmt.Sprintf("%d-%d", from, to)
+	}
+	return
+}
+
+func portRange2Int(portRange string) (from, to int) {
+	if portRange == "" {
+		return 0, 0
+	}
+
+	idx := strings.Index(portRange, "-")
+	if idx == -1 {
+		from = cast.ToInt(portRange)
+		to = from
+	} else {
+		from = cast.ToInt(portRange[:idx])
+		to = cast.ToInt(portRange[idx+1:])
+	}
+	return
 }

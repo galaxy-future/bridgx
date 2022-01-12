@@ -82,3 +82,12 @@ var _bandwidthChargeType = map[string]string{
 	"BANDWIDTH_PREPAID":        cloud.BandwidthPayByFix,
 	"TRAFFIC_POSTPAID_BY_HOUR": cloud.BandwidthPayByTraffic,
 }
+
+var _outProtocol = map[string]string{
+	"icmp":   cloud.ProtocolIcmp,
+	"icmpv6": cloud.ProtocolIcmpV6,
+	"tcp":    cloud.ProtocolTcp,
+	"udp":    cloud.ProtocolUdp,
+	"gre":    cloud.ProtocolGre,
+	"ALL":    cloud.ProtocolAll,
+}

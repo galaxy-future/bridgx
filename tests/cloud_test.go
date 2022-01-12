@@ -232,12 +232,14 @@ func TestAddSecGrpRule(t *testing.T) {
 		return
 	}
 
+	sgId := ""
 	req := cloud.AddSecurityGroupRuleRequest{
-		SecurityGroupId: "",
-		IpProtocol:      "udp",
-		PortFrom:        8894,
+		RegionId:        _region,
+		SecurityGroupId: sgId,
+		IpProtocol:      cloud.ProtocolUdp,
+		PortFrom:        8895,
 		PortTo:          8895,
-		CidrIp:          "192.168.1.1/24",
+		CidrIp:          "",
 	}
 	err = client.AddIngressSecurityGroupRule(req)
 	if err != nil {
@@ -246,11 +248,12 @@ func TestAddSecGrpRule(t *testing.T) {
 	}
 
 	req = cloud.AddSecurityGroupRuleRequest{
-		SecurityGroupId: "",
-		IpProtocol:      "tcp",
+		RegionId:        _region,
+		SecurityGroupId: sgId,
+		IpProtocol:      cloud.ProtocolGre,
 		PortFrom:        1000,
 		PortTo:          1000,
-		CidrIp:          "192.168.1.1/24",
+		CidrIp:          "",
 	}
 	err = client.AddEgressSecurityGroupRule(req)
 	if err != nil {
@@ -269,7 +272,8 @@ func TestShowSecGrp(t *testing.T) {
 	var res interface{}
 	var resStr string
 	res, err = client.DescribeSecurityGroups(cloud.DescribeSecurityGroupsRequest{
-		VpcId: "",
+		VpcId:    "",
+		RegionId: _region,
 	})
 	if err != nil {
 		t.Log(err.Error())
@@ -279,6 +283,7 @@ func TestShowSecGrp(t *testing.T) {
 	t.Log(resStr)
 
 	res, err = client.DescribeGroupRules(cloud.DescribeGroupRulesRequest{
+		RegionId:        _region,
 		SecurityGroupId: "",
 	})
 	if err != nil {

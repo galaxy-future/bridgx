@@ -30,6 +30,9 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 		}
 		instanceTypeDesc := GetInstanceTypeDesc(&cluster)
 		cpuType := cluster.GetCpuType()
+		if cpuType == "" {
+			cpuType = constants.CPU
+		}
 		provider := getProvider(instance.ClusterName, clusterMap)
 		r := response.InstanceThumb{
 			InstanceId:         instance.InstanceId,

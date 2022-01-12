@@ -3,10 +3,10 @@ package huawei
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/galaxy-future/BridgX/pkg/utils"
+	"strings"
 
 	"github.com/galaxy-future/BridgX/pkg/cloud"
+	"github.com/galaxy-future/BridgX/pkg/utils"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v3/model"
 	"github.com/spf13/cast"
 )
@@ -15,8 +15,7 @@ import (
 func (p *HuaweiCloud) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest) (cloud.CreateSecurityGroupResponse, error) {
 	request := &model.CreateSecurityGroupRequest{}
 	securityGroupOpt := &model.CreateSecurityGroupOption{
-		Name:        req.SecurityGroupName,
-		Description: &req.VpcId,
+		Name: req.SecurityGroupName,
 	}
 	request.Body = &model.CreateSecurityGroupRequestBody{
 		SecurityGroup: securityGroupOpt,
@@ -45,8 +44,6 @@ func (p *HuaweiCloud) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleR
 func (p *HuaweiCloud) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRequest) (cloud.DescribeSecurityGroupsResponse, error) {
 	groups := make([]cloud.SecurityGroup, 0, _pageSize)
 	request := &model.ListSecurityGroupsRequest{}
-	var listDescription = []string{req.VpcId}
-	request.Description = &listDescription
 	limitRequest := int32(_pageSize)
 	request.Limit = &limitRequest
 	markerRequest := ""
@@ -67,7 +64,6 @@ func (p *HuaweiCloud) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsReq
 				SecurityGroupType: "normal",
 				SecurityGroupName: group.Name,
 				CreateAt:          group.CreatedAt.String(),
-				VpcId:             req.VpcId,
 				RegionId:          req.RegionId,
 			})
 		}
@@ -94,14 +90,23 @@ func (p *HuaweiCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (c
 	}
 
 	for _, rule := range response.SecurityGroup.SecurityGroupRules {
+		from, to := portRange2Int(rule.Multiport)
+		protocol := _outProtocol[rule.Protocol]
+		if protocol == "" {
+			protocol = rule.Protocol
+		}
+		ipCidr := rule.RemoteIpPrefix
+		if rule.RemoteGroupId == "" && rule.RemoteIpPrefix == "" && rule.RemoteAddressGroupId == "" {
+			ipCidr = "0.0.0.0/0"
+		}
 		rules = append(rules, cloud.SecurityGroupRule{
-			VpcId:           response.SecurityGroup.Description,
 			SecurityGroupId: response.SecurityGroup.Id,
-			PortRange:       rule.Multiport,
-			Protocol:        rule.Protocol,
+			PortFrom:        from,
+			PortTo:          to,
+			Protocol:        protocol,
 			Direction:       _secGrpRuleDirection[rule.Direction],
 			GroupId:         rule.RemoteGroupId,
-			CidrIp:          rule.RemoteIpPrefix,
+			CidrIp:          ipCidr,
 			PrefixListId:    rule.RemoteAddressGroupId,
 			CreateAt:        rule.CreatedAt.String(),
 		})
@@ -116,15 +121,14 @@ func (p *HuaweiCloud) addSecGrpRule(req cloud.AddSecurityGroupRuleRequest, direc
 		SecurityGroupId: req.SecurityGroupId,
 		Direction:       direction,
 	}
-	if req.IpProtocol != "" {
+	if req.IpProtocol != "" && _protocol[req.IpProtocol] != "" {
 		secGrpRuleOpt.Protocol = utils.String(_protocol[req.IpProtocol])
-	}
-	if req.PortFrom > 0 {
-		portRange := cast.ToString(req.PortFrom)
-		if req.PortFrom != req.PortTo {
-			portRange = fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
+		if req.IpProtocol == cloud.ProtocolIcmpV6 {
+			secGrpRuleOpt.Ethertype = utils.String(cloud.IpV6)
 		}
-		secGrpRuleOpt.Multiport = &portRange
+	}
+	if (req.IpProtocol == cloud.ProtocolTcp || req.IpProtocol == cloud.ProtocolUdp) && req.PortFrom > 0 {
+		secGrpRuleOpt.Multiport = utils.String(getPortRange(req.PortFrom, req.PortTo))
 	}
 	if req.CidrIp != "" {
 		secGrpRuleOpt.RemoteIpPrefix = &req.CidrIp
@@ -147,4 +151,33 @@ func (p *HuaweiCloud) addSecGrpRule(req cloud.AddSecurityGroupRuleRequest, direc
 		return fmt.Errorf("httpcode %d", response.HttpStatusCode)
 	}
 	return nil
+}
+
+func getPortRange(from, to int) (portRange string) {
+	if from < 1 {
+		return
+	}
+
+	if from == to {
+		portRange = cast.ToString(from)
+	} else {
+		portRange = fmt.Sprintf("%d-%d", from, to)
+	}
+	return
+}
+
+func portRange2Int(portRange string) (from, to int) {
+	if portRange == "" {
+		return 0, 0
+	}
+
+	idx := strings.Index(portRange, "-")
+	if idx == -1 {
+		from = cast.ToInt(portRange)
+		to = from
+	} else {
+		from = cast.ToInt(portRange[:idx])
+		to = cast.ToInt(portRange[idx+1:])
+	}
+	return
 }

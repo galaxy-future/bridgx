@@ -111,6 +111,14 @@ var _secGrpRuleDirection = map[string]string{
 	"egress":  cloud.SecGroupRuleOut,
 }
 
+var _outProtocol = map[string]string{
+	"icmp":   cloud.ProtocolIcmp,
+	"icmpv6": cloud.ProtocolIcmpV6,
+	"tcp":    cloud.ProtocolTcp,
+	"udp":    cloud.ProtocolUdp,
+	"":       cloud.ProtocolAll,
+}
+
 var _osType = map[string]string{
 	"\"Linux\"\n":   cloud.OsLinux,
 	"\"Windows\"\n": cloud.OsWindows,

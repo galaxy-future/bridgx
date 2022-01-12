@@ -12,6 +12,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/galaxy-future/BridgX/internal/types"
+	"github.com/galaxy-future/BridgX/pkg/cloud"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,16 +31,69 @@ func CreateNetworkConfig(ctx *gin.Context) {
 		VpcName:           req.VpcName,
 		ZoneId:            req.ZoneId,
 		SwitchCidrBlock:   req.SwitchCidrBlock,
+		GatewayIp:         req.GatewayIp,
 		SwitchName:        req.SwitchName,
 		SecurityGroupName: req.SecurityGroupName,
 		SecurityGroupType: req.SecurityGroupType,
 		Ak:                req.Ak,
+		Rules:             req.Rules,
 	})
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
+	return
+}
+
+func SyncNetworkConfig(ctx *gin.Context) {
+	req := request.SyncNetworkRequest{}
+	err := ctx.Bind(&req)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, response.PermissionDenied, nil)
+		return
+	}
+
+	err = service.SyncNetwork(ctx, service.SyncNetworkRequest{
+		Provider:   req.Provider,
+		RegionId:   req.RegionId,
+		AccountKey: req.AccountKey,
+	})
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, nil)
+	return
+}
+
+func GetNetCfgTemplate(ctx *gin.Context) {
+	provider := ctx.Query("provider")
+	logs.Logger.Infof("GetNetCfgTemplate provider:%v", provider)
+
+	netCfg := request.CreateNetworkRequest{
+		Provider:          provider,
+		CidrBlock:         "10.0.0.0/16",
+		VpcName:           "默认的vpc",
+		SwitchCidrBlock:   "10.0.0.0/24",
+		GatewayIp:         "10.0.0.254",
+		SwitchName:        "默认的子网",
+		SecurityGroupName: "默认的安全组",
+		SecurityGroupType: "normal",
+		Rules: []service.GroupRule{
+			{
+				Protocol:  cloud.ProtocolAll,
+				Direction: cloud.SecGroupRuleIn,
+				CidrIp:    "0.0.0.0/0",
+			},
+			{
+				Protocol:  cloud.ProtocolAll,
+				Direction: cloud.SecGroupRuleOut,
+				CidrIp:    "0.0.0.0/0",
+			},
+		},
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, netCfg)
 	return
 }
 
@@ -58,6 +112,18 @@ func CreateVpc(ctx *gin.Context) {
 		CidrBlock: req.CidrBlock,
 		Ak:        req.Ak,
 	})
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
+	return
+}
+
+func GetVpcById(ctx *gin.Context) {
+	id := ctx.Param("id")
+	logs.Logger.Infof("GetVpcById id:%v", id)
+	resp, err := service.GetVpcById(ctx, id)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
@@ -100,6 +166,7 @@ func CreateSwitch(ctx *gin.Context) {
 	logs.Logger.Infof("req is:%v ", req)
 
 	resp, err := service.CreateSwitch(ctx, service.CreateSwitchRequest{
+		Ak:         req.Ak,
 		SwitchName: req.SwitchName,
 		ZoneId:     req.ZoneId,
 		VpcId:      req.VpcId,
@@ -114,12 +181,26 @@ func CreateSwitch(ctx *gin.Context) {
 	return
 }
 
+func GetSwitchById(ctx *gin.Context) {
+	switchId := ctx.Param("id")
+	vpcId := ctx.Query("vpc_id")
+	logs.Logger.Infof("GetSwitchById id:%v,vpcId:%v", switchId, vpcId)
+	resp, err := service.GetSwitchById(ctx, vpcId, switchId)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
+	return
+}
+
 func DescribeSwitch(ctx *gin.Context) {
 	vpcId := ctx.Query("vpc_id")
 	switchName := ctx.Query("switch_name")
 	zoneId := ctx.Query("zone_id")
 	pageNumber, pageSize := getPager(ctx)
-	logs.Logger.Infof("vpcId:[%s] switchName[:%s] pageNumber[%d]  pageSize[%d]", vpcId, switchName, pageNumber, pageSize)
+	logs.Logger.Infof("vpcId:[%s] switchName[:%s]  zone:%v pageNumber[%d]  pageSize[%d]",
+		vpcId, switchName, zoneId, pageNumber, pageSize)
 
 	resp, err := service.GetSwitch(ctx, service.GetSwitchRequest{
 		SwitchName: switchName,
@@ -146,6 +227,7 @@ func CreateSecurityGroup(ctx *gin.Context) {
 	logs.Logger.Infof("req is:%v ", req)
 
 	resp, err := service.CreateSecurityGroup(ctx, service.CreateSecurityGroupRequest{
+		Ak:                req.Ak,
 		VpcId:             req.VpcId,
 		SecurityGroupName: req.SecurityGroupName,
 		SecurityGroupType: req.SecurityGroupType,
@@ -159,12 +241,15 @@ func CreateSecurityGroup(ctx *gin.Context) {
 }
 
 func DescribeSecurityGroup(ctx *gin.Context) {
+	ak := ctx.Query("account_key")
 	vpcId := ctx.Query("vpc_id")
 	securityGroupName := ctx.Query("security_group_name")
 	pageNumber, pageSize := getPager(ctx)
-	logs.Logger.Infof("vpcId:[%s] securityGroupName[:%s] pageNumber[%d]  pageSize[%d]", vpcId, securityGroupName, pageNumber, pageSize)
+	logs.Logger.Infof("ak:%v vpcId:[%s] securityGroupName[:%s] pageNumber[%d]  pageSize[%d]",
+		ak, vpcId, securityGroupName, pageNumber, pageSize)
 
 	resp, err := service.GetSecurityGroup(ctx, service.GetSecurityGroupRequest{
+		Ak:                ak,
 		SecurityGroupName: securityGroupName,
 		VpcId:             vpcId,
 		PageNumber:        pageNumber,
@@ -188,6 +273,7 @@ func AddSecurityGroupRule(ctx *gin.Context) {
 	logs.Logger.Infof("req is:%v ", req)
 
 	resp, err := service.AddSecurityGroupRule(ctx, service.AddSecurityGroupRuleRequest{
+		Ak:              req.Ak,
 		RegionId:        req.RegionId,
 		VpcId:           req.VpcId,
 		SecurityGroupId: req.SecurityGroupId,
@@ -210,6 +296,7 @@ func CreateSecurityGroupWithRules(ctx *gin.Context) {
 	}
 	logs.Logger.Infof("req is:%v ", req)
 	groupId, err := service.CreateSecurityGroup(ctx, service.CreateSecurityGroupRequest{
+		Ak:                req.Ak,
 		VpcId:             req.VpcId,
 		SecurityGroupName: req.SecurityGroupName,
 		SecurityGroupType: req.SecurityGroupType,
@@ -223,6 +310,7 @@ func CreateSecurityGroupWithRules(ctx *gin.Context) {
 		return
 	}
 	_, err = service.AddSecurityGroupRule(ctx, service.AddSecurityGroupRuleRequest{
+		Ak:              req.Ak,
 		RegionId:        req.RegionId,
 		VpcId:           req.VpcId,
 		SecurityGroupId: groupId,
@@ -233,6 +321,18 @@ func CreateSecurityGroupWithRules(ctx *gin.Context) {
 		return
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, groupId)
+}
+
+func GetSecurityGroupWithRules(ctx *gin.Context) {
+	secGrpId := ctx.Param("id")
+	logs.Logger.Infof("GetSecurityGroupWithRules id:%v", secGrpId)
+	resp, err := service.GetSecurityGroupWithRules(ctx, secGrpId)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
+	return
 }
 
 func getPager(ctx *gin.Context) (pageNumber int, pageSize int) {
