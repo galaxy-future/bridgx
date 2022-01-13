@@ -41,9 +41,9 @@ func ConvertToTaskDetail(instances []model.Instance, task *model.Task) *response
 		case constants.Running:
 			success++
 		case constants.Deleted:
-			success++
+			fail++
 		case constants.Deleting:
-			success++
+			fail++
 		}
 	}
 	successRate := fmt.Sprintf("%0.2f", float64(success)/float64(total))
