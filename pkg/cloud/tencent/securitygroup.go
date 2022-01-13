@@ -6,7 +6,7 @@ import (
 
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
-	"github.com/galaxy-future/BridgX/pkg/utils"
+	"github.com/spf13/cast"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 )
@@ -17,11 +17,11 @@ func (p *TencentCloud) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest)
 	request.GroupDescription = common.StringPtr(req.RegionId)
 	// The tags are a filter for DescribeSecurityGroups`
 	request.Tags = []*vpc.Tag{
-		&vpc.Tag{
+		{
 			Key:   common.StringPtr("VpcId"),
 			Value: common.StringPtr(req.VpcId),
 		},
-		&vpc.Tag{
+		{
 			Key:   common.StringPtr("SecurityGroupType"),
 			Value: common.StringPtr(req.SecurityGroupType),
 		},
@@ -42,21 +42,30 @@ func (p *TencentCloud) CreateSecurityGroup(req cloud.CreateSecurityGroupRequest)
 
 // AddIngressSecurityGroupRule 入参各云得统一
 func (p *TencentCloud) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
-	portRange := fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
 	request := vpc.NewCreateSecurityGroupPoliciesRequest()
 	securityGroupId := common.StringPtr(req.SecurityGroupId)
 	request.SecurityGroupId = securityGroupId
 	request.SecurityGroupPolicySet = &vpc.SecurityGroupPolicySet{
 		Ingress: []*vpc.SecurityGroupPolicy{
-			&vpc.SecurityGroupPolicy{
+			{
 				Protocol:          common.StringPtr(_protocol[req.IpProtocol]),
-				Port:              common.StringPtr(portRange),
-				CidrBlock:         common.StringPtr(req.CidrIp),
 				Action:            common.StringPtr("ACCEPT"),
 				PolicyDescription: common.StringPtr(req.VpcId),
-				ModifyTime:        common.StringPtr(utils.CurrentTime()),
 			},
 		},
+	}
+	if (req.IpProtocol == cloud.ProtocolTcp || req.IpProtocol == cloud.ProtocolUdp) && req.PortFrom > 0 {
+		portRange := cast.ToString(req.PortFrom)
+		if req.PortFrom != req.PortTo {
+			portRange = fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
+		}
+		request.SecurityGroupPolicySet.Ingress[0].Port = &portRange
+	}
+	if req.CidrIp != "" {
+		request.SecurityGroupPolicySet.Ingress[0].CidrBlock = common.StringPtr(req.CidrIp)
+	}
+	if req.GroupId != "" {
+		request.SecurityGroupPolicySet.Ingress[0].SecurityGroupId = common.StringPtr(req.GroupId)
 	}
 
 	_, err := p.vpcClient.CreateSecurityGroupPolicies(request)
@@ -68,21 +77,30 @@ func (p *TencentCloud) AddIngressSecurityGroupRule(req cloud.AddSecurityGroupRul
 }
 
 func (p *TencentCloud) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRuleRequest) error {
-	portRange := fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
 	request := vpc.NewCreateSecurityGroupPoliciesRequest()
 	securityGroupId := common.StringPtr(req.SecurityGroupId)
 	request.SecurityGroupId = securityGroupId
 	request.SecurityGroupPolicySet = &vpc.SecurityGroupPolicySet{
 		Egress: []*vpc.SecurityGroupPolicy{
-			&vpc.SecurityGroupPolicy{
+			{
 				Protocol:          common.StringPtr(_protocol[req.IpProtocol]),
-				Port:              common.StringPtr(portRange),
-				CidrBlock:         common.StringPtr(req.CidrIp),
 				Action:            common.StringPtr("ACCEPT"),
 				PolicyDescription: common.StringPtr(req.VpcId),
-				ModifyTime:        common.StringPtr(utils.CurrentTime()),
 			},
 		},
+	}
+	if (req.IpProtocol == cloud.ProtocolTcp || req.IpProtocol == cloud.ProtocolUdp) && req.PortFrom > 0 {
+		portRange := cast.ToString(req.PortFrom)
+		if req.PortFrom != req.PortTo {
+			portRange = fmt.Sprintf("%d-%d", req.PortFrom, req.PortTo)
+		}
+		request.SecurityGroupPolicySet.Egress[0].Port = common.StringPtr(portRange)
+	}
+	if req.CidrIp != "" {
+		request.SecurityGroupPolicySet.Egress[0].CidrBlock = common.StringPtr(req.CidrIp)
+	}
+	if req.GroupId != "" {
+		request.SecurityGroupPolicySet.Egress[0].SecurityGroupId = common.StringPtr(req.GroupId)
 	}
 
 	_, err := p.vpcClient.CreateSecurityGroupPolicies(request)
@@ -100,7 +118,7 @@ func (p *TencentCloud) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRe
 	for {
 		request := vpc.NewDescribeSecurityGroupsRequest()
 		request.Filters = []*vpc.Filter{
-			&vpc.Filter{
+			{
 				Name:   common.StringPtr("tag:VpcId"),
 				Values: common.StringPtrs([]string{req.VpcId}),
 			},
