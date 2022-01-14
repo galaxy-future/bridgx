@@ -392,15 +392,13 @@ func TestQueryOrders(t *testing.T) {
 		return
 	}
 
-	//endTime := time.Now().UTC()
-	//duration, _ := time.ParseDuration("-5h")
-	//startTime := endTime.Add(duration)
 	startTime, err := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:40:02")
 	if err != nil {
 		t.Log(startTime, err)
 		return
 	}
-	endTime, _ := time.Parse("2006-01-02 15:04:05", "2021-11-19 11:45:02")
+	duration, _ := time.ParseDuration("5m")
+	endTime := startTime.Add(duration)
 	pageNum := 1
 	pageSize := 100
 	for {
