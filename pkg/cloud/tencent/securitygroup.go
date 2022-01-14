@@ -2,7 +2,6 @@ package tencent
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/pkg/cloud"
@@ -113,21 +112,21 @@ func (p *TencentCloud) AddEgressSecurityGroupRule(req cloud.AddSecurityGroupRule
 
 func (p *TencentCloud) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRequest) (cloud.DescribeSecurityGroupsResponse, error) {
 	var page int32 = 1
+	var pageSize int32 = 100
 	groups := make([]cloud.SecurityGroup, 0, 128)
 
+	request := vpc.NewDescribeSecurityGroupsRequest()
+	request.Filters = []*vpc.Filter{
+		{
+			Name:   common.StringPtr("tag:VpcId"),
+			Values: common.StringPtrs([]string{req.VpcId}),
+		},
+	}
+	request.Limit = common.StringPtr(cast.ToString(pageSize))
 	for {
-		request := vpc.NewDescribeSecurityGroupsRequest()
-		request.Filters = []*vpc.Filter{
-			{
-				Name:   common.StringPtr("tag:VpcId"),
-				Values: common.StringPtrs([]string{req.VpcId}),
-			},
-		}
-		request.Offset = common.StringPtr(strconv.Itoa(int((page - 1) * 100)))
-		request.Limit = common.StringPtr("100")
+		request.Offset = common.StringPtr(cast.ToString((page - 1) * pageSize))
 		response, err := p.vpcClient.DescribeSecurityGroups(request)
 		if err != nil {
-			logs.Logger.Errorf("GetSecurityGroup AlibabaCloud failed.err: [%v], req[%v]", err, req)
 			return cloud.DescribeSecurityGroupsResponse{}, err
 		}
 		if response != nil && response.Response != nil && response.Response.SecurityGroupSet != nil {
@@ -149,14 +148,13 @@ func (p *TencentCloud) DescribeSecurityGroups(req cloud.DescribeSecurityGroupsRe
 					RegionId:          req.RegionId,
 				})
 			}
-			if *response.Response.TotalCount > uint64(page*100) {
+			if *response.Response.TotalCount > uint64(page*pageSize) {
 				page++
 			} else {
 				break
 			}
-		}
-		if err != nil {
-			logs.Logger.Errorf("GetSecurityGroup failed,error: %v pageNumber:%d pageSize:%d vpcId:%s", err, page, 50, req.VpcId)
+		} else {
+			return cloud.DescribeSecurityGroupsResponse{}, fmt.Errorf("response is nil")
 		}
 	}
 	return cloud.DescribeSecurityGroupsResponse{Groups: groups}, nil
@@ -185,7 +183,6 @@ func (p *TencentCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (
 					GroupId:         "",
 					CidrIp:          *policy.CidrBlock,
 					PrefixListId:    "",
-					CreateAt:        *policy.ModifyTime,
 				})
 			}
 		}
@@ -201,14 +198,9 @@ func (p *TencentCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (
 					GroupId:         "",
 					CidrIp:          *policy.CidrBlock,
 					PrefixListId:    "",
-					CreateAt:        *policy.ModifyTime,
 				})
 			}
 		}
-	}
-
-	if err != nil {
-		logs.Logger.Errorf("DescribeGroupRules failed,error: %v groupId:%s", err, req.SecurityGroupId)
 	}
 	return cloud.DescribeGroupRulesResponse{Rules: rules}, nil
 }

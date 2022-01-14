@@ -114,7 +114,7 @@ func (p *TencentCloud) GetInstancesByTags(regionId string, tags []cloud.Tag) (in
 		}
 		cvmInstances = append(cvmInstances, response.Response.InstanceSet...)
 
-		if offset+_pageSize > *response.Response.TotalCount {
+		if offset+_pageSize >= *response.Response.TotalCount {
 			break
 		}
 		offset += _pageSize
@@ -257,7 +257,7 @@ func (p *TencentCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.De
 				ImageId:  *img.ImageId,
 			})
 		}
-		if offset+_pageSize > uint64(*response.Response.TotalCount) {
+		if offset+_pageSize >= uint64(*response.Response.TotalCount) {
 			break
 		}
 		offset += _pageSize

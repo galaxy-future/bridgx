@@ -697,7 +697,7 @@ func (p *AlibabaCloud) DescribeImages(req cloud.DescribeImagesRequest) (cloud.De
 				})
 			}
 
-			if page*pageSize > tea.Int32Value(response.Body.TotalCount) {
+			if page*pageSize >= tea.Int32Value(response.Body.TotalCount) {
 				break
 			}
 			page++

@@ -410,21 +410,11 @@ func TestQueryOrders(t *testing.T) {
 			t.Log(err.Error())
 			return
 		}
-		cnt := 0
-		t.Log("len:", len(res.Orders))
-		for _, row := range res.Orders {
-			cnt += 1
-			if cnt > 3 {
-				t.Log("---------------")
-				break
-			}
-			rowStr, _ := jsoniter.MarshalToString(row)
-			t.Log(rowStr)
-		}
+		resStr, _ := jsoniter.MarshalToString(res.Orders)
+		t.Log(len(res.Orders), resStr)
 		if len(res.Orders) < pageSize {
 			break
 		}
 		pageNum += 1
 	}
-	t.Log(pageNum)
 }
