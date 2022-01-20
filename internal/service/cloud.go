@@ -51,15 +51,18 @@ func ExpandInDeed(c *types.ClusterInfo, num int, taskId int64) ([]string, error)
 	return expandInstanceIds, err
 }
 
-func RepairCluster(c *types.ClusterInfo, taskId int64, availableIds []string, allIds []string) (err error) {
+func RepairCluster(c *types.ClusterInfo, taskId int64, availableIds []string, allIds []string) int {
+	successNum := len(availableIds)
 	tags := []cloud.Tag{{
 		Key:   cloud.TaskId,
 		Value: strconv.FormatInt(taskId, 10),
 	}}
 	cloudInstances, err := GetInstanceByTag(c, tags)
 	if err != nil {
-		return
+		logs.Logger.Infof("[RepairCluster] GetInstanceByTag failed %v", err)
+		return successNum
 	}
+
 	cloudInsNum := len(cloudInstances)
 	logs.Logger.Infof("[RepairCluster] GetInstanceByTag length %d, available num %d, all num %d", cloudInsNum, len(availableIds), len(allIds))
 	cloudIds := make([]string, 0, cloudInsNum)
@@ -94,7 +97,7 @@ func RepairCluster(c *types.ClusterInfo, taskId int64, availableIds []string, al
 		logs.Logger.Errorf("[RepairCluster] taskId: %d, ClusterName: %s, delete InstanceIds error: %s", taskId, c.Name, err.Error())
 	}
 
-	return nil
+	return successNum - len(onlyMemoryIds)
 }
 
 func cloudDiff(cloudIds, memoryIds []string) (onlyCouldIds, onlyMemoryIds []string) {

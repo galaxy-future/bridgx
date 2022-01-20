@@ -45,7 +45,7 @@ type CreateVpcRequest struct {
 	RegionId  string `json:"region_id"`
 	VpcName   string `json:"vpc_name"`
 	CidrBlock string `json:"cidr_block"`
-	Ak        string `json:"ak" binding:"required"`
+	Ak        string `json:"ak"`
 }
 
 func (c *CreateVpcRequest) Check() bool {

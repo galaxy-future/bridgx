@@ -28,6 +28,7 @@ func (Task) TableName() string {
 }
 
 type TaskInfo interface {
+	GetCount() int
 	GetBeforeInstanceCount() (beforeCount int)
 	GetAfterInstanceCount(success int) (afterCount int)
 	GetExpectInstanceCount() (expectCount int)
@@ -41,6 +42,10 @@ type ExpandTaskInfo struct {
 	TaskSubmitHost string `json:"task_submit_host"`
 	UserId         int64  `json:"user_id"`
 	BeforeCount    int    `json:"before_count"`
+}
+
+func (e *ExpandTaskInfo) GetCount() int {
+	return e.Count
 }
 
 func (e *ExpandTaskInfo) GetBeforeInstanceCount() (beforeCount int) {
@@ -78,6 +83,10 @@ type ShrinkTaskInfo struct {
 	BeforeCount    int    `json:"before_count"`
 }
 
+func (e *ShrinkTaskInfo) GetCount() int {
+	return e.Count
+}
+
 func (s *ShrinkTaskInfo) GetBeforeInstanceCount() (beforeCount int) {
 	return s.BeforeCount
 }
@@ -103,6 +112,10 @@ func (s *ShrinkTaskInfo) GetCreateUsername() (username string) {
 		return user.Username
 	}
 	return ""
+}
+
+type TaskResult struct {
+	SuccessNum int `json:"success_num"`
 }
 
 func CountByTaskStatus(taskFilter string, statuses []string) (int64, error) {

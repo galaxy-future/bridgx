@@ -116,7 +116,6 @@ type SecurityGroupIDStruct struct {
 
 func FindVpcById(ctx context.Context, cond FindVpcConditions) (result Vpc, err error) {
 	err = clients.ReadDBCli.WithContext(ctx).
-		Model(Vpc{}).
 		Where("vpc_id = ? and is_del = 0", cond.VpcId).
 		First(&result).
 		Error
@@ -219,9 +218,8 @@ func FindSwitchId(ctx context.Context, cond FindSwitchesConditions) (result Swit
 
 func FindSwitchById(ctx context.Context, vpcId, switchId string) (result Switch, err error) {
 	err = clients.ReadDBCli.WithContext(ctx).
-		Model(Switch{}).
 		Where("vpc_id =? and switch_id = ? and is_del = 0", vpcId, switchId).
-		Scan(&result).
+		First(&result).
 		Error
 	return result, err
 }
@@ -260,7 +258,8 @@ type FindSecurityGroupConditions struct {
 }
 
 func FindSecurityGroupWithPage(ctx context.Context, cond FindSecurityGroupConditions) (result []SecurityGroup, total int64, err error) {
-	query := clients.ReadDBCli.WithContext(ctx).Table(SecurityGroup{}.TableName()).
+	query := clients.ReadDBCli.WithContext(ctx).
+		Model(&SecurityGroup{}).
 		Where("ak = ? and provider = ? and region_id=? and is_del = 0", cond.Ak, cond.Provider, cond.RegionId)
 	if cond.VpcId != "" {
 		query.Where("vpc_id = ?", cond.VpcId)
@@ -294,7 +293,7 @@ func FindSecurityGroupWithPage(ctx context.Context, cond FindSecurityGroupCondit
 
 func FindSecurityId(ctx context.Context, cond FindSecurityGroupConditions) (result SecurityGroupIDStruct, err error) {
 	sql := clients.ReadDBCli.WithContext(ctx).
-		Table("b_security_group").
+		Model(&SecurityGroup{}).
 		Select(`security_group_id`).
 		Where("ak = ? and provider = ? and region_id=? and is_del = 0", cond.Ak, cond.Provider, cond.RegionId)
 	if cond.VpcId != "" {
@@ -312,7 +311,6 @@ func FindSecurityId(ctx context.Context, cond FindSecurityGroupConditions) (resu
 
 func FindSecurityGroupById(ctx context.Context, securityGroupId string) (result SecurityGroup, err error) {
 	err = clients.ReadDBCli.WithContext(ctx).
-		Model(SecurityGroup{}).
 		Where("security_group_id = ? and is_del = 0", securityGroupId).
 		First(&result).Error
 	return result, err
@@ -368,8 +366,7 @@ func ReplaceRules(ctx context.Context, vpcID, groupId string, rules []SecurityGr
 
 func FindSecurityGroupRulesById(ctx context.Context, securityGroupId string) (result []SecurityGroupRule, err error) {
 	err = clients.ReadDBCli.WithContext(ctx).
-		Model(SecurityGroupRule{}).
 		Where("security_group_id = ? and is_del = 0", securityGroupId).
-		Scan(&result).Error
+		Find(&result).Error
 	return result, err
 }

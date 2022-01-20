@@ -39,13 +39,13 @@ func doExpand(task *model.Task) {
 	}
 	availableIds, allIds, err := service.ExpandCluster(clusterInfo, taskInfo.Count, task.Id)
 	if len(availableIds) == taskInfo.Count {
-		taskSuccess(task, "")
+		taskSuccess(task, taskInfo.Count)
 	} else {
-		_ = service.RepairCluster(clusterInfo, task.Id, availableIds, allIds)
-		if len(availableIds) == 0 {
+		successNum := service.RepairCluster(clusterInfo, task.Id, availableIds, allIds)
+		if successNum == 0 {
 			taskFailed(task, err)
 		} else {
-			taskPartialSuccess(task, err)
+			taskPartialSuccess(task, successNum, err)
 		}
 	}
 }
@@ -55,36 +55,31 @@ func DoExpand(task *model.Task) {
 	doExpand(task)
 }
 
-func taskPartialSuccess(task *model.Task, err error) {
-	task.Status = constants.TaskStatusPartialSuccess
+func saveTaskResult(task *model.Task, taskResult *model.TaskResult, stat string, err error) {
+	task.Status = stat
 	if err != nil {
 		task.ErrMsg = err.Error()
+	}
+	task.TaskResult, err = jsoniter.MarshalToString(taskResult)
+	if err != nil {
+		logs.Logger.Warnf("saveTaskResult taskResult to string failed, %v", err)
 	}
 	ft := time.Now()
 	task.FinishTime = &ft
 	_ = model.Save(task)
-	logs.Logger.Warnf("Task PartialSuccess:%v, %v, %v", task.Id, task.TaskAction, task.TaskInfo)
-	_ = model.Save(task)
+	logs.Logger.Warnf("Task %v:%v, %v, %v", stat, task.Id, task.TaskAction, task.TaskInfo)
 }
 
-func taskSuccess(task *model.Task, s string) {
-	task.TaskResult = s
-	task.Status = constants.TaskStatusSuccess
-	ft := time.Now()
-	task.FinishTime = &ft
-	logs.Logger.Warnf("Task Success:%v, %v, %v", task.Id, task.TaskAction, task.TaskInfo)
-	_ = model.Save(task)
+func taskPartialSuccess(task *model.Task, successNum int, err error) {
+	saveTaskResult(task, &model.TaskResult{SuccessNum: successNum}, constants.TaskStatusPartialSuccess, err)
+}
+
+func taskSuccess(task *model.Task, successNum int) {
+	saveTaskResult(task, &model.TaskResult{SuccessNum: successNum}, constants.TaskStatusSuccess, nil)
 }
 
 func taskFailed(task *model.Task, err error) {
-	task.Status = constants.TaskStatusFailed
-	if err != nil {
-		task.ErrMsg = err.Error()
-	}
-	ft := time.Now()
-	task.FinishTime = &ft
-	_ = model.Save(task)
-	logs.Logger.Warnf("Task Failed:%v, %v, %v", task.Id, task.TaskAction, task.TaskInfo)
+	saveTaskResult(task, &model.TaskResult{}, constants.TaskStatusFailed, err)
 }
 
 func doShrink(task *model.Task) {
@@ -122,7 +117,7 @@ func doShrink(task *model.Task) {
 		taskFailed(task, err)
 		return
 	}
-	taskSuccess(task, "")
+	taskSuccess(task, taskInfo.Count)
 }
 
 func calcDeletingIPs(IPs string) int {

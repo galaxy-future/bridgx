@@ -50,7 +50,7 @@ func SyncNetworkConfig(ctx *gin.Context) {
 	req := request.SyncNetworkRequest{}
 	err := ctx.Bind(&req)
 	if err != nil {
-		response.MkResponse(ctx, http.StatusInternalServerError, response.PermissionDenied, nil)
+		response.MkResponse(ctx, http.StatusInternalServerError, response.ParamInvalid, nil)
 		return
 	}
 

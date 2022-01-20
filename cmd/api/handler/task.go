@@ -6,6 +6,7 @@ import (
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
+	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/gin-gonic/gin"
@@ -39,11 +40,16 @@ func GetTaskDescribe(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	instances, err := service.GetInstancesByTaskId(ctx, taskId, task.TaskAction)
-	if err != nil {
-		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
-		return
+
+	instances := make([]model.Instance, 0)
+	if task.Status == constants.TaskStatusRunning {
+		instances, err = service.GetInstancesByTaskId(ctx, taskId, task.TaskAction)
+		if err != nil {
+			response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
 	}
+
 	resp := helper.ConvertToTaskDetail(instances, task)
 	response.MkResponse(ctx, http.StatusOK, response.Success, resp)
 	return
