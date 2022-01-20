@@ -99,3 +99,28 @@ func Test_getTaskInfoCountDiff(t *testing.T) {
 		})
 	}
 }
+
+func TestSyncTaskResult(t *testing.T) {
+	taskResult := model.TaskResult{}
+	resultStr, _ := jsoniter.MarshalToString(taskResult)
+	if err := model.UpdateWhere(&model.Task{}, map[string]interface{}{"status": constants.TaskStatusFailed},
+		map[string]interface{}{"task_result": resultStr}); err != nil {
+		t.Log(err)
+		return
+	}
+
+	tasks := make([]model.Task, 0)
+	if err := model.QueryAll(map[string]interface{}{"status": constants.TaskStatusSuccess}, &tasks, ""); err != nil {
+		t.Log(err)
+		return
+	}
+	for _, task := range tasks {
+		taskInfo := helper.ExtractTaskInfo(&task)
+		taskResult.SuccessNum = taskInfo.GetCount()
+		task.TaskResult, _ = jsoniter.MarshalToString(taskResult)
+		if err := model.Save(&task); err != nil {
+			t.Log(err)
+			return
+		}
+	}
+}

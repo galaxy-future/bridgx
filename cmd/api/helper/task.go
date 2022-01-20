@@ -7,6 +7,7 @@ import (
 
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
 	jsoniter "github.com/json-iterator/go"
@@ -14,38 +15,27 @@ import (
 )
 
 func ConvertToTaskDetail(instances []model.Instance, task *model.Task) *response.TaskDetailResponse {
-	if len(instances) == 0 {
+	if task.Status == constants.TaskStatusRunning && len(instances) == 0 {
 		return defaultTaskDetailByType(task)
 	}
+	taskInfo := ExtractTaskInfo(task)
+	taskResult := model.TaskResult{}
+	if task.TaskResult != "" {
+		if err := jsoniter.UnmarshalFromString(task.TaskResult, &taskResult); err != nil {
+			logs.Logger.Warnf("unmarshal taskResult failed, %v", err)
+		}
+	}
+
 	ret := &response.TaskDetailResponse{}
 	ret.TaskName = task.TaskName
 	ret.TaskAction = task.TaskAction
 	ret.TaskStatus = task.Status
 	ret.ClusterName = task.TaskFilter
-	ret.TaskResult = task.TaskResult
+	ret.TaskResult = ""
 	ret.FailReason = task.ErrMsg
 	ret.CreateAt = task.CreateAt.String()
 	ret.TaskId = cast.ToString(task.Id)
-	var running, suspending, success, fail, total int
-	for _, instance := range instances {
-		total++
-		switch instance.Status {
-		case constants.Undefined:
-			suspending++
-		case constants.Pending:
-			running++
-		case constants.Timeout:
-			fail++
-		case constants.Starting:
-			running++
-		case constants.Running:
-			success++
-		case constants.Deleted:
-			success++
-		case constants.Deleting:
-			success++
-		}
-	}
+	running, suspending, success, fail, total := getCount(task, taskInfo, &taskResult, instances)
 	successRate := fmt.Sprintf("%0.2f", float64(success)/float64(total))
 	ret.FailNum = fail
 	ret.SuspendNum = suspending
@@ -58,7 +48,6 @@ func ConvertToTaskDetail(instances []model.Instance, task *model.Task) *response
 		endTime = *task.FinishTime
 	}
 	ret.ExecuteTime = int(endTime.Sub(*task.CreateAt).Seconds())
-	taskInfo := ExtractTaskInfo(task)
 	ret.BeforeInstanceCount = taskInfo.GetBeforeInstanceCount()
 	ret.AfterInstanceCount = taskInfo.GetAfterInstanceCount(success)
 	ret.ExpectInstanceCount = taskInfo.GetExpectInstanceCount()
@@ -127,17 +116,53 @@ func defaultTaskDetailByType(task *model.Task) *response.TaskDetailResponse {
 	return resp
 }
 
+func getCount(task *model.Task, taskInfo model.TaskInfo, taskResult *model.TaskResult, instances []model.Instance) (running, suspending, success, fail, total int) {
+	total = taskInfo.GetCount()
+	if task.Status == constants.TaskStatusInit {
+		suspending = total
+	} else if task.Status == constants.TaskStatusRunning {
+		for _, instance := range instances {
+			switch instance.Status {
+			case constants.Undefined:
+				suspending++
+			case constants.Pending:
+				running++
+			case constants.Timeout:
+				fail++
+			case constants.Starting:
+				running++
+			case constants.Running:
+				success++
+			case constants.Deleted:
+				fail++
+			case constants.Deleting:
+				fail++
+			}
+		}
+	} else {
+		success = taskResult.SuccessNum
+		fail = total - success
+	}
+	return
+}
+
 func ConvertToTaskDetailList(ctx context.Context, tasks []model.Task) ([]*response.TaskDetailResponse, error) {
 	detailList := make([]*response.TaskDetailResponse, 0)
 	if len(tasks) == 0 {
 		return detailList, nil
 	}
+
+	instances := make([]model.Instance, 0)
+	var err error
 	for _, task := range tasks {
 		t := task
-		instances, err := service.GetInstancesByTaskId(ctx, cast.ToString(task.Id), task.TaskAction)
-		if err != nil {
-			return nil, err
+		if task.Status == constants.TaskStatusRunning {
+			instances, err = service.GetInstancesByTaskId(ctx, cast.ToString(task.Id), task.TaskAction)
+			if err != nil {
+				return nil, err
+			}
 		}
+
 		r := ConvertToTaskDetail(instances, &t)
 		if r != nil {
 			detailList = append(detailList, r)

@@ -282,7 +282,7 @@ func ExpandCluster(c *types.ClusterInfo, num int, taskId int64) ([]string, []str
 	err := saveExpandInstancesToDB(c, expandInstanceIds, taskId)
 	if err != nil {
 		logs.Logger.Errorf("[ExpandCluster] saveExpandInstancesToDB error. cluster name: %s, error: %v", c.Name, err)
-		return nil, nil, err
+		return nil, expandInstanceIds, err
 	}
 
 	//查询扩容的Instance的IP并保存
@@ -433,6 +433,10 @@ func getDelayFactor(n int) int {
 
 func queryAndSaveExpandIPs(c *types.ClusterInfo, taskId int64, idNum int) ([]string, []string, error) {
 	var err error
+	needPublicIp := false
+	if c.NetworkConfig != nil && c.NetworkConfig.InternetMaxBandwidthOut > 0 {
+		needPublicIp = true
+	}
 	var instances []cloud.Instance
 	var insNum int
 	tags := []cloud.Tag{{
@@ -444,7 +448,7 @@ func queryAndSaveExpandIPs(c *types.ClusterInfo, taskId int64, idNum int) ([]str
 		instances, err = GetInstanceByTag(c, tags)
 		insNum = len(instances)
 		logs.Logger.Infof("[queryAndSaveExpandIPs] insNum: %d, idNum: %d, err: %v", insNum, idNum, err)
-		if err == nil && insNum == idNum && judgeInstancesIsReady(instances, c.NetworkConfig) {
+		if err == nil && insNum == idNum && judgeInstancesIsReady(instances, needPublicIp) {
 			logs.Logger.Infof("[queryAndSaveExpandIPs] is ready, %d", insNum)
 			break
 		}
@@ -457,8 +461,8 @@ func queryAndSaveExpandIPs(c *types.ClusterInfo, taskId int64, idNum int) ([]str
 	expandIps := make([]string, 0, insNum)
 	expandIds := make([]string, 0, insNum)
 	for _, instance := range instances {
-		if instance.IpInner == "" {
-			logs.Logger.Errorf("[syncDbAndConfig] InstanceId:%v, GOT NO IP", instance.Id)
+		if !IsInstanceReady(instance, needPublicIp) {
+			logs.Logger.Errorf("[syncDbAndConfig] InstanceId:%v is not ready", instance.Id)
 			continue
 		}
 		update := func(attempt uint) error {
@@ -584,16 +588,19 @@ func publishShrinkConfig(clusterName string) error {
 	return err
 }
 
-func judgeInstancesIsReady(instances []cloud.Instance, chargeConfig *types.NetworkConfig) bool {
-	bandwithOut := 0
-	if chargeConfig != nil {
-		bandwithOut = chargeConfig.InternetMaxBandwidthOut
+func IsInstanceReady(instance cloud.Instance, needPublicIp bool) bool {
+	if instance.Status != cloud.EcsRunning || instance.IpInner == "" {
+		return false
 	}
+	if needPublicIp && instance.IpOuter == "" {
+		return false
+	}
+	return true
+}
+
+func judgeInstancesIsReady(instances []cloud.Instance, needPublicIp bool) bool {
 	for _, instance := range instances {
-		if instance.Status != cloud.EcsRunning || instance.IpInner == "" {
-			return false
-		}
-		if bandwithOut > 0 && instance.IpOuter == "" {
+		if !IsInstanceReady(instance, needPublicIp) {
 			return false
 		}
 	}
