@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
+	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/pool"
@@ -97,5 +98,31 @@ func Test_getTaskInfoCountDiff(t *testing.T) {
 				t.Errorf("extractTaskInfo() GetCreateUsername = %v, want %v", info.GetCreateUsername(), tt.wantUserName)
 			}
 		})
+	}
+}
+
+func TestSyncTaskResult(t *testing.T) {
+	taskResult := model.TaskResult{}
+	resultStr, _ := jsoniter.MarshalToString(taskResult)
+	if err := model.UpdateWhere(&model.Task{}, map[string]interface{}{"status": constants.TaskStatusFailed},
+		map[string]interface{}{"task_result": resultStr}); err != nil {
+		t.Log(err)
+		return
+	}
+
+	tasks := make([]model.Task, 0)
+	if err := clients.ReadDBCli.Where("status = ? or status = ?", constants.TaskStatusSuccess,
+		constants.TaskStatusPartialSuccess).Find(&tasks).Error; err != nil {
+		t.Log(err)
+		return
+	}
+	for _, task := range tasks {
+		taskInfo := helper.ExtractTaskInfo(&task)
+		taskResult.SuccessNum = taskInfo.GetCount()
+		task.TaskResult, _ = jsoniter.MarshalToString(taskResult)
+		if err := model.Save(&task); err != nil {
+			t.Log(err)
+			return
+		}
 	}
 }

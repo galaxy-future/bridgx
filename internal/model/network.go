@@ -116,7 +116,7 @@ type SecurityGroupIDStruct struct {
 
 func FindVpcById(ctx context.Context, cond FindVpcConditions) (result Vpc, err error) {
 	err = clients.ReadDBCli.WithContext(ctx).
-		Model(Vpc{}).
+		Model(&Vpc{}).
 		Where("vpc_id = ? and is_del = 0", cond.VpcId).
 		First(&result).
 		Error
@@ -312,7 +312,7 @@ func FindSecurityId(ctx context.Context, cond FindSecurityGroupConditions) (resu
 
 func FindSecurityGroupById(ctx context.Context, securityGroupId string) (result SecurityGroup, err error) {
 	err = clients.ReadDBCli.WithContext(ctx).
-		Model(SecurityGroup{}).
+		Model(&SecurityGroup{}).
 		Where("security_group_id = ? and is_del = 0", securityGroupId).
 		First(&result).Error
 	return result, err

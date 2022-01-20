@@ -149,6 +149,14 @@ func Updates(model interface{}, ids []int64, updates map[string]interface{}) err
 	return nil
 }
 
+func UpdateWhere(model interface{}, where map[string]interface{}, updates map[string]interface{}) error {
+	if err := clients.WriteDBCli.Model(model).Where(where).Updates(updates).Error; err != nil {
+		logErr("UpdateWhere", err)
+		return err
+	}
+	return nil
+}
+
 // Get find first record that match given conditions, order by primary key
 func Get(id int64, out interface{}) error {
 	if err := clients.ReadDBCli.Where("id = ?", id).First(out).Error; err != nil {
