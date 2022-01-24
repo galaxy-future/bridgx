@@ -4,6 +4,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/galaxy-future/BridgX/internal/model"
+
+	"github.com/galaxy-future/BridgX/internal/constants"
+
 	"github.com/spf13/cast"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
@@ -29,7 +33,7 @@ func Login(ctx *gin.Context) {
 		return
 	}
 	userTokenFactory := authorization.CreateUserTokenFactory()
-	userToken, err := userTokenFactory.GenerateToken(user.Id, user.Username, user.OrgId, config.GlobalConfig.JwtToken.JwtTokenCreatedExpires)
+	userToken, err := userTokenFactory.GenerateToken(user.Id, user.Username, helper.ConvertToReadableStr(user.UserType), user.OrgId, config.GlobalConfig.JwtToken.JwtTokenCreatedExpires)
 	if err == nil {
 		response.MkResponse(ctx, http.StatusOK, response.Success, userToken)
 		return
@@ -127,8 +131,16 @@ func CreateUser(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-
-	err := service.CreateUser(ctx, user.OrgId, req.UserName, req.Password, user.Name)
+	dbUser := model.GetUserByName(ctx, req.UserName)
+	if dbUser != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, response.UserExists, nil)
+		return
+	}
+	if user.UserType == constants.UserTypeCommonUserStr || (user.Name != constants.UserNameRoot && req.UserType == constants.UserTypeAdminStr) {
+		response.MkResponse(ctx, http.StatusBadRequest, response.PermissionDenied, nil)
+		return
+	}
+	err := service.CreateUser(ctx, user.OrgId, req.UserName, req.Password, user.Name, helper.ConvertUserTypeToInt(req.UserType))
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return

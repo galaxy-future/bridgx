@@ -205,6 +205,7 @@ type UserThumb struct {
 	CreateAt   string `json:"create_at"`
 	CreateBy   string `json:"create_by"`
 	UserStatus string `json:"user_status"`
+	UserType   string `json:"user_type"`
 }
 
 type ListUsersResponse struct {

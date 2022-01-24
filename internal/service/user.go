@@ -23,23 +23,21 @@ func Login(ctx context.Context, username, password string) *model.User {
 	return nil
 }
 
-func GetUserList(ctx context.Context, orgId int64, pageNum, pageSize int) (ret []model.User, total int64, err error) {
-	queryMap := map[string]interface{}{"org_id": orgId, "user_type": []int{constants.UserTypeCommonUser}}
-
-	total, err = model.Query(queryMap, pageNum, pageSize, &ret, "id DESC", true)
+func GetUserList(ctx context.Context, orgId int64, pageNum, pageSize int) ([]model.User, int64, error) {
+	ret, total, err := model.GetUserList(ctx, orgId, pageNum, pageSize)
 	if err != nil {
 		return ret, 0, err
 	}
 	return ret, total, nil
 }
 
-func CreateUser(ctx context.Context, orgId int64, username, password, createBy string) error {
+func CreateUser(ctx context.Context, orgId int64, username, password, createBy string, userType int8) error {
 	user := &model.User{
 		Username:   username,
 		Password:   utils.Base64Md5(password),
 		OrgId:      orgId,
 		UserStatus: constants.UserStatusEnable,
-		UserType:   constants.UserTypeCommonUser,
+		UserType:   userType,
 		CreateBy:   createBy,
 	}
 	now := time.Now()

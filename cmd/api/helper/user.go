@@ -16,6 +16,7 @@ func ConvertToUserThumbList(users []model.User) []response.UserThumb {
 			CreateAt:   user.CreateAt.Format("2006-01-02 15:04:05"),
 			CreateBy:   user.CreateBy,
 			UserStatus: user.UserStatus,
+			UserType:   ConvertToReadableStr(user.UserType),
 		}
 		res = append(res, c)
 	}
@@ -30,4 +31,11 @@ func ConvertToReadableStr(userType int8) string {
 		return "COMMON"
 	}
 	return "SYSTEM"
+}
+
+func ConvertUserTypeToInt(userType string) int8 {
+	if userType == "ADMIN" {
+		return constants.UserTypeAdmin
+	}
+	return constants.UserTypeCommonUser
 }

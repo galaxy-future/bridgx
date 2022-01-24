@@ -146,6 +146,7 @@ type EditOrgRequest struct {
 type CreateUserRequest struct {
 	UserName string `json:"username"`
 	Password string `json:"password"`
+	UserType string `json:"user_type"`
 }
 
 type ModifyAdminPasswordRequest struct {

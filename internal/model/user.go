@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/galaxy-future/BridgX/internal/constants"
+
 	"github.com/galaxy-future/BridgX/internal/cache"
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/logs"
@@ -25,7 +27,7 @@ func (u *User) TableName() string {
 
 func GetUserByName(ctx context.Context, username string) *User {
 	user := User{}
-	err := clients.ReadDBCli.WithContext(ctx).Where(&User{Username: username}).Find(&user).Error
+	err := clients.ReadDBCli.WithContext(ctx).Where(&User{Username: username}).First(&user).Error
 	if err != nil {
 		logErr("get user from readDB", err)
 		return nil
@@ -90,4 +92,14 @@ func GetUsersByIDs(ctx context.Context, ids []int64) []User {
 		return nil
 	}
 	return users
+}
+
+func GetUserList(ctx context.Context, orgId int64, pageNum, pageSize int) ([]User, int64, error) {
+	res := make([]User, 0)
+	query := clients.ReadDBCli.WithContext(ctx).Where("org_id = ? AND username != ?", orgId, constants.UserNameRoot)
+	count, err := QueryWhere(query, pageNum, pageSize, &res, "id Desc", true)
+	if err != nil {
+		return nil, 0, err
+	}
+	return res, count, nil
 }

@@ -16,5 +16,6 @@ const (
 	TokenInvalid     = "token_invalid"
 	PermissionDenied = "permission_denied"
 	UserNotFound     = "user_not_found"
+	UserExists       = "username_already_exists"
 	TaskNotFound     = "task_not_found"
 )

@@ -9,9 +9,10 @@ import (
 )
 
 type CustomClaims struct {
-	UserId int64  `json:"user_id"`
-	Name   string `json:"name"`
-	OrgId  int64  `json:"org_id"`
+	UserId   int64  `json:"user_id"`
+	Name     string `json:"name"`
+	UserType string `json:"user_type"`
+	OrgId    int64  `json:"org_id"`
 	jwt.StandardClaims
 }
 
@@ -33,11 +34,12 @@ type userToken struct {
 	userJwt *JwtSign
 }
 
-func (u *userToken) GenerateToken(userid int64, username string, orgId int64, expireAt int64) (tokens string, err error) {
+func (u *userToken) GenerateToken(userid int64, username string, userType string, orgId int64, expireAt int64) (tokens string, err error) {
 	customClaims := CustomClaims{
-		UserId: userid,
-		Name:   username,
-		OrgId:  orgId,
+		UserId:   userid,
+		Name:     username,
+		UserType: userType,
+		OrgId:    orgId,
 		StandardClaims: jwt.StandardClaims{
 			NotBefore: time.Now().Unix() - 10,       // 生效开始时间
 			ExpiresAt: time.Now().Unix() + expireAt, // 失效截止时间
