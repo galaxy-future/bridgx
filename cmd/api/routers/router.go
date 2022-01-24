@@ -130,10 +130,10 @@ func Init() *gin.Engine {
 		userPath := v1Api.Group("user/")
 		{
 			userPath.GET("info", handler.GetUserInfo)
-			userPath.POST("create_ram_user", handler.CreateUser)
+			userPath.POST("create_user", handler.CreateUser)
 			userPath.POST("modify_password", handler.ModifyAdminPassword)
 			userPath.POST("modify_username", handler.ModifyUsername)
-			userPath.POST("enable_ram_user", handler.EnableUser)
+			userPath.POST("enable_user", handler.EnableUser)
 			userPath.GET("list", handler.ListUsers)
 		}
 		orgPath := v1Api.Group("org/")
