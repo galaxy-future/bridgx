@@ -64,7 +64,7 @@ func (c *Cluster) GetCpuType() string {
 
 func (c *Cluster) UnmarshalExtendConfig() (*types.ExtendConfig, error) {
 	if c.ExtendConfig == "" {
-		return nil, fmt.Errorf("ExtendConfig is empty")
+		return &types.ExtendConfig{}, nil
 	}
 
 	extendCfg := types.ExtendConfig{}

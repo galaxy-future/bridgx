@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
-	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/pool"
@@ -111,8 +110,7 @@ func TestSyncTaskResult(t *testing.T) {
 	}
 
 	tasks := make([]model.Task, 0)
-	if err := clients.ReadDBCli.Where("status = ? or status = ?", constants.TaskStatusSuccess,
-		constants.TaskStatusPartialSuccess).Find(&tasks).Error; err != nil {
+	if err := model.QueryAll(map[string]interface{}{"status": constants.TaskStatusSuccess}, &tasks, ""); err != nil {
 		t.Log(err)
 		return
 	}
