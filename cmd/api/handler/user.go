@@ -32,6 +32,10 @@ func Login(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, "incorrect username/password", nil)
 		return
 	}
+	if user.UserStatus == constants.UserStatusDisable {
+		response.MkResponse(ctx, http.StatusBadRequest, "your account has been suspended", nil)
+		return
+	}
 	userTokenFactory := authorization.CreateUserTokenFactory()
 	userToken, err := userTokenFactory.GenerateToken(user.Id, user.Username, helper.ConvertToReadableStr(user.UserType), user.OrgId, config.GlobalConfig.JwtToken.JwtTokenCreatedExpires)
 	if err == nil {
