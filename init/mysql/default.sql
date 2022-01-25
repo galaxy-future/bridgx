@@ -295,7 +295,7 @@ CREATE TABLE `user`
 (
     `id`          bigint(20) NOT NULL AUTO_INCREMENT,
     `username`    varchar(32) COLLATE utf8mb4_bin NOT NULL,
-    `password`    varchar(64) COLLATE utf8mb4_bin NOT NULL,
+    `password`    varchar(32) COLLATE utf8mb4_bin NOT NULL,
     `user_type`   tinyint(1) NOT NULL DEFAULT '0',
     `user_status` varchar(16) COLLATE utf8mb4_bin  NOT NULL DEFAULT 'enable',
     `org_id`      bigint(20) NOT NULL DEFAULT '0',
