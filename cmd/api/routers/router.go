@@ -133,7 +133,7 @@ func Init() *gin.Engine {
 			userPath.POST("create_user", handler.CreateUser)
 			userPath.POST("modify_password", handler.ModifyAdminPassword)
 			userPath.POST("modify_username", handler.ModifyUsername)
-			userPath.POST("modify_usertype", handler.ModifyUsertype)
+			userPath.POST("modify_user_type", handler.ModifyUsertype)
 			userPath.POST("enable_user", handler.EnableUser)
 			userPath.GET("list", handler.ListUsers)
 		}
