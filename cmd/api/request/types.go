@@ -140,13 +140,13 @@ type EditCloudAccountRequest struct {
 
 type EditOrgRequest struct {
 	OrgId   int64  `json:"org_id" binding:"required"`
-	OrgName string `json:"org_name"`
+	OrgName string `json:"org_name" binding:"required"`
 }
 
 type CreateUserRequest struct {
-	UserName string `json:"username"`
-	Password string `json:"password"`
-	UserType string `json:"user_type"`
+	UserName string `json:"username" binding:"min=1,max=32"`
+	Password string `json:"password" binding:"min=1,max=32"`
+	UserType string `json:"user_type" binding:"required"`
 }
 
 type ModifyAdminPasswordRequest struct {
@@ -157,6 +157,11 @@ type ModifyAdminPasswordRequest struct {
 type ModifyUsernameRequest struct {
 	UserId      string `json:"user_id"`
 	NewUsername string `json:"new_username"`
+}
+
+type ModifyUserTypeRequest struct {
+	UserIds  []int64 `json:"user_ids" binding:"min=1"`
+	UserType string  `json:"user_type" binding:"required"`
 }
 
 type UserStatusRequest struct {

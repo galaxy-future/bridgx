@@ -103,21 +103,11 @@ func EditOrg(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
 		return
 	}
-	if req.OrgId != user.OrgId {
+	if user.Name != constants.UserNameRoot {
 		response.MkResponse(ctx, http.StatusBadRequest, response.PermissionDenied, nil)
 		return
 	}
-	u, err := service.GetUserById(ctx, user.UserId)
-	if err != nil {
-		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
-		return
-	}
-	if u.UserType == constants.UserTypeCommonUser {
-		response.MkResponse(ctx, http.StatusBadRequest, response.PermissionDenied, nil)
-		return
-	}
-
-	err = service.EditOrg(ctx, user.OrgId, req.OrgName)
+	err := service.EditOrg(ctx, user.OrgId, req.OrgName)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return

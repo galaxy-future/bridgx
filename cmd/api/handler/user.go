@@ -131,10 +131,6 @@ func CreateUser(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-	if req.UserName == "" || req.Password == "" {
-		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
-		return
-	}
 	dbUser := model.GetUserByName(ctx, req.UserName)
 	if dbUser != nil {
 		response.MkResponse(ctx, http.StatusBadRequest, response.UserExists, nil)
@@ -219,6 +215,32 @@ func ModifyUsername(ctx *gin.Context) {
 	}
 
 	err := service.ModifyUsername(ctx, user.UserId, req.NewUsername)
+	if err != nil {
+		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	response.MkResponse(ctx, http.StatusOK, response.Success, nil)
+	return
+}
+
+func ModifyUsertype(ctx *gin.Context) {
+	user := helper.GetUserClaims(ctx)
+	if user == nil {
+		response.MkResponse(ctx, http.StatusBadRequest, response.TokenInvalid, nil)
+		return
+	}
+
+	req := request.ModifyUserTypeRequest{}
+	if err := ctx.ShouldBind(&req); err != nil {
+		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
+		return
+	}
+	if user.Name != constants.UserNameRoot {
+		response.MkResponse(ctx, http.StatusBadRequest, response.PermissionDenied, nil)
+		return
+	}
+
+	err := service.ModifyUsertype(ctx, req.UserIds, helper.ConvertUserTypeToInt(req.UserType))
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return

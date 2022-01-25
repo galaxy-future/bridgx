@@ -43,6 +43,14 @@ func UpdateUserStatus(ctx context.Context, model interface{}, usernames []string
 	return nil
 }
 
+func UpdateUserType(ctx context.Context, ids []int64, updates map[string]interface{}) error {
+	if err := clients.WriteDBCli.WithContext(ctx).Model(User{}).Where("id IN (?)", ids).Updates(updates).Error; err != nil {
+		logErr("update data list to write db: ", err)
+		return err
+	}
+	return nil
+}
+
 func GetUserById(ctx context.Context, uid int64) (*User, error) {
 	ret, _, err := GetUserThroughBigCache([]int64{uid}, cache.UserKeyMaker, func(ids []int64) ([]*User, error) {
 		user := User{}

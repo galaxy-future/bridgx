@@ -94,6 +94,15 @@ func ModifyUsername(ctx context.Context, uid int64, newUsername string) error {
 	return model.Save(user)
 }
 
+func ModifyUsertype(ctx context.Context, userIds []int64, userType int8) error {
+	err := model.UpdateUserType(ctx, userIds, map[string]interface{}{"user_type": userType, "update_at": time.Now()})
+	if err != nil {
+		return fmt.Errorf("can not update user type : %w, userIds: %v", err, userIds)
+	}
+	return nil
+
+}
+
 func UserMapByIDs(ctx context.Context, ids []int64) map[int64]string {
 	userMap := make(map[int64]string)
 	users := model.GetUsersByIDs(ctx, ids)
