@@ -162,6 +162,24 @@ func EnableUser(ctx *gin.Context) {
 		return
 	}
 
+	if user.UserType == constants.UserTypeCommonUserStr {
+		response.MkResponse(ctx, http.StatusBadRequest, response.PermissionDenied, nil)
+		return
+	}
+
+	if user.Name != constants.UserNameRoot && user.UserType == constants.UserTypeAdminStr {
+		exist, err := service.ExistAdmin(ctx, req.UserNames)
+		if err != nil {
+			response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		if exist {
+			response.MkResponse(ctx, http.StatusBadRequest, response.PermissionDenied, nil)
+			return
+		}
+
+	}
+
 	err := service.UpdateUserStatus(ctx, req.UserNames, req.Action)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)

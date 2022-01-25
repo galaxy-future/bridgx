@@ -54,6 +54,15 @@ func UpdateUserStatus(ctx context.Context, usernames []string, status string) er
 	return nil
 }
 
+func ExistAdmin(ctx context.Context, usernames []string) (bool, error) {
+	users, err := model.GetUsersByUsernamesAndUserType(ctx, usernames, constants.UserTypeAdmin)
+	if err != nil {
+		return false, err
+	}
+	return len(users) > 0, nil
+
+}
+
 func ModifyAdminPassword(ctx context.Context, userId int64, userName, oldPassword, newPassword string) error {
 	user := model.User{}
 	err := model.Get(userId, &user)

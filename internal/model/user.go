@@ -43,6 +43,15 @@ func UpdateUserStatus(ctx context.Context, model interface{}, usernames []string
 	return nil
 }
 
+func GetUsersByUsernamesAndUserType(ctx context.Context, usernames []string, userType int8) ([]User, error) {
+	res := make([]User, 0)
+	if err := clients.WriteDBCli.WithContext(ctx).Where("username IN (?) AND user_type = ?", usernames, userType).Find(&res).Error; err != nil {
+		logErr("get user from readDB: ", err)
+		return nil, err
+	}
+	return res, nil
+}
+
 func UpdateUserType(ctx context.Context, ids []int64, updates map[string]interface{}) error {
 	if err := clients.WriteDBCli.WithContext(ctx).Model(User{}).Where("id IN (?)", ids).Updates(updates).Error; err != nil {
 		logErr("update data list to write db: ", err)
