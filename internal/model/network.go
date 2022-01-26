@@ -7,6 +7,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/clients"
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
+	"github.com/galaxy-future/BridgX/pkg/utils"
 	"gorm.io/gorm/clause"
 )
 
@@ -324,44 +325,111 @@ func AddSecurityGroupRule(ctx context.Context, r SecurityGroupRule) error {
 	return clients.WriteDBCli.WithContext(ctx).Create(&r).Error
 }
 
-func UpdateOrCreateVpcs(ctx context.Context, vpcs []Vpc) error {
+const _effectiveTime = "DATE_ADD(now(),interval 478 minute)"
+
+func UpdateOrCreateVpcs(ctx context.Context, ak, provider string, regionIds []string, vpcs []Vpc) error {
+	oldVpcIds := make([]string, 0)
+	if err := clients.ReadDBCli.WithContext(ctx).Model(&Vpc{}).
+		Select("vpc_id").
+		Where("ak=? and provider=? and region_id in (?) and is_del=0 and update_at<?", ak, provider, regionIds, _effectiveTime).
+		Scan(&oldVpcIds).Error; err != nil {
+		return err
+	}
+	vpcIds := make([]string, 0, len(vpcs))
+	for _, v := range vpcs {
+		vpcIds = append(vpcIds, v.VpcId)
+	}
+	vpcIdDiff := utils.StringSliceDiff(oldVpcIds, vpcIds)
+	if len(vpcIdDiff) > 0 {
+		logs.Logger.Debugf("%s, vpcIdDiff %v", ak, vpcIdDiff)
+		if err := clients.WriteDBCli.WithContext(ctx).
+			Where("ak=? and provider=? and vpc_id in (?)", ak, provider, vpcIdDiff).
+			Delete(&Vpc{}).Error; err != nil {
+			return err
+		}
+	}
+
 	return clients.WriteDBCli.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "ak"}, {Name: "region_id"}, {Name: "vpc_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"name", "cidr_block", "v_status"}),
 	}).Create(&vpcs).Error
 }
 
-func UpdateOrCreateSwitches(ctx context.Context, switches []Switch) error {
+func UpdateOrCreateSwitches(ctx context.Context, vpcIds []string, switches []Switch) error {
+	oldSwitchIds := make([]string, 0)
+	if err := clients.ReadDBCli.WithContext(ctx).Model(&Switch{}).
+		Select("switch_id").
+		Where("vpc_id in (?) and is_del=0 and update_at<?", vpcIds, _effectiveTime).
+		Scan(&oldSwitchIds).Error; err != nil {
+		return err
+	}
+	switchIds := make([]string, 0, len(switches))
+	for _, v := range switches {
+		switchIds = append(switchIds, v.SwitchId)
+	}
+	switchIdDiff := utils.StringSliceDiff(oldSwitchIds, switchIds)
+	if len(switchIdDiff) > 0 {
+		logs.Logger.Debugf("switchIdDiff %v", switchIdDiff)
+		if err := clients.WriteDBCli.WithContext(ctx).
+			Where("switch_id in (?)", switchIdDiff).
+			Delete(&Switch{}).Error; err != nil {
+			return err
+		}
+	}
+
 	return clients.WriteDBCli.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "switch_id"}, {Name: "vpc_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"name", "cidr_block", `gateway_ip`, "v_status", "available_ip_address_count", "is_default"}),
 	}).Create(&switches).Error
 }
 
-func UpdateOrCreateGroups(ctx context.Context, groups []SecurityGroup) error {
+func UpdateOrCreateGroups(ctx context.Context, ak, provider string, regionIds []string, groups []SecurityGroup) error {
+	oldSecGrpIds := make([]string, 0)
+	if err := clients.ReadDBCli.WithContext(ctx).Model(&SecurityGroup{}).
+		Select("security_group_id").
+		Where("ak=? and provider=? and region_id in (?) and is_del=0 and update_at<?", ak, provider, regionIds, _effectiveTime).
+		Scan(&oldSecGrpIds).Error; err != nil {
+		return err
+	}
+	secGrpIds := make([]string, 0, len(groups))
+	for _, v := range groups {
+		secGrpIds = append(secGrpIds, v.SecurityGroupId)
+	}
+	secGrpIdDiff := utils.StringSliceDiff(oldSecGrpIds, secGrpIds)
+	if len(secGrpIdDiff) > 0 {
+		logs.Logger.Debugf("%s, secGrpIdDiff %v", ak, secGrpIdDiff)
+		if err := clients.WriteDBCli.WithContext(ctx).
+			Where("ak=? and provider=? and security_group_id in (?)", ak, provider, secGrpIdDiff).
+			Delete(&SecurityGroup{}).Error; err != nil {
+			return err
+		}
+	}
+
 	return clients.WriteDBCli.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "ak"}, {Name: "provider"}, {Name: "region_id"}, {Name: "security_group_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"name", "security_group_type"}),
 	}).Create(&groups).Error
 }
 
-func ReplaceRules(ctx context.Context, vpcID, groupId string, rules []SecurityGroupRule) error {
+func ReplaceRules(ctx context.Context, vpcID, groupId string, rules []SecurityGroupRule) (err error) {
 	tx := clients.WriteDBCli.WithContext(ctx).Begin()
 	defer func() {
-		tx.Rollback()
+		if err != nil {
+			tx.Rollback()
+		}
 	}()
-	err := tx.WithContext(ctx).
+	err = tx.WithContext(ctx).
 		Where("security_group_id = ? and vpc_id = ?", groupId, vpcID).
 		Delete(SecurityGroupRule{}).Error
 	if err != nil {
-		tx.Rollback()
+		return err
 	}
 	err = tx.CreateInBatches(&rules, len(rules)).Error
 	if err != nil {
-		tx.Rollback()
+		return err
 	}
 	tx.Commit()
-	return err
+	return nil
 }
 
 func FindSecurityGroupRulesById(ctx context.Context, securityGroupId string) (result []SecurityGroupRule, err error) {

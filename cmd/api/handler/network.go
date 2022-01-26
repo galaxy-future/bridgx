@@ -69,8 +69,6 @@ func SyncNetworkConfig(ctx *gin.Context) {
 
 func GetNetCfgTemplate(ctx *gin.Context) {
 	provider := ctx.Query("provider")
-	logs.Logger.Infof("GetNetCfgTemplate provider:%v", provider)
-
 	netCfg := request.CreateNetworkRequest{
 		Provider:          provider,
 		CidrBlock:         "10.0.0.0/16",
@@ -122,7 +120,6 @@ func CreateVpc(ctx *gin.Context) {
 
 func GetVpcById(ctx *gin.Context) {
 	id := ctx.Param("id")
-	logs.Logger.Infof("GetVpcById id:%v", id)
 	resp, err := service.GetVpcById(ctx, id)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
@@ -184,7 +181,6 @@ func CreateSwitch(ctx *gin.Context) {
 func GetSwitchById(ctx *gin.Context) {
 	switchId := ctx.Param("id")
 	vpcId := ctx.Query("vpc_id")
-	logs.Logger.Infof("GetSwitchById id:%v,vpcId:%v", switchId, vpcId)
 	resp, err := service.GetSwitchById(ctx, vpcId, switchId)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
@@ -199,8 +195,6 @@ func DescribeSwitch(ctx *gin.Context) {
 	switchName := ctx.Query("switch_name")
 	zoneId := ctx.Query("zone_id")
 	pageNumber, pageSize := getPager(ctx)
-	logs.Logger.Infof("vpcId:[%s] switchName[:%s]  zone:%v pageNumber[%d]  pageSize[%d]",
-		vpcId, switchName, zoneId, pageNumber, pageSize)
 
 	resp, err := service.GetSwitch(ctx, service.GetSwitchRequest{
 		SwitchName: switchName,
@@ -245,8 +239,6 @@ func DescribeSecurityGroup(ctx *gin.Context) {
 	vpcId := ctx.Query("vpc_id")
 	securityGroupName := ctx.Query("security_group_name")
 	pageNumber, pageSize := getPager(ctx)
-	logs.Logger.Infof("ak:%v vpcId:[%s] securityGroupName[:%s] pageNumber[%d]  pageSize[%d]",
-		ak, vpcId, securityGroupName, pageNumber, pageSize)
 
 	resp, err := service.GetSecurityGroup(ctx, service.GetSecurityGroupRequest{
 		Ak:                ak,
@@ -325,7 +317,6 @@ func CreateSecurityGroupWithRules(ctx *gin.Context) {
 
 func GetSecurityGroupWithRules(ctx *gin.Context) {
 	secGrpId := ctx.Param("id")
-	logs.Logger.Infof("GetSecurityGroupWithRules id:%v", secGrpId)
 	resp, err := service.GetSecurityGroupWithRules(ctx, secGrpId)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)

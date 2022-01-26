@@ -353,8 +353,8 @@ func TestSyncNetwork(t *testing.T) {
 			AccountKey:   account.AccountKey,
 		})
 		if err != nil {
-			t.Log(err)
-			return
+			t.Log(account.AccountKey, err)
+			continue
 		}
 	}
 }

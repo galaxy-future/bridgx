@@ -207,14 +207,16 @@ func updateOrCreateVpcs(ctx context.Context, regionIds []string, provider, ak st
 		vpcs = append(vpcs, vpcsRes.Vpcs...)
 	}
 	vpcModels := cloud2ModelVpc(vpcs, ak, provider)
-	err := model.UpdateOrCreateVpcs(ctx, vpcModels)
+	err := model.UpdateOrCreateVpcs(ctx, ak, provider, regionIds, vpcModels)
 	return vpcs, err
 }
 
 func updateOrCreateSwitch(ctx context.Context, vpcs []cloud.VPC, provider, ak string) {
+	vpcIds := make([]string, 0, len(vpcs))
 	switches := make([]cloud.Switch, 0, 64)
 	describeSwitchesReq := cloud.DescribeSwitchesRequest{}
 	for _, vpc := range vpcs {
+		vpcIds = append(vpcIds, vpc.VpcId)
 		describeSwitchesReq.VpcId = vpc.VpcId
 		cloudCli, err := getProvider(provider, ak, vpc.RegionId)
 		if err != nil {
@@ -229,7 +231,7 @@ func updateOrCreateSwitch(ctx context.Context, vpcs []cloud.VPC, provider, ak st
 		switches = append(switches, switchesRes.Switches...)
 	}
 	switchesModels := cloud2ModelSwitches(switches)
-	err := model.UpdateOrCreateSwitches(ctx, switchesModels)
+	err := model.UpdateOrCreateSwitches(ctx, vpcIds, switchesModels)
 	if err != nil {
 		logs.Logger.Errorf("updateOrCreateSwitch failed.err : [%s]", err.Error())
 	}
@@ -281,7 +283,7 @@ func updateOrCreateSecurityGroups(ctx context.Context, regionIds []string, vpcs 
 	}
 
 	groupsModels := cloud2ModelGroups(groups, ak, provider)
-	err := model.UpdateOrCreateGroups(ctx, groupsModels)
+	err := model.UpdateOrCreateGroups(ctx, ak, provider, regionIds, groupsModels)
 	return groups, err
 }
 
