@@ -106,7 +106,7 @@ func ModifyUsername(ctx context.Context, uid int64, newUsername string) error {
 func ModifyUsertype(ctx context.Context, userIds []int64, userType int8) error {
 	err := model.UpdateUserType(ctx, userIds, map[string]interface{}{"user_type": userType, "update_at": time.Now()})
 	if err != nil {
-		return fmt.Errorf("can not update user type : %w, userIds: %v", err, userIds)
+		return err
 	}
 	return nil
 
