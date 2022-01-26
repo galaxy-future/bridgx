@@ -87,7 +87,7 @@ func GetOrgById(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-	response.MkResponse(ctx, http.StatusOK, response.Success, org)
+	response.MkResponse(ctx, http.StatusOK, response.Success, helper.ConvertToOrgInfo(org))
 	return
 }
 

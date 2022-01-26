@@ -214,6 +214,13 @@ type ListUsersResponse struct {
 	Pager    Pager       `json:"pager"`
 }
 
+type OrgInfo struct {
+	Id       int64  `json:"id"`
+	OrgName  string `json:"org_name"`
+	CreateAt string `json:"create_at"`
+	UpdateAt string `json:"update_at"`
+}
+
 type OrgThumb struct {
 	OrgId   string `json:"org_id"`
 	OrgName string `json:"org_name"`
