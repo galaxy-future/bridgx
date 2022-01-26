@@ -197,6 +197,7 @@ type UserInfo struct {
 	Username string `json:"username"`
 	UserType string `json:"user_type"`
 	OrgId    int64  `json:"org_id"`
+	CreateAt string `json:"create_at"`
 }
 
 type UserThumb struct {

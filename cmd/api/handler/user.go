@@ -88,6 +88,7 @@ func GetUserInfo(ctx *gin.Context) {
 		Username: userInDB.Username,
 		OrgId:    userInDB.OrgId,
 		UserType: helper.ConvertToReadableStr(userInDB.UserType),
+		CreateAt: userInDB.CreateAt.Format("2006-01-02 15:04:05"),
 	}
 	response.MkResponse(ctx, http.StatusOK, response.Success, res)
 	return
