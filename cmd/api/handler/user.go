@@ -4,19 +4,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/galaxy-future/BridgX/internal/model"
-
-	"github.com/galaxy-future/BridgX/internal/constants"
-
-	"github.com/spf13/cast"
-
 	"github.com/galaxy-future/BridgX/cmd/api/helper"
 	"github.com/galaxy-future/BridgX/cmd/api/middleware/authorization"
 	"github.com/galaxy-future/BridgX/cmd/api/request"
 	"github.com/galaxy-future/BridgX/cmd/api/response"
 	"github.com/galaxy-future/BridgX/config"
+	"github.com/galaxy-future/BridgX/internal/constants"
+	"github.com/galaxy-future/BridgX/internal/model"
 	"github.com/galaxy-future/BridgX/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 )
 
 func Login(ctx *gin.Context) {
@@ -33,7 +30,7 @@ func Login(ctx *gin.Context) {
 		return
 	}
 	if user.UserStatus == constants.UserStatusDisable {
-		response.MkResponse(ctx, http.StatusBadRequest, "your account has been suspended", nil)
+		response.MkResponse(ctx, http.StatusBadRequest, "your account has been disabled", nil)
 		return
 	}
 	userTokenFactory := authorization.CreateUserTokenFactory()
