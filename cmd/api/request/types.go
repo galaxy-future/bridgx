@@ -45,11 +45,11 @@ type CreateVpcRequest struct {
 	RegionId  string `json:"region_id"`
 	VpcName   string `json:"vpc_name"`
 	CidrBlock string `json:"cidr_block"`
-	Ak        string `json:"ak"`
+	AK        string `json:"ak"`
 }
 
 func (c *CreateVpcRequest) Check() bool {
-	return c.Provider != "" && c.RegionId != "" && c.VpcName != "" && c.Ak != ""
+	return c.Provider != "" && c.RegionId != "" && c.VpcName != "" && c.AK != ""
 }
 
 type DescribeVpcRequest struct {
@@ -66,7 +66,7 @@ type CreateSwitchRequest struct {
 	CidrBlock  string `json:"cidr_block"`
 	GatewayIp  string `json:"gateway_ip"`
 	ZoneId     string `json:"zone_id"`
-	Ak         string `json:"account_key" binding:"required"`
+	AK         string `json:"account_key" binding:"required"`
 }
 
 func (c *CreateSwitchRequest) Check() bool {
@@ -74,7 +74,7 @@ func (c *CreateSwitchRequest) Check() bool {
 }
 
 type CreateSecurityGroupRequest struct {
-	Ak                string `json:"account_key" binding:"required"`
+	AK                string `json:"account_key" binding:"required"`
 	VpcId             string `json:"vpc_id"`
 	RegionId          string `json:"region_id"`
 	SecurityGroupName string `json:"security_group_name"`
@@ -86,7 +86,7 @@ func (c *CreateSecurityGroupRequest) Check() bool {
 }
 
 type AddSecurityGroupRuleRequest struct {
-	Ak              string              `json:"account_key" binding:"required"`
+	AK              string              `json:"account_key" binding:"required"`
 	VpcId           string              `json:"vpc_id"`
 	RegionId        string              `json:"region_id"`
 	SecurityGroupId string              `json:"security_group_id"`
@@ -99,7 +99,7 @@ func (c *AddSecurityGroupRuleRequest) Check() bool {
 }
 
 type CreateSecurityGroupWithRuleRequest struct {
-	Ak                string              `json:"account_key" binding:"required"`
+	AK                string              `json:"account_key" binding:"required"`
 	VpcId             string              `json:"vpc_id"`
 	RegionId          string              `json:"region_id"`
 	SecurityGroupName string              `json:"security_group_name"`
@@ -122,7 +122,7 @@ type CreateNetworkRequest struct {
 	SwitchName        string              `json:"switch_name" binding:"required"`
 	SecurityGroupName string              `json:"security_group_name" binding:"required"`
 	SecurityGroupType string              `json:"security_group_type"`
-	Ak                string              `json:"ak" binding:"required"`
+	AK                string              `json:"ak" binding:"required"`
 	Rules             []service.GroupRule `json:"rules"`
 }
 

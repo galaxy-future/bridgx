@@ -35,7 +35,7 @@ func CreateNetworkConfig(ctx *gin.Context) {
 		SwitchName:        req.SwitchName,
 		SecurityGroupName: req.SecurityGroupName,
 		SecurityGroupType: req.SecurityGroupType,
-		Ak:                req.Ak,
+		AK:                req.AK,
 		Rules:             req.Rules,
 	})
 	if err != nil {
@@ -102,13 +102,12 @@ func CreateVpc(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-	logs.Logger.Infof("req is:%v ", req)
 	resp, err := service.CreateVPC(ctx, service.CreateVPCRequest{
 		Provider:  req.Provider,
 		RegionId:  req.RegionId,
 		VpcName:   req.VpcName,
 		CidrBlock: req.CidrBlock,
-		Ak:        req.Ak,
+		AK:        req.AK,
 	})
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
@@ -160,10 +159,9 @@ func CreateSwitch(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-	logs.Logger.Infof("req is:%v ", req)
 
 	resp, err := service.CreateSwitch(ctx, service.CreateSwitchRequest{
-		Ak:         req.Ak,
+		AK:         req.AK,
 		SwitchName: req.SwitchName,
 		ZoneId:     req.ZoneId,
 		VpcId:      req.VpcId,
@@ -221,7 +219,7 @@ func CreateSecurityGroup(ctx *gin.Context) {
 	logs.Logger.Infof("req is:%v ", req)
 
 	resp, err := service.CreateSecurityGroup(ctx, service.CreateSecurityGroupRequest{
-		Ak:                req.Ak,
+		AK:                req.AK,
 		VpcId:             req.VpcId,
 		SecurityGroupName: req.SecurityGroupName,
 		SecurityGroupType: req.SecurityGroupType,
@@ -241,7 +239,7 @@ func DescribeSecurityGroup(ctx *gin.Context) {
 	pageNumber, pageSize := getPager(ctx)
 
 	resp, err := service.GetSecurityGroup(ctx, service.GetSecurityGroupRequest{
-		Ak:                ak,
+		AK:                ak,
 		SecurityGroupName: securityGroupName,
 		VpcId:             vpcId,
 		PageNumber:        pageNumber,
@@ -265,7 +263,7 @@ func AddSecurityGroupRule(ctx *gin.Context) {
 	logs.Logger.Infof("req is:%v ", req)
 
 	resp, err := service.AddSecurityGroupRule(ctx, service.AddSecurityGroupRuleRequest{
-		Ak:              req.Ak,
+		AK:              req.AK,
 		RegionId:        req.RegionId,
 		VpcId:           req.VpcId,
 		SecurityGroupId: req.SecurityGroupId,
@@ -286,9 +284,8 @@ func CreateSecurityGroupWithRules(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, response.ParamInvalid, nil)
 		return
 	}
-	logs.Logger.Infof("req is:%v ", req)
 	groupId, err := service.CreateSecurityGroup(ctx, service.CreateSecurityGroupRequest{
-		Ak:                req.Ak,
+		AK:                req.AK,
 		VpcId:             req.VpcId,
 		SecurityGroupName: req.SecurityGroupName,
 		SecurityGroupType: req.SecurityGroupType,
@@ -302,7 +299,7 @@ func CreateSecurityGroupWithRules(ctx *gin.Context) {
 		return
 	}
 	_, err = service.AddSecurityGroupRule(ctx, service.AddSecurityGroupRuleRequest{
-		Ak:              req.Ak,
+		AK:              req.AK,
 		RegionId:        req.RegionId,
 		VpcId:           req.VpcId,
 		SecurityGroupId: groupId,

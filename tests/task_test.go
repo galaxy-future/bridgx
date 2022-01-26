@@ -112,7 +112,7 @@ func TestSyncTaskResult(t *testing.T) {
 
 	tasks := make([]model.Task, 0)
 	if err := clients.ReadDBCli.
-		Where("task_result='' and status in (?)", []string{constants.TaskStatusSuccess, constants.TaskStatusPartialSuccess}).
+		Where("status in (?)", []string{constants.TaskStatusSuccess, constants.TaskStatusPartialSuccess}).
 		Find(&tasks).Error; err != nil {
 		t.Log(err)
 		return

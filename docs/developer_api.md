@@ -1,4 +1,4 @@
-# 开发者API手册
+# <a id="catalogue">开发者API手册</a>
   * [集群模板API](#----api)
     + [1. 创建集群](#1-----)
     + [2. 获取集群列表](#2-------)
@@ -13,6 +13,11 @@
     + [11. 查看zone列表](#11---zone--)
     + [12. 查看机型列表](#12-------)
     + [13. 获取镜像列表](#13-------)
+    + [14. 同步云厂商网络配置](#14---1)
+    + [15. 获取网络配置模板](#15---1)
+    + [16. 获取VPC详情](#16---1)
+    + [17. 获取子网详情](#17---1)
+    + [18. 获取安全组详情](#18---1)
   * [扩缩容任务API](#-----api)
     + [1. 创建扩容任务](#1-------)
     + [2. 创建缩容任务](#2-------)
@@ -1047,6 +1052,13 @@ Available：可用。</td>
     <td>示例值</td>
   </tr>
   <tr>
+    <td>account_key</td>
+    <td>String</td>
+    <td>是</td>
+    <td>云厂商账号</td>
+    <td>AKIDcAW</td>
+  </tr>
+  <tr>
     <td>zone_id</td>
     <td>String</td>
     <td>是</td>
@@ -1449,6 +1461,13 @@ false：非默认交换机。</td>
     <td>必填</td>
     <td>描述</td>
     <td>示例值</td>
+  </tr>
+  <tr>
+    <td>account_key</td>
+    <td>String</td>
+    <td>是</td>
+    <td>云厂商账号</td>
+    <td>AKIDcAWe</td>
   </tr>
   <tr>
     <td>vpc_id</td>
@@ -2727,6 +2746,688 @@ enterprise：企业安全组</td>
   </tr>
 </table>
 
+
+[返回目录](#catalogue)
+### <span id="14---1">14. 同步云厂商网络配置</span>
+同步云厂商某地域的vpc、子网、安全组配置<br>
+**请求地址**
+<table>
+  <tr>
+    <td>POST 方法</td>
+  </tr>
+  <tr>
+    <td>POST /api/v1/network_config/sync</td>
+  </tr>
+</table>
+
+**请求参数**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>provider</td>
+    <td>String</td>
+    <td>是</td>
+    <td>云厂商</td>
+    <td>AlibabaCloud</td>
+  </tr>
+  <tr>
+    <td>region_id</td>
+    <td>String</td>
+    <td>是</td>
+    <td>区域</td>
+    <td>cn-qingdao</td>
+  </tr>
+  <tr>
+    <td>account_key</td>
+    <td>String</td>
+    <td>是</td>
+    <td>云账号</td>
+    <td>AKIDcAWeW8</td>
+  </tr>
+</table>
+
+**返回参数**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>code</td>
+    <td>int</td>
+    <td>是</td>
+    <td>返回码</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>msg</td>
+    <td>string</td>
+    <td>是</td>
+    <td>错误信息</td>
+    <td>success</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>object</td>
+    <td>否</td>
+    <td>正常信息</td>
+    <td>null</td>
+  </tr>
+</table>
+
+
+**data重要参数**
+
+无
+
+
+**请求示例**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>provider</td>
+    <td>AlibabaCloud</td>
+  </tr>
+  <tr>
+    <td>region_id</td>
+    <td>cn-qingdao</td>
+  </tr>
+  <tr>
+    <td>account_key</td>
+    <td>AKIDcAWeW8</td>
+  </tr>
+</table>
+
+**响应示例**
+
+正常返回结果：
+```JSON
+{
+  "code":200,
+  "msg":"success",
+  "data":null
+}
+```
+
+异常返回结果：
+```JSON
+{
+    "code":400,
+    "msg":"param_invalid",
+    "data":null
+}
+```
+
+**返回码解释**
+
+<table>
+  <tr>
+    <td>返回码</td>
+    <td>状态</td>
+    <td>解释</td>
+  </tr>
+  <tr>
+    <td>200</td>
+    <td>success</td>
+    <td>执行成功</td>
+  </tr>
+  <tr>
+    <td>400</td>
+    <td>param_invalid</td>
+    <td>参数有误</td>
+  </tr>
+</table>
+
+
+[返回目录](#catalogue)
+### <span id="15---1">15. 获取网络配置模板</span>
+获取云厂商通用网络配置模板<br>
+**请求地址**
+<table>
+  <tr>
+    <td>GET 方法</td>
+  </tr>
+  <tr>
+    <td>GET /api/v1/network_config/template</td>
+  </tr>
+</table>
+
+**请求参数**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>provider</td>
+    <td>String</td>
+    <td>是</td>
+    <td>云厂商</td>
+    <td>AlibabaCloud</td>
+  </tr>
+</table>
+
+**返回参数**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>code</td>
+    <td>int</td>
+    <td>是</td>
+    <td>返回码</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>msg</td>
+    <td>string</td>
+    <td>是</td>
+    <td>错误信息</td>
+    <td>null</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>object</td>
+    <td>是</td>
+    <td>正常信息</td>
+    <td> {}</td>
+  </tr>
+</table>
+
+
+**data重要参数**
+
+参见返回json
+
+
+**请求示例**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>provider</td>
+    <td>AlibabaCloud</td>
+  </tr>
+</table>
+
+**响应示例**
+
+正常返回结果：
+```JSON
+{
+  "code": 200,
+  "data": {
+    "provider": "AlibabaCloud",
+    "region_id": "",
+    "cidr_block": "10.0.0.0/16",
+    "vpc_name": "默认的vpc",
+    "zone_id": "",
+    "switch_cidr_block": "10.0.0.0/24",
+    "gateway_ip": "10.0.0.254",
+    "switch_name": "默认的子网",
+    "security_group_name": "默认的安全组",
+    "security_group_type": "normal",
+    "ak": "",
+    "rules": [{
+      "protocol": "all",
+      "port_from": 0,
+      "port_to": 0,
+      "direction": "ingress",
+      "group_id": "",
+      "cidr_ip": "0.0.0.0/0",
+      "prefix_list_id": ""
+    }, {
+      "protocol": "all",
+      "port_from": 0,
+      "port_to": 0,
+      "direction": "egress",
+      "group_id": "",
+      "cidr_ip": "0.0.0.0/0",
+      "prefix_list_id": ""
+    }]
+  },
+  "msg": "success"
+}
+```
+
+异常返回结果：
+```JSON
+{
+    "code":400,
+    "msg":"param_invalid",
+    "data":null
+}
+```
+
+**返回码解释**
+
+<table>
+  <tr>
+    <td>返回码</td>
+    <td>状态</td>
+    <td>解释</td>
+  </tr>
+  <tr>
+    <td>200</td>
+    <td>success</td>
+    <td>执行成功</td>
+  </tr>
+  <tr>
+    <td>400</td>
+    <td>param_invalid</td>
+    <td>参数有误</td>
+  </tr>
+</table>
+
+
+[返回目录](#catalogue)
+### <span id="16---1">16. 获取VPC详情</span>
+通过VPC id查看详情<br>
+**请求地址**
+<table>
+  <tr>
+    <td>GET 方法</td>
+  </tr>
+  <tr>
+    <td>GET /api/v1/vpc/info/:id</td>
+  </tr>
+</table>
+
+**请求参数**
+
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>:id</td>
+    <td>string</td>
+    <td>是</td>
+    <td>占位符 vpc id</td>
+    <td>1</td>
+  </tr>
+</table>
+
+**返回参数**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>code</td>
+    <td>int</td>
+    <td>是</td>
+    <td>返回码</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>msg</td>
+    <td>string</td>
+    <td>是</td>
+    <td>错误信息</td>
+    <td>null</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>object</td>
+    <td>是</td>
+    <td>正常信息</td>
+    <td> {}</td>
+  </tr>
+</table>
+
+
+**data重要参数**
+
+参见返回json
+
+
+**请求示例**
+
+/api/v1/vpc/info/1
+
+**响应示例**
+
+正常返回结果：
+```JSON
+{
+  "code": 200,
+  "data": {
+    "VpcId": "vpc-2zelmmlfd5c5duibc2xb2",
+    "VpcName": "galaxy-future-online-server-net-bj",
+    "CidrBlock": "10.192.0.0/12",
+    "Provider": "AlibabaCloud",
+    "Status": "Available",
+    "CreateAt": "2021-07-28 14:39:15 +0800 CST"
+  },
+  "msg": "success"
+}
+```
+
+异常返回结果：
+```JSON
+{
+    "code":400,
+    "msg":"param_invalid",
+    "data":null
+}
+```
+
+**返回码解释**
+
+<table>
+  <tr>
+    <td>返回码</td>
+    <td>状态</td>
+    <td>解释</td>
+  </tr>
+  <tr>
+    <td>200</td>
+    <td>success</td>
+    <td>执行成功</td>
+  </tr>
+  <tr>
+    <td>400</td>
+    <td>param_invalid</td>
+    <td>参数有误</td>
+  </tr>
+</table>
+
+
+[返回目录](#catalogue)
+### <span id="17---1">17. 获取子网详情</span>
+通过vpc id和子网 id查看详情<br>
+**请求地址**
+<table>
+  <tr>
+    <td>GET 方法</td>
+  </tr>
+  <tr>
+    <td>GET /api/v1/subnet/info/:id</td>
+  </tr>
+</table>
+
+**请求参数**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>:id</td>
+    <td>string</td>
+    <td>是</td>
+    <td>占位符 子网id</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>vpc_id</td>
+    <td>string</td>
+    <td>是</td>
+    <td>vpc id</td>
+    <td>1</td>
+  </tr>
+</table>
+
+**返回参数**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>code</td>
+    <td>int</td>
+    <td>是</td>
+    <td>返回码</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>msg</td>
+    <td>string</td>
+    <td>是</td>
+    <td>错误信息</td>
+    <td>null</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>object</td>
+    <td>是</td>
+    <td>正常信息</td>
+    <td> {}</td>
+  </tr>
+</table>
+
+
+**data重要参数**
+
+参见返回json
+
+
+**请求示例**
+
+/api/v1/subnet/info/1?vpc_id=1
+
+**响应示例**
+
+正常返回结果：
+```JSON
+{
+  "code": 200,
+  "data": {
+    "VpcId": "vpc-2zelmmlfd5c5duibc2xb2",
+    "SwitchId": "vsw-2zennaxawzq6sa2fdj8l5",
+    "ZoneId": "cn-beijing-h",
+    "SwitchName": "galaxy-future-online-server-switch-H002",
+    "CidrBlock": "10.192.208.0/20",
+    "GatewayIp": "",
+    "VStatus": "Available",
+    "CreateAt": "2022-01-12 09:16:46 +0800 CST",
+    "IsDefault": "N",
+    "AvailableIpAddressCount": 4082
+  },
+  "msg": "success"
+}
+```
+
+异常返回结果：
+```JSON
+{
+  "code":400,
+  "msg":"param_invalid",
+  "data":null
+}
+```
+
+**返回码解释**
+
+<table>
+  <tr>
+    <td>返回码</td>
+    <td>状态</td>
+    <td>解释</td>
+  </tr>
+  <tr>
+    <td>200</td>
+    <td>success</td>
+    <td>执行成功</td>
+  </tr>
+  <tr>
+    <td>400</td>
+    <td>param_invalid</td>
+    <td>参数有误</td>
+  </tr>
+</table>
+
+
+[返回目录](#catalogue)
+### <span id="18---1">18. 获取安全组详情</span>
+通过安全组 id查看详情<br>
+**请求地址**
+<table>
+  <tr>
+    <td>GET 方法</td>
+  </tr>
+  <tr>
+    <td>GET /api/v1/security_group/:id/rules</td>
+  </tr>
+</table>
+
+**请求参数**
+
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>:id</td>
+    <td>string</td>
+    <td>是</td>
+    <td>占位符 安全组id</td>
+    <td>1</td>
+  </tr>
+</table>
+
+**返回参数**
+<table>
+  <tr>
+    <td>名称</td>
+    <td>类型</td>
+    <td>必填</td>
+    <td>描述</td>
+    <td>示例值</td>
+  </tr>
+  <tr>
+    <td>code</td>
+    <td>int</td>
+    <td>是</td>
+    <td>返回码</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>msg</td>
+    <td>string</td>
+    <td>是</td>
+    <td>错误信息</td>
+    <td>null</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>object</td>
+    <td>是</td>
+    <td>正常信息</td>
+    <td> {}</td>
+  </tr>
+</table>
+
+
+**data重要参数**
+
+参见返回json
+
+
+**请求示例**
+
+/api/v1/security_group/1/rules
+
+**响应示例**
+
+正常返回结果：
+```JSON
+{
+  "code": 200,
+  "data": {
+    "security_group_id": "sg-2zefbt9tw0yo1r7vc3ac",
+    "security_group_name": "sg-online-server-common",
+    "security_group_type": "enterprise",
+    "rules": [{
+      "protocol": "udp",
+      "port_range": "1-65535",
+      "direction": "ingress",
+      "group_id": "",
+      "cidr_ip": "10.0.0.0/8",
+      "prefix_list_id": ""
+    },{
+      "protocol": "all",
+      "port_range": "",
+      "direction": "egress",
+      "group_id": "",
+      "cidr_ip": "0.0.0.0/0",
+      "prefix_list_id": ""
+    }]
+  },
+  "msg": "success"
+}
+```
+
+异常返回结果：
+```JSON
+{
+  "code":400,
+  "msg":"param_invalid",
+  "data":null
+}
+```
+
+**返回码解释**
+
+<table>
+  <tr>
+    <td>返回码</td>
+    <td>状态</td>
+    <td>解释</td>
+  </tr>
+  <tr>
+    <td>200</td>
+    <td>success</td>
+    <td>执行成功</td>
+  </tr>
+  <tr>
+    <td>400</td>
+    <td>param_invalid</td>
+    <td>参数有误</td>
+  </tr>
+</table>
 
 
 ## 扩缩容任务API

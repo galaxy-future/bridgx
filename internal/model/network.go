@@ -13,7 +13,7 @@ import (
 
 type Network struct {
 	Base
-	Ak                      string
+	AK                      string `gorm:"ak"`
 	RegionId                string
 	VpcId                   string
 	SubNetId                string
@@ -28,7 +28,7 @@ func (Network) TableName() string {
 
 type Vpc struct {
 	Base
-	Ak        string
+	AK        string `gorm:"ak"`
 	RegionId  string
 	VpcId     string
 	Name      string
@@ -62,7 +62,7 @@ func (Switch) TableName() string {
 
 type SecurityGroup struct {
 	Base
-	Ak                string
+	AK                string `gorm:"ak"`
 	Provider          string
 	RegionId          string
 	VpcId             string
@@ -248,7 +248,7 @@ func UpdateSwitch(ctx context.Context, availableIpAddressCount, isDefault int, v
 }
 
 type FindSecurityGroupConditions struct {
-	Ak                string
+	AK                string
 	Provider          string
 	RegionId          string
 	VpcId             string
@@ -261,7 +261,7 @@ type FindSecurityGroupConditions struct {
 func FindSecurityGroupWithPage(ctx context.Context, cond FindSecurityGroupConditions) (result []SecurityGroup, total int64, err error) {
 	query := clients.ReadDBCli.WithContext(ctx).
 		Model(&SecurityGroup{}).
-		Where("ak = ? and provider = ? and region_id=? and is_del = 0", cond.Ak, cond.Provider, cond.RegionId)
+		Where("ak = ? and provider = ? and region_id=? and is_del = 0", cond.AK, cond.Provider, cond.RegionId)
 	if cond.VpcId != "" {
 		query.Where("vpc_id = ?", cond.VpcId)
 	}
@@ -296,7 +296,7 @@ func FindSecurityId(ctx context.Context, cond FindSecurityGroupConditions) (resu
 	sql := clients.ReadDBCli.WithContext(ctx).
 		Model(&SecurityGroup{}).
 		Select(`security_group_id`).
-		Where("ak = ? and provider = ? and region_id=? and is_del = 0", cond.Ak, cond.Provider, cond.RegionId)
+		Where("ak = ? and provider = ? and region_id=? and is_del = 0", cond.AK, cond.Provider, cond.RegionId)
 	if cond.VpcId != "" {
 		sql.Where("vpc_id = ?", cond.VpcId)
 	}

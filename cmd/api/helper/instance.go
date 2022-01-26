@@ -85,13 +85,7 @@ func GetInstanceTypeDesc(cluster *model.Cluster) string {
 		return ""
 	}
 
-	desc := cluster.GetInstanceTypeDesc()
-	if desc != "" {
-		return desc
-	}
-
-	instanceType := service.GetInstanceTypeByName(cluster.InstanceType)
-	return instanceType.GetDesc()
+	return cluster.GetInstanceTypeDesc()
 }
 
 func genClusterMap(clusters []model.Cluster) map[string]model.Cluster {

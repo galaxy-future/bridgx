@@ -58,7 +58,7 @@ type SimpleTaskHandler struct {
 func Init(workerCount int) {
 	H = &SimpleTaskHandler{make(chan *SimpleTask, workerCount), workerCount, 0, make([]*SimpleTask, 0, 1000), sync.Mutex{}}
 	H.run()
-	RefreshCache()
+	//RefreshCache()
 }
 
 func (s *SimpleTaskHandler) SubmitTask(t *SimpleTask) {
@@ -127,8 +127,8 @@ func (s *SimpleTaskHandler) taskHandle(t *SimpleTask) {
 		err = refreshSwitch(t)
 	case TargetTypeAccount:
 		err = RefreshAccount(t)
-	case TargetTypeInstanceType:
-		err = refreshInstanceType(t)
+		//case TargetTypeInstanceType:
+		//	err = refreshInstanceType(t)
 	}
 	if err == nil {
 		return
@@ -326,7 +326,7 @@ func cloud2ModelVpc(vpcs []cloud.VPC, ak, provider string) []model.Vpc {
 				CreateAt: &createAt,
 				UpdateAt: &now,
 			},
-			Ak:        ak,
+			AK:        ak,
 			RegionId:  vpc.RegionId,
 			VpcId:     vpc.VpcId,
 			Name:      vpc.VpcName,
@@ -384,7 +384,7 @@ func cloud2ModelGroups(groups []cloud.SecurityGroup, ak, provider string) []mode
 				CreateAt: &createAt,
 				UpdateAt: &now,
 			},
-			Ak:                ak,
+			AK:                ak,
 			Provider:          provider,
 			RegionId:          group.RegionId,
 			VpcId:             group.VpcId,
@@ -476,7 +476,7 @@ type CreateNetworkRequest struct {
 	SwitchName        string
 	SecurityGroupName string
 	SecurityGroupType string
-	Ak                string
+	AK                string
 	Rules             []GroupRule
 }
 
@@ -497,7 +497,7 @@ type CreateVPCRequest struct {
 	RegionId  string
 	VpcName   string
 	CidrBlock string
-	Ak        string
+	AK        string
 }
 
 func CreateNetwork(ctx context.Context, req *CreateNetworkRequest) (vpcRes CreateNetworkResponse, err error) {
@@ -507,7 +507,7 @@ func CreateNetwork(ctx context.Context, req *CreateNetworkRequest) (vpcRes Creat
 		RegionId:  req.RegionId,
 		VpcName:   req.VpcName,
 		CidrBlock: req.CidrBlock,
-		Ak:        req.Ak,
+		AK:        req.AK,
 	})
 	if err != nil {
 		return CreateNetworkResponse{}, err
@@ -517,7 +517,7 @@ func CreateNetwork(ctx context.Context, req *CreateNetworkRequest) (vpcRes Creat
 		return CreateNetworkResponse{}, err
 	}
 	switchId, err := CreateSwitch(ctx, CreateSwitchRequest{
-		Ak:         req.Ak,
+		AK:         req.AK,
 		SwitchName: req.SwitchName,
 		ZoneId:     req.ZoneId,
 		VpcId:      vpcId,
@@ -529,7 +529,7 @@ func CreateNetwork(ctx context.Context, req *CreateNetworkRequest) (vpcRes Creat
 	}
 
 	groupId, err := CreateSecurityGroup(ctx, CreateSecurityGroupRequest{
-		Ak:                req.Ak,
+		AK:                req.AK,
 		VpcId:             vpcId,
 		SecurityGroupName: req.SecurityGroupName,
 		SecurityGroupType: req.SecurityGroupType,
@@ -542,7 +542,7 @@ func CreateNetwork(ctx context.Context, req *CreateNetworkRequest) (vpcRes Creat
 		return CreateNetworkResponse{}, fmt.Errorf("miss rule")
 	}
 	_, err = AddSecurityGroupRule(ctx, AddSecurityGroupRuleRequest{
-		Ak:              req.Ak,
+		AK:              req.AK,
 		RegionId:        req.RegionId,
 		VpcId:           vpcId,
 		SecurityGroupId: groupId,
@@ -570,7 +570,7 @@ func waitForVpcStatus(ctx context.Context, req *CreateNetworkRequest, vpcId stri
 			VpcId:      vpcId,
 			PageNumber: 1,
 			PageSize:   10,
-			Ak:         req.Ak,
+			AK:         req.AK,
 		})
 		if err != nil {
 			return err
@@ -602,7 +602,7 @@ func CreateVPC(ctx context.Context, req CreateVPCRequest) (vpcId string, err err
 	}
 	*/
 
-	p, err := getProvider(req.Provider, req.Ak, req.RegionId)
+	p, err := getProvider(req.Provider, req.AK, req.RegionId)
 	if err != nil {
 		return "", err
 	}
@@ -622,7 +622,7 @@ func CreateVPC(ctx context.Context, req CreateVPCRequest) (vpcId string, err err
 			CreateAt: &now,
 			UpdateAt: &now,
 		},
-		Ak:        req.Ak,
+		AK:        req.AK,
 		RegionId:  req.RegionId,
 		VpcId:     res.VpcId,
 		Name:      req.VpcName,
@@ -724,12 +724,12 @@ type GetVPCFromCloudRequest struct {
 	PageNumber int32
 	PageSize   int32
 	VpcId      string
-	Ak         string
+	AK         string
 }
 
 func GetVPCFromCloud(ctx context.Context, req GetVPCFromCloudRequest) (vpc cloud.VPC, err error) {
 	// TODO: cache
-	p, err := getProvider(req.Provider, req.Ak, req.RegionId)
+	p, err := getProvider(req.Provider, req.AK, req.RegionId)
 	if err != nil {
 		return cloud.VPC{}, err
 	}
@@ -745,7 +745,7 @@ func GetVPCFromCloud(ctx context.Context, req GetVPCFromCloudRequest) (vpc cloud
 }
 
 type CreateSwitchRequest struct {
-	Ak         string
+	AK         string
 	SwitchName string
 	ZoneId     string
 	VpcId      string
@@ -776,7 +776,7 @@ func CreateSwitch(ctx context.Context, req CreateSwitchRequest) (switchId string
 
 	*/
 
-	p, err := getProvider(vpc.Provider, req.Ak, vpc.RegionId)
+	p, err := getProvider(vpc.Provider, req.AK, vpc.RegionId)
 	if err != nil {
 		return "", err
 	}
@@ -924,7 +924,7 @@ func GetSwitch(ctx context.Context, req GetSwitchRequest) (resp SwitchResponse, 
 }
 
 type CreateSecurityGroupRequest struct {
-	Ak                string
+	AK                string
 	VpcId             string
 	SecurityGroupName string
 	SecurityGroupType string
@@ -957,7 +957,7 @@ func CreateSecurityGroup(ctx context.Context, req CreateSecurityGroupRequest) (s
 
 	*/
 
-	p, err := getProvider(vpc.Provider, req.Ak, vpc.RegionId)
+	p, err := getProvider(vpc.Provider, req.AK, vpc.RegionId)
 	if err != nil {
 		return "", err
 	}
@@ -982,7 +982,7 @@ func CreateSecurityGroup(ctx context.Context, req CreateSecurityGroupRequest) (s
 			CreateAt: &now,
 			UpdateAt: &now,
 		},
-		Ak:                req.Ak,
+		AK:                req.AK,
 		Provider:          vpc.Provider,
 		RegionId:          vpc.RegionId,
 		VpcId:             vpcId,
@@ -999,7 +999,7 @@ func CreateSecurityGroup(ctx context.Context, req CreateSecurityGroupRequest) (s
 }
 
 type GetSecurityGroupRequest struct {
-	Ak                string
+	AK                string
 	SecurityGroupName string
 	VpcId             string
 	PageNumber        int
@@ -1057,7 +1057,7 @@ func GetSecurityGroup(ctx context.Context, req GetSecurityGroupRequest) (Securit
 		vpcId = vpc.VpcId
 	}
 	groups, total, err := model.FindSecurityGroupWithPage(ctx, model.FindSecurityGroupConditions{
-		Ak:                req.Ak,
+		AK:                req.AK,
 		Provider:          vpc.Provider,
 		RegionId:          vpc.RegionId,
 		VpcId:             vpcId,
@@ -1073,7 +1073,7 @@ func GetSecurityGroup(ctx context.Context, req GetSecurityGroupRequest) (Securit
 }
 
 type AddSecurityGroupRuleRequest struct {
-	Ak              string
+	AK              string
 	RegionId        string
 	VpcId           string
 	SecurityGroupId string
@@ -1123,7 +1123,7 @@ func AddSecurityGroupRule(ctx context.Context, req AddSecurityGroupRuleRequest) 
 		vpcId = vpc.VpcId
 	}
 	cond := model.FindSecurityGroupConditions{
-		Ak:              req.Ak,
+		AK:              req.AK,
 		Provider:        vpc.Provider,
 		RegionId:        vpc.RegionId,
 		VpcId:           vpcId,
@@ -1138,7 +1138,7 @@ func AddSecurityGroupRule(ctx context.Context, req AddSecurityGroupRuleRequest) 
 		return "", errs.ErrSecurityGroupNotExist
 	}
 
-	p, err := getProvider(vpc.Provider, req.Ak, req.RegionId)
+	p, err := getProvider(vpc.Provider, req.AK, req.RegionId)
 	if err != nil {
 		return "", err
 	}
