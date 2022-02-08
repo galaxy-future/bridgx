@@ -756,9 +756,7 @@ func (p *AlibabaCloud) DescribeGroupRules(req cloud.DescribeGroupRulesRequest) (
 			})
 		}
 	}
-	if err != nil {
-		logs.Logger.Errorf("DescribeGroupRules failed,error: %v groupId:%s", err, req.SecurityGroupId)
-	}
+
 	return cloud.DescribeGroupRulesResponse{Rules: rules}, nil
 }
 

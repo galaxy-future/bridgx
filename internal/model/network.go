@@ -341,7 +341,6 @@ func UpdateOrCreateVpcs(ctx context.Context, ak, provider string, regionIds []st
 	}
 	vpcIdDiff := utils.StringSliceDiff(oldVpcIds, vpcIds)
 	if len(vpcIdDiff) > 0 {
-		logs.Logger.Debugf("%s, vpcIdDiff %v", ak, vpcIdDiff)
 		if err := clients.WriteDBCli.WithContext(ctx).
 			Where("ak=? and provider=? and vpc_id in (?)", ak, provider, vpcIdDiff).
 			Delete(&Vpc{}).Error; err != nil {
@@ -369,7 +368,6 @@ func UpdateOrCreateSwitches(ctx context.Context, vpcIds []string, switches []Swi
 	}
 	switchIdDiff := utils.StringSliceDiff(oldSwitchIds, switchIds)
 	if len(switchIdDiff) > 0 {
-		logs.Logger.Debugf("switchIdDiff %v", switchIdDiff)
 		if err := clients.WriteDBCli.WithContext(ctx).
 			Where("switch_id in (?)", switchIdDiff).
 			Delete(&Switch{}).Error; err != nil {
@@ -397,7 +395,6 @@ func UpdateOrCreateGroups(ctx context.Context, ak, provider string, regionIds []
 	}
 	secGrpIdDiff := utils.StringSliceDiff(oldSecGrpIds, secGrpIds)
 	if len(secGrpIdDiff) > 0 {
-		logs.Logger.Debugf("%s, secGrpIdDiff %v", ak, secGrpIdDiff)
 		if err := clients.WriteDBCli.WithContext(ctx).
 			Where("ak=? and provider=? and security_group_id in (?)", ak, provider, secGrpIdDiff).
 			Delete(&SecurityGroup{}).Error; err != nil {

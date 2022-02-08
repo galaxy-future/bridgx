@@ -59,7 +59,7 @@ func RepairCluster(c *types.ClusterInfo, taskId int64, availableIds []string, al
 	}}
 	cloudInstances, err := GetInstanceByTag(c, tags)
 	if err != nil {
-		logs.Logger.Infof("[RepairCluster] GetInstanceByTag failed %v", err)
+		logs.Logger.Errorf("[RepairCluster] GetInstanceByTag failed %v", err)
 		return successNum
 	}
 
