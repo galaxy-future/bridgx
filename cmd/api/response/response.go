@@ -1,6 +1,9 @@
 package response
 
-import "github.com/galaxy-future/BridgX/internal/model"
+import (
+	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/internal/types"
+)
 
 type ClusterCountResponse struct {
 	ClusterNum int64 `json:"cluster_num"`
@@ -31,18 +34,19 @@ type TaskThumb struct {
 }
 
 type ClusterThumb struct {
-	ClusterId     string `json:"cluster_id"`
-	ClusterName   string `json:"cluster_name"`
-	InstanceCount int64  `json:"instance_count"`
-	InstanceType  string `json:"instance_type"`
-	ChargeType    string `json:"charge_type"`
-	Provider      string `json:"provider"`
-	Account       string `json:"account"`
-	Usage         string `json:"usage"`
-	CreateAt      string `json:"create_at"`
-	CreateBy      string `json:"create_by"`
-	UpdateBy      string `json:"update_by"`
-	UpdateAt      string `json:"update_at"`
+	ClusterId     string              `json:"cluster_id"`
+	ClusterName   string              `json:"cluster_name"`
+	InstanceCount int64               `json:"instance_count"`
+	InstanceType  string              `json:"instance_type"`
+	ChargeType    string              `json:"charge_type"`
+	Provider      string              `json:"provider"`
+	Account       string              `json:"account"`
+	Usage         string              `json:"usage"`
+	ExtendConfig  *types.ExtendConfig `json:"extend_config"`
+	CreateAt      string              `json:"create_at"`
+	CreateBy      string              `json:"create_by"`
+	UpdateBy      string              `json:"update_by"`
+	UpdateAt      string              `json:"update_at"`
 }
 
 type TaskDetailResponse struct {

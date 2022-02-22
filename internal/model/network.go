@@ -13,7 +13,7 @@ import (
 
 type Network struct {
 	Base
-	AK                      string `gorm:"ak"`
+	AK                      string `gorm:"column:ak"`
 	RegionId                string
 	VpcId                   string
 	SubNetId                string
@@ -28,7 +28,7 @@ func (Network) TableName() string {
 
 type Vpc struct {
 	Base
-	AK        string `gorm:"ak"`
+	AK        string `gorm:"column:ak"`
 	RegionId  string
 	VpcId     string
 	Name      string
@@ -62,7 +62,7 @@ func (Switch) TableName() string {
 
 type SecurityGroup struct {
 	Base
-	AK                string `gorm:"ak"`
+	AK                string `gorm:"column:ak"`
 	Provider          string
 	RegionId          string
 	VpcId             string

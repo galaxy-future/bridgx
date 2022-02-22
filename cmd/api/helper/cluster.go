@@ -7,6 +7,7 @@ import (
 	"github.com/galaxy-future/BridgX/internal/constants"
 	"github.com/galaxy-future/BridgX/internal/logs"
 	"github.com/galaxy-future/BridgX/internal/model"
+	"github.com/galaxy-future/BridgX/internal/types"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
 )
@@ -20,6 +21,13 @@ func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int
 		if len(tags) > 0 {
 			usage = tags[constants.DefaultClusterUsageKey]
 		}
+		var extendCfg types.ExtendConfig
+		if cluster.ExtendConfig != "" {
+			err := jsoniter.UnmarshalFromString(cluster.ExtendConfig, &extendCfg)
+			if err != nil {
+				logs.Logger.Warnf("%v ExtendConfig unmarshal failed, %v", cluster.Id, err)
+			}
+		}
 		c := response.ClusterThumb{
 			ClusterId:     cast.ToString(cluster.Id),
 			ClusterName:   cluster.ClusterName,
@@ -29,6 +37,7 @@ func ConvertToClusterThumbList(clusters []model.Cluster, countMap map[string]int
 			Provider:      cluster.Provider,
 			Account:       cluster.AccountKey,
 			Usage:         usage,
+			ExtendConfig:  &extendCfg,
 			CreateAt:      cluster.CreateAt.String(),
 			CreateBy:      cluster.CreateBy,
 			UpdateAt:      cluster.UpdateAt.String(),
