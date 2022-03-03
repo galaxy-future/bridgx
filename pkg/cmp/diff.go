@@ -120,7 +120,7 @@ func diffWithOneNil(notNil interface{}, notNilType reflect.Type, oldIsNil bool) 
 			continue
 		}
 		fValue := v.Field(i)
-		if fValue.IsZero(){
+		if fValue.IsZero() {
 			continue
 		}
 
