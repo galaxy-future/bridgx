@@ -179,13 +179,13 @@ func syncNetworkConfig(ctx context.Context, regionIds []string, provider, ak str
 	if err != nil {
 		return err
 	}
-	updateOrCreateSwitch(ctx, vpcs, provider, ak)
+	go updateOrCreateSwitch(ctx, vpcs, provider, ak)
 
 	groups, err := updateOrCreateSecurityGroups(ctx, regionIds, vpcs, provider, ak)
 	if err != nil {
 		return err
 	}
-	updateOrCreateSecurityGroupRules(ctx, groups, provider, ak)
+	go updateOrCreateSecurityGroupRules(ctx, groups, provider, ak)
 	return nil
 }
 

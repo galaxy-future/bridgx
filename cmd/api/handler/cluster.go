@@ -485,6 +485,7 @@ func AddClusterTags(ctx *gin.Context) {
 			ClusterName: req.ClusterName,
 			TagKey:      k,
 			TagValue:    v,
+			ValueDesc:   req.ValueDesc[v],
 		}
 		tags = append(tags, tag)
 	}
@@ -533,6 +534,7 @@ func EditClusterTags(ctx *gin.Context) {
 			ClusterName: req.ClusterName,
 			TagKey:      k,
 			TagValue:    v,
+			ValueDesc:   req.ValueDesc[v],
 		}
 		tags = append(tags, tag)
 	}

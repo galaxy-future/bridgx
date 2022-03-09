@@ -8,6 +8,7 @@ import (
 type TagRequest struct {
 	ClusterName string            `json:"cluster_name" binding:"required,min=1"`
 	Tags        map[string]string `json:"tags" binding:"required"`
+	ValueDesc   map[string]string `json:"value_desc"`
 }
 
 type GetTagsRequest struct {

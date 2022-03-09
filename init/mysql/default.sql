@@ -180,6 +180,7 @@ CREATE TABLE `cluster_tag`
     `cluster_name` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
     `tag_key`      varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
     `tag_value`    varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
+    `tag_desc`     varchar(2048) COLLATE utf8mb4_bin DEFAULT '',
     `create_at`    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_at`    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -401,6 +402,7 @@ CREATE TABLE `kubernetes_install_steps` (
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+drop table if exists `operation_log`;
 CREATE TABLE `operation_log` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT,
     `operation` varchar(256) NOT NULL DEFAULT '' COMMENT '操作',

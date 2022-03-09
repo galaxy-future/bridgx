@@ -20,6 +20,7 @@ type ClusterTag struct {
 	ClusterName string
 	TagKey      string
 	TagValue    string
+	ValueDesc   string
 }
 
 func (ClusterTag) TableName() string {

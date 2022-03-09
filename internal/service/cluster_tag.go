@@ -29,6 +29,7 @@ func EditClusterTags(tags []model.ClusterTag) error {
 			return err
 		}
 		tagDB.TagValue = tag.TagValue
+		tagDB.ValueDesc = tag.ValueDesc
 		err = model.Save(tagDB)
 		if err != nil {
 			return err
@@ -78,6 +79,9 @@ func GetClusterTagsByClusters(ctx context.Context, clusters []model.Cluster) (ma
 		} else {
 			clusterTags = make(map[string]string, 0)
 			clusterTags[tag.TagKey] = tag.TagValue
+		}
+		if tag.ValueDesc != "" {
+			clusterTags[tag.TagKey] = tag.ValueDesc
 		}
 		res[tag.ClusterName] = clusterTags
 	}
