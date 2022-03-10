@@ -340,6 +340,7 @@ func TestGetSecurityGroup(t *testing.T) {
 	}
 }
 
+//使用本函数前需要将 updateOrCreateSecurityGroupRules 改为同步调用
 func TestSyncNetwork(t *testing.T) {
 	accounts := make([]model.Account, 0)
 	if err := model.QueryAll(map[string]interface{}{}, &accounts, ""); err != nil {

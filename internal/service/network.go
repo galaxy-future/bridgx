@@ -179,9 +179,20 @@ func syncNetworkConfig(ctx context.Context, regionIds []string, provider, ak str
 	if err != nil {
 		return err
 	}
-	go updateOrCreateSwitch(ctx, vpcs, provider, ak)
 
-	groups, err := updateOrCreateSecurityGroups(ctx, regionIds, vpcs, provider, ak)
+	var groups []cloud.SecurityGroup
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		updateOrCreateSwitch(ctx, vpcs, provider, ak)
+		wg.Done()
+	}()
+	go func() {
+		groups, err = updateOrCreateSecurityGroups(ctx, regionIds, vpcs, provider, ak)
+		wg.Done()
+	}()
+	wg.Wait()
+
 	if err != nil {
 		return err
 	}
