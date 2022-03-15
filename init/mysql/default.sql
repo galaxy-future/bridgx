@@ -180,7 +180,7 @@ CREATE TABLE `cluster_tag`
     `cluster_name` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
     `tag_key`      varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
     `tag_value`    varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-    `tag_desc`     varchar(2048) COLLATE utf8mb4_bin DEFAULT '',
+    `value_desc`   varchar(2048) COLLATE utf8mb4_bin DEFAULT '',
     `create_at`    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_at`    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
