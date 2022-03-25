@@ -42,6 +42,7 @@ type ExpandTaskInfo struct {
 	TaskSubmitHost string `json:"task_submit_host"`
 	UserId         int64  `json:"user_id"`
 	BeforeCount    int    `json:"before_count"`
+	Operator       string `json:"operator"`
 }
 
 func (e *ExpandTaskInfo) GetCount() int {
@@ -61,6 +62,9 @@ func (e *ExpandTaskInfo) GetExpectInstanceCount() (expectCount int) {
 }
 
 func (e *ExpandTaskInfo) GetCreateUsername() (username string) {
+	if e.Operator != "" {
+		return e.Operator
+	}
 	uid := e.UserId
 	user, _ := GetUserById(context.Background(), uid)
 	if user != nil {
@@ -81,6 +85,7 @@ type ShrinkTaskInfo struct {
 	TaskSubmitHost string `json:"task_submit_host"`
 	UserId         int64  `json:"user_id"`
 	BeforeCount    int    `json:"before_count"`
+	Operator       string `json:"operator"`
 }
 
 func (e *ShrinkTaskInfo) GetCount() int {
@@ -106,6 +111,9 @@ func (s *ShrinkTaskInfo) GetExpectInstanceCount() (expectCount int) {
 }
 
 func (s *ShrinkTaskInfo) GetCreateUsername() (username string) {
+	if s.Operator != "" {
+		return s.Operator
+	}
 	uid := s.UserId
 	user, _ := GetUserById(context.Background(), uid)
 	if user != nil {

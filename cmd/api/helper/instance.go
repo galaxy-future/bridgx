@@ -42,6 +42,8 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 			LoginName:          getLoginName(instance.ClusterName, clusterMap),
 			LoginPassword:      getLoginPassword(instance.ClusterName, clusterMap),
 			CreateAt:           instance.CreateAt.String(),
+			RunningAt:          getRunningAtTime(instance.RunningAt),
+			DeleteAt:           getDeleteAtTime(instance.DeleteAt),
 			Status:             getStringStatus(instance.Status),
 			StartupTime:        startupTime,
 			ChargeType:         instance.ChargeType,
@@ -50,6 +52,20 @@ func ConvertToInstanceThumbList(ctx context.Context, instances []model.Instance,
 		ret = append(ret, r)
 	}
 	return ret
+}
+
+func getDeleteAtTime(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.String()
+}
+
+func getRunningAtTime(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.String()
 }
 
 func getProvider(clusterName string, m map[string]model.Cluster) string {

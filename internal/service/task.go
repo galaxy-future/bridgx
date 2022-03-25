@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-func CreateExpandTask(ctx context.Context, clusterName string, count int, taskName string, uid int64) (int64, error) {
+func CreateExpandTask(ctx context.Context, clusterName string, count int, taskName string, uid int64, operator string) (int64, error) {
 	if hasUnfinishedTask(clusterName) {
 		return 0, errors.New(fmt.Sprintf("Cluster:%v has unfinished task", clusterName))
 	}
@@ -38,6 +38,7 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 		TaskSubmitHost: utils.PrivateIPv4(),
 		UserId:         uid,
 		BeforeCount:    int(currentCount),
+		Operator:       operator,
 	}
 	s, _ := jsoniter.MarshalToString(info)
 	logs.Logger.Infof("cluster:%v expand task info:%v", clusterName, s)
@@ -60,7 +61,7 @@ func CreateExpandTask(ctx context.Context, clusterName string, count int, taskNa
 	}
 	return task.Id, nil
 }
-func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips string, taskName string, uid int64) (int64, error) {
+func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips string, taskName string, uid int64, operator string) (int64, error) {
 	if hasUnfinishedTask(clusterName) {
 		return 0, errors.New(fmt.Sprintf("Cluster:%v has unfinished task", clusterName))
 	}
@@ -85,6 +86,7 @@ func CreateShrinkTask(ctx context.Context, clusterName string, count int, ips st
 		TaskSubmitHost: utils.PrivateIPv4(),
 		UserId:         uid,
 		BeforeCount:    int(currentCount),
+		Operator:       operator,
 	}
 	s, _ := jsoniter.MarshalToString(info)
 	logs.Logger.Infof("cluster:%v shrink task info:%v", clusterName, s)

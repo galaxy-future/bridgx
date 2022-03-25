@@ -27,6 +27,7 @@ type ExpandClusterRequest struct {
 	TaskName    string `json:"task_name"`
 	ClusterName string `json:"cluster_name" binding:"required"`
 	Count       int    `json:"count" binding:"required,min=1,max=10000"`
+	Operator    string `json:"operator"`
 }
 
 type ShrinkClusterRequest struct {
@@ -34,11 +35,13 @@ type ShrinkClusterRequest struct {
 	ClusterName string   `json:"cluster_name" binding:"required"`
 	IPs         []string `json:"ips"`
 	Count       int      `json:"count" binding:"required,min=1,max=10000"`
+	Operator    string   `json:"operator"`
 }
 
 type ShrinkAllInstancesRequest struct {
 	TaskName    string `json:"task_name"`
 	ClusterName string `json:"cluster_name" binding:"required"`
+	Operator    string `json:"operator"`
 }
 
 type CreateVpcRequest struct {

@@ -131,6 +131,8 @@ type InstanceThumb struct {
 	LoginPassword      string `json:"login_password"`
 	ChargeType         string `json:"charge_type"`
 	ComputingPowerType string `json:"computing_power_type"`
+	RunningAt          string `json:"running_at"`
+	DeleteAt           string `json:"delete_at"`
 }
 
 type InstanceUsage struct {

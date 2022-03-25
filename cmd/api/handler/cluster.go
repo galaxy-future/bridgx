@@ -604,7 +604,7 @@ func ExpandCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
 		return
 	}
-	taskId, err := service.CreateExpandTask(ctx, req.ClusterName, req.Count, req.TaskName, user.UserId)
+	taskId, err := service.CreateExpandTask(ctx, req.ClusterName, req.Count, req.TaskName, user.UserId, req.Operator)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
@@ -625,7 +625,7 @@ func ShrinkCluster(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
 		return
 	}
-	taskId, err := service.CreateShrinkTask(ctx, req.ClusterName, req.Count, strings.Join(req.IPs, ","), req.TaskName, user.UserId)
+	taskId, err := service.CreateShrinkTask(ctx, req.ClusterName, req.Count, strings.Join(req.IPs, ","), req.TaskName, user.UserId, req.Operator)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
@@ -646,7 +646,7 @@ func ShrinkAllInstances(ctx *gin.Context) {
 		response.MkResponse(ctx, http.StatusBadRequest, validation.Translate2Chinese(err), nil)
 		return
 	}
-	taskId, err := service.CreateShrinkAllTask(ctx, req.ClusterName, req.TaskName, user.UserId)
+	taskId, err := service.CreateShrinkAllTask(ctx, req.ClusterName, req.TaskName, user.UserId, req.Operator)
 	if err != nil {
 		response.MkResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 		return
