@@ -426,6 +426,10 @@ func ecsInfo2CloudIns(ecsInfos []model.ServerDetail, resources map[string]prePai
 func flavor2CloudInsType(flavors []model.Flavor, zoneId string) []cloud.InstanceType {
 	insTypes := make([]cloud.InstanceType, 0, len(flavors))
 	for _, flavor := range flavors {
+		mem := cast.ToInt(flavor.Ram / 1024)
+		if mem < 1 {
+			continue
+		}
 		extra := flavor.OsExtraSpecs
 		stat := getFlavorStatus(extra, zoneId)
 		chargeType := cloud.InsTypeChargeTypeAll
@@ -444,7 +448,7 @@ func flavor2CloudInsType(flavors []model.Flavor, zoneId string) []cloud.Instance
 			ChargeType:  chargeType,
 			IsGpu:       isGpu,
 			Core:        cast.ToInt(flavor.Vcpus),
-			Memory:      cast.ToInt(flavor.Ram / 1024),
+			Memory:      mem,
 			Family:      utils.StringValue(extra.Ecsperformancetype),
 			InsTypeName: flavor.Id,
 			Status:      stat,

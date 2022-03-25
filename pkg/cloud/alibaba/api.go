@@ -854,6 +854,10 @@ func (p *AlibabaCloud) GetOrders(req cloud.GetOrdersRequest) (cloud.GetOrdersRes
 func ecsInsType2CloudInsType(ecsInsType []*ecsClient.DescribeInstanceTypesResponseBodyInstanceTypesInstanceType) []cloud.InstanceType {
 	insType := make([]cloud.InstanceType, 0, len(ecsInsType))
 	for _, info := range ecsInsType {
+		mem := int(tea.Float32Value(info.MemorySize))
+		if mem < 1 {
+			continue
+		}
 		isGpu := false
 		if tea.Int32Value(info.GPUAmount) > 0 {
 			isGpu = true
@@ -861,7 +865,7 @@ func ecsInsType2CloudInsType(ecsInsType []*ecsClient.DescribeInstanceTypesRespon
 		insType = append(insType, cloud.InstanceType{
 			IsGpu:       isGpu,
 			Core:        int(tea.Int32Value(info.CpuCoreCount)),
-			Memory:      int(tea.Float32Value(info.MemorySize)),
+			Memory:      mem,
 			Family:      tea.StringValue(info.InstanceTypeFamily),
 			InsTypeName: tea.StringValue(info.InstanceTypeId),
 		})
