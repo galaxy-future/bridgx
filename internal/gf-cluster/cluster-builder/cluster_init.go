@@ -137,7 +137,7 @@ func initMachine(machine gf_cluster.ClusterBuildMachine) {
 	}
 
 	_, _ = sshRun(machine, "tee init.sh <<"+initConfig)
-	_, _ = sshRun(machine, "sh init.sh")
+	_, _ = sshRun(machine, "bash init.sh")
 }
 
 func resetFlannel(machine gf_cluster.ClusterBuildMachine) {
