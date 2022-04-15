@@ -111,7 +111,7 @@ BridgX uses [Apache License 2.0](https://github.com/galaxy-future/bridgx/blob/ma
 
 Contact us
 -----
-If you want more information about SchedulX, scan the following QR code to contact us:
+If you want more information about the service, scan the following QR code to contact us:
 
 ![image](https://user-images.githubusercontent.com/102009012/163559389-813afa06-924f-412d-8642-1a0944384f91.png)
 
