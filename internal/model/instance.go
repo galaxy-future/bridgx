@@ -267,7 +267,7 @@ func GetInstanceByCond(ctx context.Context, cond InstanceSearchCond) (ret []Inst
 	if len(cond.Status) != 0 && cond.Status[0] != "" {
 		query = query.Where("status in (?)", cond.Status)
 	}
-	total, err = QueryWhere(query, cond.PageNumber, cond.PageSize, &ret, "id", true)
+	total, err = QueryWhere(query, cond.PageNumber, cond.PageSize, &ret, "id desc", true)
 	if err != nil {
 		return nil, 0, err
 	}

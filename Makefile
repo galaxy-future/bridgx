@@ -70,9 +70,16 @@ version ?= latest
 docker-tag:
 	docker tag bridgx_api:latest galaxyfuture/bridgx-api:${version}
 	docker tag bridgx_scheduler:latest galaxyfuture/bridgx-scheduler:${version}
+	docker tag bridgx_api:latest images.galaxy-future.com/galaxy-future/bridgx-api:${version}
+	docker tag bridgx_scheduler:latest images.galaxy-future.com/galaxy-future/bridgx-scheduler:${version}
 
 docker-push-hub:
 	docker push galaxyfuture/bridgx-api:${version}
 	docker push galaxyfuture/bridgx-scheduler:${version}
 
+docker-push-inner:
+	docker push images.galaxy-future.com/galaxy-future/bridgx-api:${version}
+	docker push images.galaxy-future.com/galaxy-future/bridgx-scheduler:${version}
+
 docker-hub-all: docker-compose-build docker-tag docker-push-hub
+docker-inner: docker-compose-build docker-tag docker-push-inner
